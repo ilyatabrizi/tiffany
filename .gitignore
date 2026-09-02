@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+*.pyc
+docs/contact-sheet.png
+# the studio's uncompressed campaign film — 3.8MB, kept local, not shipped
+media/raw/campaign-film.mp4

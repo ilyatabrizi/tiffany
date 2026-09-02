@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-theme="auto" data-colour="touch">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<title>TIFFANY BY VANDA — Womenswear, made in Iran.</title>
+<meta name="description" content="TIFFANY by Vanda — womenswear made in Iran. Three collections a year, cut in small runs. Shop Pastel Play, Lace Noir and Desert Hours.">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0E" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TIFFANY">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TIFFANY by Vanda">
+<meta property="og:title" content="TIFFANY BY VANDA">
+<meta property="og:description" content="Womenswear, made in Iran. Three collections a year, cut in small runs.">
+<meta property="og:image" content="assets/img/og.jpg">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="css/app.css">
+
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/cormorant.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
+<!-- No image preloads: the poster is only on the home route, and the wordmark
+     is a CSS mask, which the preloader fetches in a different credentials mode
+     and so never reuses. Both are marked fetchpriority="high" where they are
+     actually used. -->
+</head>
+<body>
+
+<!-- the boot veil: the wordmark wipes in, then lifts -->
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="boot-mark"></div>
+</div>
+
+<!-- glass top bar — earns its place only once the hero has scrolled away -->
+<header class="topbar" id="topbar">
+  <button class="topbar-back" id="topbarBack" data-act="back" type="button" aria-label="Back" hidden>
+    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <div class="topbar-title" id="topbarTitle">TIFFANY</div>
+  <button class="topbar-act" id="topbarAct" type="button" hidden></button>
+</header>
+
+<main id="app" class="app" tabindex="-1"></main>
+
+<!-- glass tab bar -->
+<nav class="tabbar" id="tabbar" aria-label="Main">
+  <div class="tab-pill" id="tabPill" aria-hidden="true"></div>
+</nav>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Looks"></div>
+<div class="toast-dock" id="toastDock" aria-live="polite"></div>
+<div class="sheet-root" id="sheetRoot"></div>
+
+<script type="module" src="js/app.js"></script>
+<noscript>
+  <div style="padding:40px 24px;text-align:center;font:400 15px/1.6 system-ui">
+    <h1 style="font:400 30px/1.1 Georgia,serif;letter-spacing:.06em">TIFFANY</h1>
+    <p>This shop needs JavaScript. Turn it on, or find us on Instagram at
+      <a href="https://instagram.com/tiffanyiran">@tiffanyiran</a>.</p>
+  </div>
+</noscript>
+</body>
+</html>
