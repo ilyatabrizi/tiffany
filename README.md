@@ -7,6 +7,8 @@ it installs from Safari with no app store in the way.
 Live: **https://ilyatabrizi.github.io/tiffany/**
 Instagram: [@tiffanyiran](https://instagram.com/tiffanyiran)
 
+![Home, shop, a product, the look viewer and a collection](docs/preview.webp)
+
 ---
 
 ## The idea
