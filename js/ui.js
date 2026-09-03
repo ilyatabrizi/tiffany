@@ -202,6 +202,19 @@ export const secHead = (title, more = '') => `
     ${more}
   </div>`;
 
+/* The agency signature. Its own block, not a few words tacked onto the
+   copyright — the lockup already reads "alpha", so the words beside it carry
+   the rest of the phrase rather than saying the name twice. */
+export const alphaSig = () => `
+  <a class="alphasig" href="https://alphaa.agency" target="_blank" rel="noopener"
+     aria-label="Powered by Alpha Agency">
+    <span class="alphasig__mark" aria-hidden="true"></span>
+    <span class="alphasig__txt">
+      <span class="alphasig__by">Powered by</span>
+      <span class="alphasig__name">Alpha Agency</span>
+    </span>
+  </a>`;
+
 export const moreLink = (to, label = 'See all') =>
   `<button class="link-more" data-act="nav" data-to="${to}" type="button">
      ${esc(label)}${icon('arrow', 14)}</button>`;

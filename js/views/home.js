@@ -2,7 +2,9 @@
 import { BRAND } from '../config.js';
 import { COLLECTIONS, LOOKS, newIn } from '../data.js';
 import { icon } from '../icons.js';
-import { collectionCard, productCard, lookTile, secHead, moreLink, shot } from '../ui.js';
+import {
+  collectionCard, productCard, lookTile, secHead, moreLink, shot, alphaSig,
+} from '../ui.js';
 import { mountHero } from '../hero.js';
 
 const hero = () => `
@@ -79,6 +81,11 @@ const footer = () => `
   <p>Free delivery over 3,500,000 Toman.</p>
   <a class="ig" href="${BRAND.instagramUrl}" target="_blank" rel="noopener">
     ${icon('instagram', 17)}@${BRAND.instagram}</a>
+
+  <div class="footer-rule"></div>
+  ${alphaSig()}
+  <p class="footer-legal">© ${new Date().getFullYear()} ${BRAND.full}</p>
+
   <div class="notice">Preview build. Photography is the studio’s own; every
     price, name, fabric and delivery time on this site is placeholder copy.</div>
 </footer>`;

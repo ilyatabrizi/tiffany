@@ -101,6 +101,27 @@ def run(shots_only=False):
         page.evaluate('window.scrollTo(0, 1700)')
         shot(page, '03-home-newin')
         page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+        check('agency signature in the footer', page.locator('.alphasig').count() == 1)
+        check('signature points at Alpha',
+              page.locator('.alphasig').get_attribute('href') == 'https://alphaa.agency')
+        # the lockup is two masks: letters follow --ink and invert, bars keep
+        # Alpha's yellow. If either layer stops painting the mark disappears.
+        layers = page.evaluate("""(() => {
+            const e = document.querySelector('.alphasig__mark');
+            const b = getComputedStyle(e, '::before'), a = getComputedStyle(e, '::after');
+            return {
+              letters: b.maskImage || b.webkitMaskImage,
+              bars: a.maskImage || a.webkitMaskImage,
+              barColour: a.backgroundColor,
+              w: Math.round(e.getBoundingClientRect().width),
+            };
+        })()""")
+        check('both signature layers are masked',
+              'alpha-letters' in (layers['letters'] or '')
+              and 'alpha-bars' in (layers['bars'] or ''), str(layers))
+        check('the bars keep Alpha yellow', layers['barColour'] == 'rgb(255, 204, 0)',
+              layers['barColour'])
+        check('the lockup is legibly sized', layers['w'] >= 70, f"{layers['w']}px")
         shot(page, '04-home-foot')
 
         # ------------------------------------------------------------ shop
@@ -267,6 +288,10 @@ def run(shots_only=False):
         check('stats row', page.locator('.stat').count() == 3)
         check('fit shown', 'Not set' not in page.locator(
             '[data-act="fit"] .row-val').inner_text())
+        page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+        page.wait_for_timeout(400)
+        check('signature signs the profile too', page.locator('.alphasig').count() == 1)
+        page.evaluate('window.scrollTo(0, 0)')
         shot(page, '17-profile')
 
         page.locator('[data-theme-mode="dark"]').click()

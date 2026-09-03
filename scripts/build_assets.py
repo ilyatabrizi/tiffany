@@ -10,6 +10,7 @@ first try. So:
              at the seam, plus a WebP poster
   brand   -> the wordmark in white and in ink, trimmed to its own ink
   icons   -> the wordmark on black at 180/192/512/1024 + a maskable
+  sig     -> Alpha's lockup split into two recolourable masks
   og      -> a 1200x630 share card
 
     python3 scripts/build_assets.py           # everything
@@ -206,6 +207,46 @@ def build_og():
     print(f"  {p.name:34s} 1200x630  {p.stat().st_size // 1024}KB")
 
 
+# ------------------------------------------------------------------- sig
+# The agency signature. Alpha's lockup is white letterforms plus two yellow
+# bars on transparent, which is unusable on a shop that is white by default and
+# black by preference. So it is split into two alpha masks and recoloured in
+# CSS: the letters take --ink and invert with the theme, the bars keep Alpha's
+# own yellow. Same technique as the TIFFANY wordmark.
+ALPHA_SRC = pathlib.Path.home() / "Claude Code" / "code-concept" / "assets" / "img" / "alpha-logo.png"
+ALPHA_YELLOW = "#FFCC00"
+
+
+def build_sig():
+    print("sig")
+    if not ALPHA_SRC.exists():
+        print(f"  ! missing {ALPHA_SRC}")
+        return
+    BRAND.mkdir(parents=True, exist_ok=True)
+    src = Image.open(ALPHA_SRC).convert("RGBA")
+    w, h = src.size
+    letters = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    bars = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    lp, bp = letters.load(), bars.load()
+
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = src.getpixel((x, y))
+            if a == 0:
+                continue
+            # the bars are the only chromatic ink in the lockup
+            if r > 170 and g > 110 and b < 120 and (r - b) > 70:
+                bp[x, y] = (255, 255, 255, a)
+            else:
+                lp[x, y] = (255, 255, 255, a)
+
+    for name, im in (("alpha-letters", letters), ("alpha-bars", bars)):
+        out = BRAND / f"{name}.png"
+        im.save(out, "PNG", optimize=True)
+        box = im.getchannel("A").getbbox()
+        print(f"  {out.name:34s} {w}x{h}  ink bbox {box}  {out.stat().st_size // 1024}KB")
+
+
 # ------------------------------------------------------------------ hero
 def build_hero():
     print("hero")
@@ -264,9 +305,10 @@ def contact_sheet():
 
 
 STAGES = {"photos": build_photos, "brand": build_brand, "icons": build_icons,
-          "og": build_og, "hero": build_hero, "sheet": contact_sheet}
+          "sig": build_sig, "og": build_og, "hero": build_hero,
+          "sheet": contact_sheet}
 
 if __name__ == "__main__":
-    want = sys.argv[1:] or ["photos", "brand", "icons", "og", "hero", "sheet"]
+    want = sys.argv[1:] or ["photos", "brand", "icons", "sig", "og", "hero", "sheet"]
     for s in want:
         STAGES[s]()

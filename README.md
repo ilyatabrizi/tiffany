@@ -61,7 +61,7 @@ python3 serve.py          # http://localhost:8131
 ```
 
 ```bash
-python3 e2e.py            # 67 checks in a real browser, plus docs/shots/
+python3 e2e.py            # 76 checks in a real browser, plus docs/shots/
 ```
 
 `e2e.py` drives the system Chrome through Playwright — no browser download. It
@@ -76,8 +76,8 @@ python3 scripts/build_assets.py            # everything
 python3 scripts/build_assets.py hero       # or one stage
 ```
 
-Needs Pillow and imageio-ffmpeg. Stages: `photos`, `brand`, `icons`, `og`,
-`hero`, `sheet`. The last one writes `docs/contact-sheet.png` — a grid of every
+Needs Pillow and imageio-ffmpeg. Stages: `photos`, `brand`, `icons`, `sig`,
+`og`, `hero`, `sheet`. The last one writes `docs/contact-sheet.png` — a grid of every
 crop, so framing gets checked rather than hoped.
 
 What the studio sent, and what it became:
@@ -87,6 +87,10 @@ What the studio sent, and what it became:
 - **The wordmark** (transparent PNG) → white and ink versions, the app icons at
   180/192/512/1024, a maskable, a favicon, and the CSS mask used for the boot
   animation and the hero.
+- **Alpha's own lockup** → split into two alpha masks, because it ships as white
+  letterforms plus two yellow bars and would be invisible on paper. The letters
+  take `--ink` and invert with the theme; the bars keep Alpha's yellow, the one
+  colour on this site that is not TIFFANY's to spend.
 - **A 22-second studio film** → a silent, 576-wide, 1.4MB H.264 loop trimmed to
   the clean middle (the master opens and closes on black flash frames) and faded
   through white at both ends, so the loop seam reads as a breath rather than a

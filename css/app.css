@@ -982,6 +982,57 @@ html[data-colour='always'] .order-thumbs img { filter: none; }
 }
 @media (hover: hover) { .ig:hover { color: var(--accent); } }
 
+.footer-rule {
+  height: 1px; background: var(--line); border: 0;
+  margin: 32px auto 26px; max-width: 300px;
+}
+.footer-legal { font-size: 11.5px; color: var(--faint); margin: 18px 0 0; }
+
+/* ------------------------------------------------- the agency signature */
+/* Alpha's lockup ships as white letterforms plus two yellow bars on
+   transparent — invisible on a shop that is white by default. So it arrives as
+   two alpha masks instead: the letters take --ink and invert with the theme,
+   the bars keep Alpha's own yellow, which is the one colour on this site that
+   is not TIFFANY's to spend. Same technique as the TIFFANY wordmark. */
+.alphasig {
+  display: inline-flex; align-items: center;
+  gap: clamp(12px, 3vw, 16px);
+  color: var(--ink);
+  transition: opacity .28s var(--ease);
+}
+.alphasig:active { opacity: .68; }
+@media (hover: hover) { .alphasig:hover { opacity: .7; } }
+
+.alphasig__mark {
+  position: relative; flex: 0 0 auto;
+  width: clamp(76px, 20vw, 98px); aspect-ratio: 440 / 335;
+}
+.alphasig__mark::before, .alphasig__mark::after {
+  content: ''; position: absolute; inset: 0;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+.alphasig__mark::before {
+  background: var(--ink);
+  -webkit-mask-image: url('../assets/brand/alpha-letters.png');
+  mask-image: url('../assets/brand/alpha-letters.png');
+}
+.alphasig__mark::after {
+  background: #FFCC00;
+  -webkit-mask-image: url('../assets/brand/alpha-bars.png');
+  mask-image: url('../assets/brand/alpha-bars.png');
+}
+.alphasig__txt { display: grid; gap: 5px; text-align: left; }
+.alphasig__by {
+  font-size: 9.5px; font-weight: 500; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--muted);
+}
+.alphasig__name {
+  font-size: clamp(17px, 4.6vw, 21px); font-weight: 500;
+  letter-spacing: -.022em; line-height: 1;
+}
+
 .notice {
   margin: 26px var(--gap) 0; padding: 13px 15px; border-radius: var(--r-m);
   border: 1px dashed var(--line); color: var(--muted); font-size: 12px;

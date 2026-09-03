@@ -5,7 +5,9 @@ import { SIZES } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, num } from '../util.js';
 import { state, patch, bagCount } from '../store.js';
-import { openSheet, closeSheet, toast, recommendSize, fitSaved } from '../ui.js';
+import {
+  openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig,
+} from '../ui.js';
 import { applyColourPref } from '../colour.js';
 import { promptInstall, standalone } from '../install.js';
 
@@ -251,7 +253,9 @@ export default {
     <div class="footer">
       <div class="footer-mark"></div>
       <p>${BRAND.full} · ${BRAND.country}</p>
-      <p class="tiny">Preview build by Alpha Agency</p>
+      <div class="footer-rule"></div>
+      ${alphaSig()}
+      <p class="footer-legal">© ${new Date().getFullYear()} ${BRAND.full}</p>
     </div>`;
   },
 
