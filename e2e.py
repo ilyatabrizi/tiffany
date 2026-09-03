@@ -76,6 +76,15 @@ def run(shots_only=False):
         check('boot veil lifted', page.locator('#boot').count() == 0)
         check('wordmark drawn', page.locator('.hero-mark').is_visible())
         check('campaign film present', page.locator('.hero video').count() == 1)
+        check('the film is running', page.evaluate(
+            "(()=>{const v=document.querySelector('.hero video');"
+            "return !v.paused && v.currentTime > 0})()"))
+        # the poster used to be the only positioned layer, so it painted over a
+        # playing video and the hero was a still. never again.
+        check('the film paints over its poster', page.evaluate(
+            "(()=>{const e=document.elementFromPoint(195,300);return e&&e.tagName})()")
+            == 'VIDEO')
+        check('nothing floats over the film', page.locator('.hero-sound').count() == 0)
         check('three collections', page.locator('.ccard').count() == 3)
         check('new-in rail filled', page.locator('.rail-p .card').count() >= 6)
         check('six looks', page.locator('.look-tile').count() == 6)

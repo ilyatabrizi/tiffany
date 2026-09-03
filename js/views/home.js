@@ -12,8 +12,6 @@ const hero = () => `
     <video src="media/hero.mp4" poster="media/hero-poster.webp" muted playsinline
            loop preload="metadata" aria-label="Campaign film"></video>
   </div>
-  <button class="hero-sound" type="button" aria-label="Pause the film"
-          aria-pressed="false">${icon('pause', 16)}</button>
   <div class="hero-body">
     <h1 class="hero-mark" aria-label="${BRAND.name} ${BRAND.sub}"></h1>
     <p class="hero-lede">${BRAND.lede}</p>

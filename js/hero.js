@@ -5,24 +5,17 @@
    nothing looks broken. The clip is paused whenever it scrolls out of view or
    the tab is hidden, because a looping video behind five screens of content is
    pure battery. */
-import { icon } from './icons.js';
-
 export function mountHero(root, signal) {
   const hero = root.querySelector('.hero');
   const vid = root.querySelector('.hero video');
   if (!hero || !vid) return;
 
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const btn = root.querySelector('.hero-sound');
-
-  if (reduce.matches) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     vid.remove();
-    if (btn) btn.hidden = true;
     return;
   }
 
-  let wanted = true;
-  const tryPlay = () => { if (wanted) vid.play().catch(() => { /* poster carries it */ }); };
+  const tryPlay = () => vid.play().catch(() => { /* the poster carries it */ });
   vid.addEventListener('playing', () => vid.classList.add('ready'), { once: true });
   tryPlay();
 
@@ -38,15 +31,6 @@ export function mountHero(root, signal) {
   const kick = () => tryPlay();
   document.addEventListener('touchstart', kick, { once: true, passive: true, signal });
   document.addEventListener('click', kick, { once: true, signal });
-
-  btn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    wanted = !wanted;
-    if (wanted) { tryPlay(); } else { vid.pause(); }
-    btn.innerHTML = icon(wanted ? 'pause' : 'play', 16);
-    btn.setAttribute('aria-label', wanted ? 'Pause the film' : 'Play the film');
-    btn.setAttribute('aria-pressed', String(!wanted));
-  }, { signal });
 
   signal?.addEventListener('abort', () => { io.disconnect(); vid.pause(); });
 }

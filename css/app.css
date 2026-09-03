@@ -306,17 +306,24 @@ h3.serif { font-size: 22px; line-height: 1.2; }
   display: flex; align-items: flex-end;
 }
 .hero-media { position: absolute; inset: 0; }
+/* Both layers are positioned. A static video under an absolute poster paints
+   BEHIND it — the film plays and nobody ever sees it. DOM order decides
+   instead: poster first, video over it, fading in once it is actually running. */
 .hero-media img, .hero-media video {
+  position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover;
 }
 .hero-media video { opacity: 0; transition: opacity .9s var(--ease); }
 .hero-media video.ready { opacity: 1; }
-.hero-media img { position: absolute; inset: 0; }
 .hero::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
+  /* The film moves, so the type cannot rely on what is behind it. The middle
+     of the frame stays clear; the lower third is scrimmed to near-paper so ink
+     reads over a light garment and a dark one alike. */
   background: linear-gradient(to bottom,
-    rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, 0) 26%,
-    rgba(255, 255, 255, 0) 44%, var(--paper) 96%);
+    rgba(255, 255, 255, .5) 0%, rgba(255, 255, 255, 0) 22%,
+    rgba(255, 255, 255, .42) 58%, rgba(255, 255, 255, .86) 78%,
+    var(--paper) 94%);
 }
 @media (prefers-color-scheme: dark) {
   html[data-theme='auto'] .hero::after {
@@ -352,15 +359,6 @@ html[data-theme='dark'] .hero::after {
 .hero-cta { display: flex; gap: 9px; justify-content: center;
   animation: rise .9s var(--ease) .32s both; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
-
-.hero-sound {
-  position: absolute; z-index: 3; right: var(--gap); top: calc(var(--st) + 14px);
-  width: 38px; height: 38px; border-radius: 999px;
-  display: grid; place-items: center;
-  background: var(--glass-2); border: 1px solid var(--line-soft);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-}
 
 /* ------------------------------------------------------------ buttons */
 .btn {

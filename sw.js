@@ -4,7 +4,7 @@
    Photographs and the campaign clip are cached as they are first seen, so a
    second visit on a bad connection opens instantly without paying 1.4MB of
    video up front. */
-const V = 'tiffany-v1';
+const V = 'tiffany-v2';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
   'js/app.js', 'js/colour.js', 'js/config.js', 'js/data.js', 'js/hero.js',
