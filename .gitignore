@@ -4,3 +4,6 @@ __pycache__/
 docs/contact-sheet.png
 # the studio's uncompressed campaign film — 3.8MB, kept local, not shipped
 media/raw/campaign-film.mp4
+
+# the upload bundle is built on demand, never committed
+dist/

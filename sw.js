@@ -1,10 +1,18 @@
 /* Offline shell.
 
-   Precache is the app itself — markup, styles, modules, fonts, brand marks.
-   Photographs and the campaign clip are cached as they are first seen, so a
-   second visit on a bad connection opens instantly without paying 1.4MB of
-   video up front. */
-const V = 'tiffany-v3';
+   Strategy is split by what the thing IS, because a shop on its own domain
+   gets edited and a stale price is worse than a slow one:
+
+     markup, styles, modules, manifest -> network first, cache as fallback
+     images, fonts                     -> cache first, refreshed in background
+     the campaign clip                 -> straight to the network (Range)
+
+   Network-first is a lie without cache:'reload'. A plain fetch() inside a
+   worker still reads the browser's HTTP cache, and the host sends its own
+   max-age, so the "network" copy can be the stale one. Every revalidation
+   below bypasses it explicitly. */
+const V = 'tiffany-v4';
+
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
   'js/app.js', 'js/colour.js', 'js/config.js', 'js/data.js', 'js/hero.js',
@@ -21,45 +29,73 @@ const SHELL = [
   'media/hero-poster.webp',
 ];
 
+/* A local preview must never be served from cache, or every edit needs a
+   version bump before it shows up. */
+const DEV = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
+
 self.addEventListener('install', (e) => {
-  if (['localhost', '127.0.0.1'].includes(self.location.hostname)) {
-    self.skipWaiting();
-    return;
-  }
+  if (DEV) { self.skipWaiting(); return; }
   e.waitUntil(caches.open(V)
-    .then((c) => Promise.allSettled(SHELL.map((u) => c.add(u))))
+    .then((c) => Promise.allSettled(
+      SHELL.map((u) => c.add(new Request(u, { cache: 'reload' })))))
     .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys()
-    .then((keys) => Promise.all(keys.filter((k) => k !== V).map((k) => caches.delete(k))))
-    .then(() => self.clients.claim()));
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    const upgrade = keys.some((k) => k.startsWith('tiffany-') && k !== V);
+    await Promise.all(keys.filter((k) => k !== V).map((k) => caches.delete(k)));
+    /* Claiming on a COLD install hands pages that already loaded without a
+       worker to a cache that has only just started filling. Take over an
+       upgrade; leave a first visit alone and pick it up on the next load. */
+    if (upgrade) await self.clients.claim();
+  })());
 });
 
-/* Local preview: never serve from cache, or every edit needs a version bump. */
-const DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname);
+/* ------------------------------------------------------------ strategies */
+async function fresh(request) {
+  const cache = await caches.open(V);
+  try {
+    const res = await fetch(request.url, {
+      cache: 'reload', credentials: 'same-origin',
+    });
+    if (res && res.ok && res.type === 'basic') cache.put(request, res.clone());
+    return res;
+  } catch {
+    const hit = await cache.match(request)
+      || (request.mode === 'navigate' ? await cache.match('index.html') : null);
+    if (hit) return hit;
+    return Response.error();
+  }
+}
+
+async function fast(request) {
+  const cache = await caches.open(V);
+  const hit = await cache.match(request);
+  const net = fetch(request).then((res) => {
+    if (res && res.ok && res.type === 'basic') cache.put(request, res.clone());
+    return res;
+  }).catch(() => null);
+  return hit || (await net) || Response.error();
+}
 
 self.addEventListener('fetch', (e) => {
   if (DEV) return;
   const { request } = e;
   if (request.method !== 'GET') return;
+
   const url = new URL(request.url);
   if (url.origin !== location.origin) return;
 
-  /* Video needs Range support; let the network own it. */
+  /* Video needs Range support; the network owns it entirely. */
   if (request.destination === 'video' || request.headers.has('range')) return;
 
-  if (request.mode === 'navigate') {
-    e.respondWith(fetch(request).catch(() => caches.match('index.html')));
+  const d = request.destination;
+  if (request.mode === 'navigate' || d === 'document' || d === 'script'
+      || d === 'style' || d === 'manifest' || url.pathname.endsWith('.webmanifest')) {
+    e.respondWith(fresh(request));
     return;
   }
-
-  e.respondWith(caches.match(request).then((hit) => hit || fetch(request).then((res) => {
-    if (res.ok && res.type === 'basic') {
-      const copy = res.clone();
-      caches.open(V).then((c) => c.put(request, copy));
-    }
-    return res;
-  }).catch(() => Response.error())));
+  e.respondWith(fast(request));
 });

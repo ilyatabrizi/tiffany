@@ -1,0 +1,70 @@
+# TIFFANY by Vanda — static PWA on cPanel/LiteSpeed.
+# Every module is guarded: a host without one of these must not 500 the site.
+
+Options -Indexes
+DirectoryIndex index.html
+
+# ---------------------------------------------------------------- MIME
+# cPanel images often have no mapping for .webmanifest, which silently breaks
+# "Add to Home Screen", and an unknown .woff2 gets downloaded instead of used.
+<IfModule mod_mime.c>
+  AddType application/manifest+json  .webmanifest
+  AddType text/javascript            .js
+  AddType font/woff2                 .woff2
+  AddType image/webp                 .webp
+  AddType video/mp4                  .mp4
+  AddType image/svg+xml              .svg
+  AddCharset UTF-8                   .html .css .js .webmanifest .json .svg
+</IfModule>
+
+# ------------------------------------------------------------ canonical
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # https, once the certificate is issued
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # one hostname, not two
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# -------------------------------------------------------------- caching
+# The app is hash-routed, so index.html is the only page there is — it must
+# never be held. sw.js must never be held either, or an update can never
+# arrive. Fingerprint-free assets get a week and the worker revalidates them.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  <Files "sw.js">
+    Header set Cache-Control "no-cache, must-revalidate"
+    Header set Service-Worker-Allowed "/"
+  </Files>
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "\.(webp|jpg|jpeg|png|svg|woff2|mp4)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ---------------------------------------------------------- compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript \
+    application/javascript application/json application/manifest+json \
+    image/svg+xml
+</IfModule>
+
+# The hero clip is streamed; byte ranges must survive.
+<IfModule mod_headers.c>
+  <FilesMatch "\.mp4$">
+    Header set Accept-Ranges bytes
+  </FilesMatch>
+</IfModule>
+
+ErrorDocument 404 /404.html
