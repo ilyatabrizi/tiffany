@@ -11,11 +11,11 @@ import { shot, empty, openSheet } from '../ui.js';
 
 /* minutes after placing → the stage it reaches */
 const STAGES = [
-  { at: 0, name: 'Order placed', note: 'We have it. You will get an SMS.' },
-  { at: 2, name: 'Preparing', note: 'Picked and being wrapped at the studio.' },
-  { at: 10, name: 'With the courier', note: 'Handed over and on the road.' },
-  { at: 30, name: 'Out for delivery', note: 'The courier will call before arriving.' },
-  { at: 120, name: 'Delivered', note: 'Exchanges are open for 7 days.' },
+  { at: 0, name: 'ثبت شد', note: 'سفارشت رسید. پیامک برایت می‌آید.' },
+  { at: 2, name: 'در حال آماده‌سازی', note: 'از انبار جمع شد و دارد بسته می‌شود.' },
+  { at: 10, name: 'تحویل پیک', note: 'تحویل پیک شد و راه افتاد.' },
+  { at: 30, name: 'در مسیر', note: 'پیک قبل از رسیدن زنگ می‌زند.' },
+  { at: 120, name: 'تحویل شد', note: 'تا ۷ روز می‌توانی تعویضش کنی.' },
 ];
 
 export function stageOf(order) {
@@ -27,7 +27,7 @@ export function stageOf(order) {
 
 const ETA = (order) => {
   const d = new Date(order.placed + 3 * 86400000);
-  return `${fullDate(d)}, ${relDay(d).toLowerCase()}`;
+  return `${fullDate(d)}، ${relDay(d)}`;
 };
 
 function orderCard(o) {
@@ -38,16 +38,16 @@ function orderCard(o) {
   <button class="order" data-act="order" data-code="${o.code}" type="button"
           style="--dot:${i === STAGES.length - 1 ? 'var(--muted)' : 'var(--c-cherry)'}">
     <span class="order-top">
-      <span class="order-code">${esc(o.code)}</span>
+      <span class="order-code" dir="ltr">${esc(o.code)}</span>
       <span class="status"><i></i>${esc(stage.name)}</span>
     </span>
     <span class="order-thumbs">
       ${items.slice(0, 5).map((p) => `<img src="assets/img/${p.img}-480.webp"
         alt="${esc(p.name)}" loading="lazy" decoding="async" width="42" height="52">`).join('')}
-      ${items.length > 5 ? `<span class="tiny" style="align-self:center">+${items.length - 5}</span>` : ''}
+      ${items.length > 5 ? `<span class="tiny" style="align-self:center">${num(items.length - 5)}+</span>` : ''}
     </span>
     <span class="order-foot">
-      <span>${fullDate(new Date(o.placed))}, ${timeOf(new Date(o.placed))}</span>
+      <span>${fullDate(new Date(o.placed))}، ساعت ${timeOf(new Date(o.placed))}</span>
       <span>${toman(o.total)}</span>
     </span>
   </button>`;
@@ -57,10 +57,10 @@ function trackSheet(o, { sample = false } = {}) {
   const now = sample ? 2 : stageOf(o);
   const items = o.items.map((l) => ({ l, p: getProduct(l.id) })).filter((x) => x.p);
   openSheet(`
-    <h2>${sample ? 'Sample tracking' : esc(o.code)}</h2>
+    <h2>${sample ? 'نمونهٔ پیگیری' : `<span dir="ltr">${esc(o.code)}</span>`}</h2>
     <p class="lede">${sample
-      ? 'This is what an order looks like once it is on its way.'
-      : `Estimated delivery ${esc(ETA(o))}.`}</p>
+      ? 'وقتی سفارشی در راه باشد، این شکلی دیده می‌شود.'
+      : `تحویل تقریبی ${esc(ETA(o))}.`}</p>
 
     <div class="track" style="--accent:var(--c-cherry)">
       ${STAGES.map((s, i) => `
@@ -70,31 +70,31 @@ function trackSheet(o, { sample = false } = {}) {
     </div>
 
     ${items.length ? `
-    <p class="eyebrow" style="margin:12px 0 4px">In this order</p>
+    <p class="eyebrow" style="margin:12px 0 4px">توی این سفارش</p>
     ${items.map(({ l, p }) => `
       <div class="line">
         <span class="shot"><img ${shot(p.img, '78px')} alt="${esc(p.name)}"
           loading="lazy" decoding="async" width="480" height="600"></span>
         <div>
           <div class="line-name">${esc(p.name)}</div>
-          <div class="line-opt">${esc(l.size)} · ${esc(l.colour)} · ${num(l.qty)}</div>
+          <div class="line-opt"><span dir="ltr">${esc(l.size)}</span> — ${esc(l.colour)} — ${num(l.qty)} عدد</div>
           <div class="line-foot"><span></span>
             <span class="line-price">${toman(p.price * l.qty)}</span></div>
         </div>
       </div>`).join('')}
     <div class="totals">
-      <div class="trow"><span>Subtotal</span><b>${toman(o.subtotal)}</b></div>
-      <div class="trow"><span>Delivery</span><b>${o.shipping ? toman(o.shipping) : 'Free'}</b></div>
-      <div class="trow big"><span>Total</span><b>${toman(o.total)}</b></div>
+      <div class="trow"><span>جمع</span><b>${toman(o.subtotal)}</b></div>
+      <div class="trow"><span>ارسال</span><b>${o.shipping ? toman(o.shipping) : 'رایگان'}</b></div>
+      <div class="trow big"><span>مبلغ کل</span><b>${toman(o.total)}</b></div>
     </div>` : ''}
 
     ${!sample && o.address?.line ? `
-    <p class="eyebrow" style="margin:16px 0 6px">Delivering to</p>
+    <p class="eyebrow" style="margin:16px 0 6px">ارسال به</p>
     <p class="lede" style="margin:0">${esc(o.address.line)}, ${esc(o.address.city)}</p>` : ''}
 
     <div class="topgap"></div>
-    <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">Close</button>`,
-  { label: 'Tracking' });
+    <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">بستن</button>`,
+  { label: 'پیگیری سفارش' });
 }
 
 const SAMPLE = () => ({
@@ -107,25 +107,25 @@ const SAMPLE = () => ({
 
 export default {
   tab: 'orders',
-  title: 'Orders',
+  title: 'سفارش‌ها',
   topbarAt: 20,
 
   render() {
     if (!state.orders.length) {
       return `<div class="wrap"><div class="topgap"></div>
-        <h1 class="serif" style="font-size:30px">Orders</h1></div>
-        ${empty('box', 'No orders yet',
-          'Once you order, this is where the courier turns up.',
-          `<button class="btn btn-ink btn-s" data-act="nav" data-to="/shop" type="button">Shop the season</button>
+        <h1 class="serif" style="font-size:30px">سفارش‌ها</h1></div>
+        ${empty('box', 'هنوز سفارشی نداری',
+          'وقتی سفارش بدهی، پیک از همین‌جا پیدایش می‌شود.',
+          `<button class="btn btn-ink btn-s" data-act="nav" data-to="/shop" type="button">خرید کالکشن</button>
            <div style="height:9px"></div>
-           <button class="btn btn-line btn-s" data-act="sample" type="button">See how tracking looks</button>`)}`;
+           <button class="btn btn-line btn-s" data-act="sample" type="button">ببین پیگیری چه شکلی است</button>`)}`;
     }
     return `
     <div class="wrap">
       <div class="topgap"></div>
-      <h1 class="serif" style="font-size:30px">Orders</h1>
+      <h1 class="serif" style="font-size:30px">سفارش‌ها</h1>
       <p class="lede" style="margin-bottom:18px">${num(state.orders.length)}
-        order${state.orders.length === 1 ? '' : 's'} on this phone.</p>
+        سفارش روی همین گوشی.</p>
       ${state.orders.map(orderCard).join('')}
       <div style="height:30px"></div>
     </div>`;

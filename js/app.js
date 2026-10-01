@@ -1,7 +1,7 @@
 /* Boot, routing, the two glass bars, and one click delegate for the lot. */
 import { BRAND } from './config.js';
 import { icon } from './icons.js';
-import { $, $$ } from './util.js';
+import { $, $$, num } from './util.js';
 import { start, onRoute, go, back, parse, recallScroll } from './router.js';
 import { flipWish, closeSheet, sheetIsOpen, toast } from './ui.js';
 import { state, bagCount, isWished } from './store.js';
@@ -27,11 +27,11 @@ const VIEWS = {
 /* Each tab owns one of the five colours. It is the only colour in the chrome,
    and it only shows on the tab you are standing on. */
 const TABS = [
-  { id: 'home', to: '/', label: 'Home', ico: 'home', c: 'var(--c-blush)' },
-  { id: 'shop', to: '/shop', label: 'Shop', ico: 'hanger', c: 'var(--c-sky)' },
-  { id: 'bag', to: '/bag', label: 'Bag', ico: 'bag', c: 'var(--c-cherry)' },
-  { id: 'orders', to: '/orders', label: 'Orders', ico: 'box', c: 'var(--c-rust)' },
-  { id: 'profile', to: '/profile', label: 'Profile', ico: 'user', c: 'var(--c-lilac)' },
+  { id: 'home', to: '/', label: 'خانه', ico: 'home', c: 'var(--c-blush)' },
+  { id: 'shop', to: '/shop', label: 'فروشگاه', ico: 'hanger', c: 'var(--c-sky)' },
+  { id: 'bag', to: '/bag', label: 'سبد', ico: 'bag', c: 'var(--c-cherry)' },
+  { id: 'orders', to: '/orders', label: 'سفارش‌ها', ico: 'box', c: 'var(--c-rust)' },
+  { id: 'profile', to: '/profile', label: 'پروفایل', ico: 'user', c: 'var(--c-lilac)' },
 ];
 
 const app = $('#app');
@@ -97,7 +97,7 @@ function badgeTabs() {
   const dot = tabbar.querySelector('[data-tab="bag"] .tab-dot');
   if (!dot) return;
   dot.hidden = !n;
-  dot.textContent = String(n);
+  dot.textContent = num(n);
 }
 
 /* ---------------------------------------------------------------- topbar */
@@ -109,6 +109,8 @@ function wireTopbar(view, parts, signal) {
 
   topTitle.textContent = isHome ? BRAND.name : title;
   topTitle.classList.toggle('mark', isHome);
+  /* The wordmark is Latin; everything else in the bar is Persian. */
+  topTitle.setAttribute('dir', isHome ? 'ltr' : 'rtl');
   topBack.hidden = !view.back;
   topAct.hidden = !meta.wishId;
   if (meta.wishId) {
@@ -116,7 +118,7 @@ function wireTopbar(view, parts, signal) {
     topAct.dataset.id = meta.wishId;
     topAct.innerHTML = icon('heart', 19);
     topAct.setAttribute('aria-pressed', String(isWished(meta.wishId)));
-    topAct.setAttribute('aria-label', 'Save this piece');
+    topAct.setAttribute('aria-label', 'ذخیرهٔ این قطعه');
     topAct.classList.toggle('on', isWished(meta.wishId));
   }
 
@@ -210,7 +212,7 @@ async function share() {
   try {
     if (navigator.share) { await navigator.share({ title: BRAND.full, url }); return; }
     await navigator.clipboard.writeText(url);
-    toast('Link copied', 'check');
+    toast('لینک کپی شد', 'check');
   } catch { /* the user dismissed it */ }
 }
 

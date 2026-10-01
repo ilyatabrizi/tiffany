@@ -1,8 +1,8 @@
 # TIFFANY by Vanda — shop preview
 
 A black-and-white, installable storefront for **TIFFANY by Vanda**, women's
-ready-to-wear, Iran. English throughout, iOS design language, built as a PWA so
-it installs from Safari with no app store in the way.
+ready-to-wear, Iran. **Persian throughout, right to left**, iOS design language,
+built as a PWA so it installs from Safari with no app store in the way.
 
 Live: **https://ilyatabrizi.github.io/tiffany/**
 Instagram: [@tiffanyiran](https://instagram.com/tiffanyiran)
@@ -10,6 +10,34 @@ Instagram: [@tiffanyiran](https://instagram.com/tiffanyiran)
 ![Home, shop, a product, the look viewer and a collection](docs/preview.webp)
 
 ---
+
+## Language
+
+The interface is Persian and the page is `dir="rtl"`. What deliberately stays in
+Latin script is everything that is a **name** rather than a word:
+
+- the wordmark, **TIFFANY / BY VANDA**
+- the three collection names, **Pastel Play**, **Lace Noir**, **Desert Hours**
+- the size codes, **XS–XL** (one-size reads فری‌سایز)
+- the Instagram handle and **Alpha Agency**
+- the order number prefix, `TF-`
+
+Translating those would be translating a logo.
+
+Type is **IRANYekanX**, the Farsi-numeral cut, as a single variable file —
+every weight from one 90KB download. The FaNum build maps a Latin digit to ۰–۹
+itself, which is why nothing in the JavaScript ever converts a digit; prices and
+dates come from `Intl` with `fa-IR`, so the thousands separator is ٬ and dates
+are Jalali. Cormorant is still here but is held to a Latin `unicode-range`, so
+the collection names keep their serif and no Persian word is ever asked of a
+font with no Persian in it.
+
+Two rules that cost real bugs on the way:
+
+- **Arabic script is never letter-spaced** — it breaks the joins. Tracking comes
+  back only on runs that are Latin by construction.
+- **`·` and `۰` are the same circle in this face.** The middot is banned
+  outright as a separator, and the suite fails the build if one appears.
 
 ## The idea
 
@@ -38,11 +66,11 @@ Profile lilac.
 
 | Tab | What it does |
 | --- | --- |
-| **Home** | Full-bleed campaign film, the three collections, new in, the looks strip, an editorial block |
-| **Shop** | 17 pieces, category chips in a sticky glass bar, a filter sheet for collection / size / sort |
-| **Bag** | Line items with steppers, a free-delivery bar, a full checkout sheet that writes a real order |
-| **Orders** | Order list with a live status, a five-stage tracking sheet, and a sample so an empty tab still demos |
-| **Profile** | Saved pieces, orders, **Your fit**, delivery details, colour mode, light/dark, install |
+| **خانه** | Full-bleed campaign film, the three collections, new in, the looks strip, an editorial block |
+| **فروشگاه** | 17 pieces, category chips in a sticky glass bar, a filter sheet for collection / size / sort |
+| **سبد** | Line items with steppers, a free-delivery bar, a full checkout sheet that writes a real order |
+| **سفارش‌ها** | Order list with a live status, a five-stage tracking sheet, and a sample so an empty tab still demos |
+| **پروفایل** | Saved pieces, orders, **اندازه‌های من**, delivery details, colour mode, light/dark, install |
 
 Beyond the five:
 
@@ -61,13 +89,20 @@ python3 serve.py          # http://localhost:8131
 ```
 
 ```bash
-python3 e2e.py            # 76 checks in a real browser, plus docs/shots/
+python3 e2e.py            # 85 checks in a real browser, plus docs/shots/
 ```
 
 `e2e.py` drives the system Chrome through Playwright — no browser download. It
 walks every route, adds to the bag, checks out, tracks the order, opens the look
 viewer, flips both appearance switches, and fails on **any** console error,
 page error or failed request.
+
+It also guards the Persian specifically: that the page is `fa`/`rtl`, that
+IRANYekanX is the resolved body face, that no Latin digit and no middot reach
+the page, that the thousands separator is ٬, that no Latin comma or question
+mark is sitting inside a Persian sentence, and that paging the look viewer's
+**RTL** scroll track still lands on the right slide — engines disagree about the
+sign of `scrollLeft` in RTL, so the viewer probes it rather than assuming.
 
 ## Rebuilding the assets
 
@@ -123,7 +158,8 @@ The **photography is the studio's own**. Nothing else is.
 
 Every product name, price, fabric, care instruction, measurement, delivery
 time, returns window and the free-delivery threshold is copy written to make
-the preview read like a real shop. The three collections — Pastel Play, Lace
+the preview read like a real shop — **in Persian, which makes it read more
+convincingly, not less**. The three collections — Pastel Play, Lace
 Noir, Desert Hours — are named from the campaigns, not from the studio's own
 line sheet. Product photographs are **crops of campaign frames**, not shot on
 white; a real shop needs real product photography.

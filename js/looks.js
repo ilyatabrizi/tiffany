@@ -1,6 +1,11 @@
-/* The look viewer: full-bleed campaign frames you swipe through, each one
-   carrying the pieces it was shot in. Always in colour — this is the one place
-   the shop stops holding back. */
+/* لوک‌ها — the look viewer: full-bleed campaign frames you swipe through, each
+   one carrying the pieces it was shot in. Always in colour — this is the one
+   place the shop stops holding back.
+
+   The track scrolls horizontally inside an RTL page, which is the one piece of
+   geometry a direction flip genuinely breaks. Engines disagree about the sign
+   of scrollLeft in RTL, so nothing below assumes one: the sign is measured off
+   the live element once and every read and write goes through it. */
 import { LOOKS, getProduct } from './data.js';
 import { icon } from './icons.js';
 import { esc, toman } from './util.js';
@@ -40,7 +45,7 @@ export function openLooks(index = 0) {
       ${LOOKS.map(() => '<i></i>').join('')}
     </div>
     <button class="viewer-close" data-act="viewer-close" type="button"
-            aria-label="Close looks">${icon('close', 19)}</button>
+            aria-label="بستن لوک‌ها">${icon('close', 19)}</button>
     <div class="viewer-track" id="viewerTrack" tabindex="-1">
       ${LOOKS.map(slide).join('')}
     </div>`;
@@ -54,12 +59,23 @@ export function openLooks(index = 0) {
 
   /* Layout has to settle before scrollLeft means anything. */
   void track.offsetWidth;
-  track.scrollLeft = track.clientWidth * index;
+
+  /* Probe the engine rather than trusting it. In an RTL track some browsers
+     count scrollLeft up from the left edge and others count it DOWN from zero
+     at the right; writing 1 and reading it back says which, because the
+     negative convention clamps straight back to 0. */
+  track.scrollLeft = 1;
+  const sign = track.scrollLeft > 0 ? 1 : -1;
+  track.scrollLeft = 0;
+
+  const page = () => Math.max(1, track.clientWidth);
+  const goTo = (i) => { track.scrollLeft = sign * page() * i; };
+  const at = () => Math.round(Math.abs(track.scrollLeft) / page());
+
+  goTo(index);
   mark(index);
 
-  track.addEventListener('scroll', () => {
-    mark(Math.round(track.scrollLeft / Math.max(1, track.clientWidth)));
-  }, { passive: true });
+  track.addEventListener('scroll', () => mark(at()), { passive: true });
 
   track.focus({ preventScroll: true });
 

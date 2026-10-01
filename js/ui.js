@@ -36,7 +36,7 @@ export function productCard(p, { sizes = '(max-width:620px) 44vw, 230px' } = {})
     </button>
     <button class="card-wish ${wished ? 'on' : ''}" data-act="wish" data-id="${p.id}"
             type="button" aria-pressed="${wished}"
-            aria-label="Save ${esc(p.name)}">${icon('heart', 17)}</button>
+            aria-label="ذخیرهٔ ${esc(p.name)}">${icon('heart', 17)}</button>
   </div>`;
 }
 
@@ -93,10 +93,10 @@ export function recommendSize(product) {
   if (product.fit === 'relaxed' && best.score === 0) idx = clamp(idx - 0, 0, SIZES.length - 1);
 
   const why = product.fit === 'small'
-    ? 'This one is cut close — we have sized you up.'
+    ? 'این یکی تنگ دوخته شده — یک سایز بالاتر گرفتیم برایت.'
     : product.fit === 'relaxed'
-      ? 'Cut relaxed. Size down if you want it closer to the body.'
-      : 'Based on the measurements saved in your profile.';
+      ? 'گشاد دوخته شده. اگر چسبان‌تر می‌خواهی یک سایز پایین‌تر بگیر.'
+      : 'بر اساس اندازه‌هایی که توی پروفایلت ذخیره کرده‌ای.';
   return { size: SIZES[idx].id, why };
 }
 
@@ -113,7 +113,7 @@ export function flipWish(id) {
     if (el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', String(now));
   });
   const p = getProduct(id);
-  toast(now ? `Saved — ${p ? p.name : 'piece'}` : 'Removed from saved', 'heart');
+  toast(now ? `ذخیره شد — ${p ? p.name : 'این قطعه'}` : 'از ذخیره‌ها برداشته شد', 'heart');
   return now;
 }
 
@@ -207,14 +207,14 @@ export const secHead = (title, more = '') => `
    the rest of the phrase rather than saying the name twice. */
 export const alphaSig = () => `
   <a class="alphasig" href="https://alphaa.agency" target="_blank" rel="noopener"
-     aria-label="Powered by Alpha Agency">
+     aria-label="ساخته شده در Alpha Agency">
     <span class="alphasig__mark" aria-hidden="true"></span>
     <span class="alphasig__txt">
-      <span class="alphasig__by">Powered by</span>
-      <span class="alphasig__name">Alpha Agency</span>
+      <span class="alphasig__by">ساخته شده در</span>
+      <span class="alphasig__name" dir="ltr">Alpha Agency</span>
     </span>
   </a>`;
 
-export const moreLink = (to, label = 'See all') =>
+export const moreLink = (to, label = 'همه') =>
   `<button class="link-more" data-act="nav" data-to="${to}" type="button">
      ${esc(label)}${icon('arrow', 14)}</button>`;

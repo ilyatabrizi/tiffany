@@ -12,21 +12,21 @@ const hero = () => `
   <div class="hero-media full-colour">
     <img src="media/hero-poster.webp" alt="" width="576" height="1024" fetchpriority="high">
     <video src="media/hero.mp4" poster="media/hero-poster.webp" muted playsinline
-           loop preload="metadata" aria-label="Campaign film"></video>
+           loop preload="metadata" aria-label="فیلم کمپین"></video>
   </div>
   <div class="hero-body">
     <h1 class="hero-mark" aria-label="${BRAND.name} ${BRAND.sub}"></h1>
     <p class="hero-lede">${BRAND.lede}</p>
     <div class="hero-cta">
-      <button class="btn btn-ink" data-act="nav" data-to="/shop" type="button">Shop the season</button>
-      <button class="btn btn-line" data-act="look" data-i="0" type="button">Looks</button>
+      <button class="btn btn-ink" data-act="nav" data-to="/shop" type="button">خرید کالکشن</button>
+      <button class="btn btn-line" data-act="look" data-i="0" type="button">لوک‌ها</button>
     </div>
   </div>
 </section>`;
 
 const collections = () => `
 <section class="sec">
-  ${secHead('Collections')}
+  ${secHead('کالکشن‌ها')}
   <div class="rail rail-c">
     ${COLLECTIONS.map((c) => collectionCard(c)).join('')}
   </div>
@@ -34,7 +34,7 @@ const collections = () => `
 
 const fresh = () => `
 <section class="sec">
-  ${secHead('New in', moreLink('/shop'))}
+  ${secHead('تازه‌رسیده‌ها', moreLink('/shop'))}
   <div class="rail rail-p">
     ${newIn().map((p) => productCard(p, { sizes: '(max-width:520px) 63vw, 250px' })).join('')}
   </div>
@@ -42,7 +42,7 @@ const fresh = () => `
 
 const looks = () => `
 <section class="sec">
-  ${secHead('The looks', moreLink('/shop', 'Shop all'))}
+  ${secHead('لوک‌ها', moreLink('/shop', 'همه رو ببین'))}
   <div class="looks-strip">
     ${LOOKS.map((l, i) => lookTile(l, i)).join('')}
   </div>
@@ -52,42 +52,42 @@ const editorial = () => `
 <section class="sec">
   <article class="ed">
     <span class="shot">
-      <img ${shot('ed-noir', '(max-width:520px) 92vw, 470px')} alt="Lace Noir, campaign"
+      <img ${shot('ed-noir', '(max-width:520px) 92vw, 470px')} alt="کمپین Lace Noir"
            loading="lazy" decoding="async" width="480" height="300">
     </span>
     <div class="ed-body">
-      <p class="eyebrow">The house line</p>
-      <h3 class="serif">Lace Noir</h3>
-      <p class="lede">Black, white, and the lace that argues with both. Remade
-        every year because it never stops selling.</p>
+      <p class="eyebrow">خط اصلی برند</p>
+      <h3 class="serif" dir="ltr">Lace Noir</h3>
+      <p class="lede">مشکی، سفید، و دانتلی که با هر دوشان بحث می‌کند. هر سال
+        دوباره دوخته می‌شود، چون هیچ‌وقت فروشش تمام نمی‌شود.</p>
       <div style="height:16px"></div>
       <button class="btn btn-line btn-s" data-act="collection" data-id="noir"
-              type="button">See the collection</button>
+              type="button">دیدن کالکشن</button>
     </div>
   </article>
 </section>`;
 
 const quote = () => `
 <section class="quote">
-  <p>Colour belongs to the clothes, not the page.</p>
-  <cite class="swap" data-touch="Touch a piece to see it"
-        data-hover="Hover a piece to see it"></cite>
+  <p>رنگ مال لباس‌هاست، نه صفحه.</p>
+  <cite class="swap" data-touch="یکی رو لمس کن تا رنگش بیاد"
+        data-hover="نشانگر رو روی یکی ببر تا رنگش بیاد"></cite>
 </section>`;
 
 const footer = () => `
 <footer class="footer">
   <div class="footer-mark"></div>
   <p>${BRAND.tagline}</p>
-  <p>Free delivery over 3,500,000 Toman.</p>
+  <p>ارسال رایگان برای خرید بالای ۳٬۵۰۰٬۰۰۰ تومان.</p>
   <a class="ig" href="${BRAND.instagramUrl}" target="_blank" rel="noopener">
     ${icon('instagram', 17)}@${BRAND.instagram}</a>
 
   <div class="footer-rule"></div>
   ${alphaSig()}
-  <p class="footer-legal">© ${new Date().getFullYear()} ${BRAND.full}</p>
+  <p class="footer-legal" dir="ltr">© ${new Date().getFullYear()} ${BRAND.full}</p>
 
-  <div class="notice">Preview build. Photography is the studio’s own; every
-    price, name, fabric and delivery time on this site is placeholder copy.</div>
+  <div class="notice">نسخهٔ پیش‌نمایش. عکس‌ها مال خود برند است؛ قیمت‌ها، اسم‌ها،
+    جنس پارچه و زمان ارسال روی این سایت همگی نمونه‌اند.</div>
 </footer>`;
 
 export default {

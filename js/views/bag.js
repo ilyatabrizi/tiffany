@@ -31,12 +31,12 @@ function lineHTML(l) {
     </button>
     <div>
       <div class="line-name">${esc(p.name)}</div>
-      <div class="line-opt">${esc(l.size)} · ${esc(l.colour)}</div>
+      <div class="line-opt"><span dir="ltr">${esc(l.size)}</span> — ${esc(l.colour)}</div>
       <div class="line-foot">
         <div class="stepper">
-          <button data-qty="-1" type="button" aria-label="One fewer">${icon('minus', 15)}</button>
+          <button data-qty="-1" type="button" aria-label="یکی کمتر">${icon('minus', 15)}</button>
           <b>${num(l.qty)}</b>
-          <button data-qty="1" type="button" aria-label="One more">${icon('plus', 15)}</button>
+          <button data-qty="1" type="button" aria-label="یکی بیشتر">${icon('plus', 15)}</button>
         </div>
         <span class="line-price">${toman(p.price * l.qty)}</span>
       </div>
@@ -50,48 +50,48 @@ function checkoutSheet() {
   const { profile, address } = state;
 
   openSheet(`
-    <h2>Checkout</h2>
-    <p class="lede">Preview only — no card is charged and nothing is sent.</p>
+    <h2>تکمیل خرید</h2>
+    <p class="lede">فقط پیش‌نمایش است — پولی کم نمی‌شود و چیزی ارسال نمی‌شود.</p>
 
     <form id="coForm" novalidate>
-      <p class="eyebrow" style="margin:18px 0 10px">Who it is for</p>
-      <div class="field"><label for="coName">Full name</label>
+      <p class="eyebrow" style="margin:18px 0 10px">برای چه کسی</p>
+      <div class="field"><label for="coName">نام و نام خانوادگی</label>
         <input id="coName" name="name" autocomplete="name" value="${esc(profile.name)}" required></div>
-      <div class="field"><label for="coPhone">Phone</label>
-        <input id="coPhone" name="phone" inputmode="tel" autocomplete="tel"
-               placeholder="09xx xxx xxxx" value="${esc(profile.phone)}" required></div>
+      <div class="field"><label for="coPhone">شمارهٔ موبایل</label>
+        <input id="coPhone" name="phone" inputmode="tel" autocomplete="tel" dir="ltr"
+               placeholder="۰۹۱۲ ۰۰۰ ۰۰۰۰" value="${esc(profile.phone)}" required></div>
 
-      <p class="eyebrow" style="margin:20px 0 10px">Where it goes</p>
-      <div class="field"><label for="coLine">Address</label>
+      <p class="eyebrow" style="margin:20px 0 10px">کجا بفرستیم</p>
+      <div class="field"><label for="coLine">نشانی</label>
         <textarea id="coLine" name="line" autocomplete="street-address"
-                  placeholder="Street, building, unit" required>${esc(address.line)}</textarea></div>
+                  placeholder="خیابان، پلاک، واحد" required>${esc(address.line)}</textarea></div>
       <div class="field-row">
-        <div class="field"><label for="coCity">City</label>
+        <div class="field"><label for="coCity">شهر</label>
           <input id="coCity" name="city" autocomplete="address-level2"
                  value="${esc(address.city)}" required></div>
-        <div class="field"><label for="coPostal">Post code</label>
-          <input id="coPostal" name="postal" inputmode="numeric"
+        <div class="field"><label for="coPostal">کد پستی</label>
+          <input id="coPostal" name="postal" inputmode="numeric" dir="ltr"
                  autocomplete="postal-code" value="${esc(address.postal)}"></div>
       </div>
 
-      <p class="eyebrow" style="margin:20px 0 10px">Payment</p>
+      <p class="eyebrow" style="margin:20px 0 10px">پرداخت</p>
       <div class="sizes">
-        <button class="chip on" data-pay="card" type="button">${icon('card', 15)}Card, on delivery</button>
-        <button class="chip" data-pay="online" type="button">${icon('lock', 15)}Pay online</button>
+        <button class="chip on" data-pay="card" type="button">${icon('card', 15)}کارت، موقع تحویل</button>
+        <button class="chip" data-pay="online" type="button">${icon('lock', 15)}پرداخت آنلاین</button>
       </div>
 
       <div class="totals">
-        <div class="trow"><span>Subtotal</span><b>${toman(sub)}</b></div>
-        <div class="trow"><span>Delivery</span><b>${ship ? toman(ship) : 'Free'}</b></div>
-        <div class="trow big"><span>Total</span><b>${toman(sub + ship)}</b></div>
+        <div class="trow"><span>جمع</span><b>${toman(sub)}</b></div>
+        <div class="trow"><span>ارسال</span><b>${ship ? toman(ship) : 'رایگان'}</b></div>
+        <div class="trow big"><span>مبلغ کل</span><b>${toman(sub + ship)}</b></div>
       </div>
 
-      <button class="btn btn-ink btn-block" type="submit">Place order</button>
+      <button class="btn btn-ink btn-block" type="submit">ثبت سفارش</button>
       <div style="height:9px"></div>
-      <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">Not yet</button>
+      <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">فعلاً نه</button>
     </form>`,
   {
-    label: 'Checkout',
+    label: 'تکمیل خرید',
     onMount(sheet) {
       let pay = 'card';
       sheet.addEventListener('click', (e) => {
@@ -106,7 +106,7 @@ function checkoutSheet() {
         const f = new FormData(e.target);
         const get = (k) => String(f.get(k) || '').trim();
         if (!get('name') || !get('phone') || !get('line') || !get('city')) {
-          toast('Fill in name, phone, address and city', 'info');
+          toast('اسم، شماره، نشانی و شهر را پر کن', 'info');
           return;
         }
         patch('profile', { name: get('name'), phone: get('phone') });
@@ -129,7 +129,7 @@ function checkoutSheet() {
         closeSheet();
         document.dispatchEvent(new CustomEvent('bag:changed'));
         go('/orders');
-        setTimeout(() => toast(`Order ${code} placed`, 'check', 3200), 260);
+        setTimeout(() => toast(`سفارش ${code} ثبت شد`, 'check', 3200), 260);
       });
     },
   });
@@ -137,16 +137,16 @@ function checkoutSheet() {
 
 export default {
   tab: 'bag',
-  title: 'Bag',
+  title: 'سبد',
   topbarAt: 20,
 
   render() {
     if (!state.bag.length) {
       return `<div class="wrap"><div class="topgap"></div>
-        <h1 class="serif" style="font-size:30px">Bag</h1></div>
-        ${empty('bag', 'Nothing in the bag yet',
-          'Everything is cut in one small run — when a size goes, it goes.',
-          '<button class="btn btn-ink btn-s" data-act="nav" data-to="/shop" type="button">Start shopping</button>')}`;
+        <h1 class="serif" style="font-size:30px">سبد</h1></div>
+        ${empty('bag', 'سبدت خالی است',
+          'هر مدل تیراژ کمی دارد؛ سایزی که تمام شود، تمام است.',
+          '<button class="btn btn-ink btn-s" data-act="nav" data-to="/shop" type="button">شروع خرید</button>')}`;
     }
 
     const sub = subtotal();
@@ -157,14 +157,14 @@ export default {
     return `
     <div class="wrap">
       <div class="topgap"></div>
-      <h1 class="serif" style="font-size:30px">Bag</h1>
+      <h1 class="serif" style="font-size:30px">سبد</h1>
       <p class="lede" style="margin-bottom:6px">${num(state.bag.reduce((n, l) => n + l.qty, 0))}
-        item${state.bag.reduce((n, l) => n + l.qty, 0) === 1 ? '' : 's'} held for 60 minutes.</p>
+        قطعه، ۶۰ دقیقه برایت نگه داشته می‌شود.</p>
 
       <div class="freebar">
         <p class="tiny" style="margin:0 0 7px">${left
-          ? `${toman(left)} more for free delivery`
-          : 'Delivery is on us'}</p>
+          ? `${toman(left)} دیگر تا ارسال رایگان`
+          : 'ارسال با ماست'}</p>
         <div class="freebar-track"><div class="freebar-fill" style="width:${pct}%"></div></div>
       </div>
 
@@ -172,17 +172,17 @@ export default {
       ${state.bag.map(lineHTML).join('')}
 
       <div class="totals">
-        <div class="trow"><span>Subtotal</span><b>${toman(sub)}</b></div>
-        <div class="trow"><span>Delivery</span><b>${ship ? toman(ship) : 'Free'}</b></div>
-        <div class="trow big"><span>Total</span><b>${toman(sub + ship)}</b></div>
+        <div class="trow"><span>جمع</span><b>${toman(sub)}</b></div>
+        <div class="trow"><span>ارسال</span><b>${ship ? toman(ship) : 'رایگان'}</b></div>
+        <div class="trow big"><span>مبلغ کل</span><b>${toman(sub + ship)}</b></div>
       </div>
 
       <div style="height:14px"></div>
       <button class="btn btn-ink btn-block" data-act="checkout" type="button">
-        Checkout · ${toman(sub + ship)}</button>
+        تکمیل خرید — ${toman(sub + ship)}</button>
       <div style="height:9px"></div>
       <button class="btn btn-quiet btn-block" data-act="nav" data-to="/shop" type="button">
-        Keep looking</button>
+        ادامهٔ خرید</button>
       <div style="height:30px"></div>
     </div>`;
   },

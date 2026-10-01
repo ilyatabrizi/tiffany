@@ -1,9 +1,9 @@
 {
   "name": "TIFFANY by Vanda",
   "short_name": "TIFFANY",
-  "description": "Womenswear, made in Iran. Three collections a year, cut in small runs.",
-  "lang": "en",
-  "dir": "ltr",
+  "description": "لباس زنانه، دوخت ایران. سالی سه کالکشن در تیراژ کم.",
+  "lang": "fa-IR",
+  "dir": "rtl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -18,11 +18,11 @@
     { "src": "assets/icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png" }
   ],
   "shortcuts": [
-    { "name": "Shop", "url": "./#/shop",
+    { "name": "فروشگاه", "url": "./#/shop",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Bag", "url": "./#/bag",
+    { "name": "سبد", "url": "./#/bag",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Orders", "url": "./#/orders",
+    { "name": "سفارش‌ها", "url": "./#/orders",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

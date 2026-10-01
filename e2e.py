@@ -74,6 +74,28 @@ def run(shots_only=False):
         page.goto(BASE, wait_until='networkidle')
         page.wait_for_timeout(1800)          # the boot veil lifts
         check('boot veil lifted', page.locator('#boot').count() == 0)
+        check('page is Persian and right-to-left', page.evaluate(
+            "document.documentElement.lang + '/' + document.documentElement.dir") == 'fa/rtl')
+        check('IRANYekanX is the body face', page.evaluate(
+            "document.fonts.check('400 15px IRANYekanX')"))
+        # Cormorant has no Persian in it; the stack must fall through for any
+        # Persian word, and hold the serif for a Latin collection name.
+        check('Persian never asks Cormorant for a glyph', page.evaluate(
+            "getComputedStyle(document.body).fontFamily.startsWith('IRANYekanX')"))
+        check('tabs are Persian', page.evaluate(
+            "[...document.querySelectorAll('.tab-label')].map(e=>e.textContent).join()")
+            == 'خانه,فروشگاه,سبد,سفارش\u200cها,پروفایل')
+        # Latin digits must never reach the page: Intl formats fa-IR and the
+        # font would map anything that slipped through, which hides the bug.
+        prices = page.evaluate(
+            "[...document.querySelectorAll('.card-price')].map(e=>e.textContent).join()")
+        check('every price is in Persian numerals',
+              not any(c in prices for c in '0123456789'), prices[:60])
+        check('thousands use the Persian separator', '\u066c' in prices, prices[:60])
+        # · and ۰ are the same circle in this face — one must never sit beside
+        # the other, so the separator is banned outright.
+        body = page.inner_text('#app')
+        check('no middot anywhere near a numeral', '\u00b7' not in body)
         check('wordmark drawn', page.locator('.hero-mark').is_visible())
         check('campaign film present', page.locator('.hero video').count() == 1)
         check('the film is running', page.evaluate(
@@ -137,7 +159,7 @@ def run(shots_only=False):
               f"bar ends {bar['y'] + bar['height']:.0f}, card starts {first['y']:.0f}")
         shot(page, '05-shop')
 
-        page.locator('.seg .chip', has_text='Skirts').click()
+        page.locator('.seg .chip', has_text='دامن').click()
         page.wait_for_timeout(500)
         skirts = page.locator('.grid-p .card').count()
         check('skirts filter narrows', 0 < skirts < total, f'{skirts} of {total}')
@@ -182,8 +204,8 @@ def run(shots_only=False):
         page.fill('#fWaist', '73')
         page.fill('#fHip', '99')
         page.wait_for_timeout(300)
-        check('fit preview names a size', 'M' in page.locator('#fitOut').inner_text(),
-              page.locator('#fitOut').inner_text())
+        out = page.locator('#fitOut').inner_text()
+        check('fit preview names a size', 'M' in out, out)
         shot(page, '09-fit')
         page.locator('#fitForm button[type="submit"]').click()
         page.wait_for_timeout(900)
@@ -215,8 +237,9 @@ def run(shots_only=False):
 
         page.locator('.line').first.locator('[data-qty="1"]').click()
         page.wait_for_timeout(500)
-        qty = page.locator('.line').first.locator('.stepper b').inner_text()
-        check('stepper adds one', qty.strip() == '2', qty)
+        qty = page.locator('.line').first.locator('.stepper b').inner_text().strip()
+        # the stepper counts in Persian, like everything else on the page
+        check('stepper adds one', qty == '\u06f2', f'{qty} (want ۲)')
 
         # -------------------------------------------------------- checkout
         print('\ncheckout')
@@ -224,10 +247,10 @@ def run(shots_only=False):
         page.wait_for_timeout(700)
         check('checkout sheet opens', page.locator('#coForm').count() == 1)
         shot(page, '11-checkout')
-        page.fill('#coName', 'Vanda T')
-        page.fill('#coPhone', '0912 000 0000')
-        page.fill('#coLine', '12 Studio Street, unit 4')
-        page.fill('#coCity', 'Tehran')
+        page.fill('#coName', 'وندا تبریزی')
+        page.fill('#coPhone', '۰۹۱۲۰۰۰۰۰۰۰')
+        page.fill('#coLine', 'خیابان ولیعصر، پلاک ۱۲، واحد ۴')
+        page.fill('#coCity', 'تهران')
         page.locator('#coForm button[type="submit"]').click()
         page.wait_for_timeout(1400)
         check('landed on orders', page.evaluate('location.hash') == '#/orders')
@@ -254,6 +277,16 @@ def run(shots_only=False):
         page.wait_for_timeout(900)
         check('viewer opens', page.locator('#viewer.open').count() == 1)
         check('six slides', page.locator('.viewer-slide').count() == 6)
+        # scrollLeft in an RTL track is signed differently per engine; the
+        # viewer probes it rather than assuming. Prove paging still lands.
+        page.evaluate("""(() => {
+            const t = document.querySelector('#viewerTrack');
+            t.scrollLeft = Math.sign(t.scrollLeft || -1) * t.clientWidth * 2;
+        })()""")
+        page.wait_for_timeout(900)
+        lit = page.evaluate(
+            "[...document.querySelectorAll('.viewer-bars i')].findIndex(b=>b.classList.contains('on'))")
+        check('paging the RTL track lands on a slide', lit == 2, f'bar {lit}')
         check('slide one is shoppable', page.locator('.viewer-slide').first
               .locator('.vitem').count() >= 2)
         shot(page, '14-looks')
@@ -284,10 +317,10 @@ def run(shots_only=False):
         # --------------------------------------------------------- profile
         print('\nprofile')
         goto(page, '#/profile')
-        check('name carried from checkout', 'Vanda' in page.locator('.phead h1').inner_text())
+        check('name carried from checkout', 'وندا' in page.locator('.phead h1').inner_text())
         check('stats row', page.locator('.stat').count() == 3)
-        check('fit shown', 'Not set' not in page.locator(
-            '[data-act="fit"] .row-val').inner_text())
+        check('fit shown', '—' != page.locator(
+            '[data-act="fit"] .row-val').inner_text().strip())
         page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
         page.wait_for_timeout(400)
         check('signature signs the profile too', page.locator('.alphasig').count() == 1)
@@ -339,7 +372,7 @@ def run(shots_only=False):
         # -------------------------------------------------------- the rest
         print('\nplumbing')
         goto(page, '#/p/does-not-exist')
-        check('unknown product handled', 'Not in the line' in page.inner_text('#app'))
+        check('unknown product handled', 'توی کالکشن نیست' in page.inner_text('#app'))
         goto(page, '#/c/nope')
         check('unknown collection handled', page.locator('.empty').count() == 1)
         goto(page, '#/nowhere')
@@ -352,6 +385,20 @@ def run(shots_only=False):
         check('service worker served', sw is True)
         og = page.evaluate("fetch('assets/img/og.jpg').then(r => r.ok)")
         check('share card served', og is True)
+
+        # A Latin comma or question mark sitting in a Persian sentence is the
+        # shape a missed translation leaves behind. Sweep every route for it.
+        import re
+        FA = r'[\u0600-\u06FF\u200c]'
+        BAD = re.compile(FA + r'\s*[,;?]|[,;?]\s*' + FA)
+        leftovers = []
+        for r in ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
+                  '#/c/pastel', '#/c/noir', '#/c/desert', '#/p/alphabet-tee',
+                  '#/p/heart-belt', '#/p/prairie-blouse']:
+            goto(page, r, 600)
+            for m in BAD.finditer(page.inner_text('#app')):
+                leftovers.append(f'{r}: {m.group(0)!r}')
+        check('no Latin punctuation inside Persian', not leftovers, str(leftovers[:3]))
 
         # every image the app asked for actually arrived
         broken = page.evaluate("""[...document.images]

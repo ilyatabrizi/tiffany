@@ -21,30 +21,30 @@ const initials = (name) => {
 export function fitSheet() {
   const f = state.fit;
   openSheet(`
-    <h2>Your fit</h2>
-    <p class="lede">Three measurements, kept on this phone only. Every product
-      page then names the size we would hand you in the studio.</p>
+    <h2>اندازه‌های من</h2>
+    <p class="lede">سه تا اندازه، فقط روی همین گوشی می‌ماند. بعدش هر صفحهٔ
+      محصول خودش می‌گوید توی استودیو چه سایزی دستت می‌دادیم.</p>
     <form id="fitForm" novalidate>
       <div class="field-row">
-        <div class="field"><label for="fBust">Bust (cm)</label>
+        <div class="field"><label for="fBust">دور سینه (سانتی‌متر)</label>
           <input id="fBust" name="bust" inputmode="numeric" value="${esc(f.bust)}"></div>
-        <div class="field"><label for="fWaist">Waist (cm)</label>
+        <div class="field"><label for="fWaist">دور کمر (سانتی‌متر)</label>
           <input id="fWaist" name="waist" inputmode="numeric" value="${esc(f.waist)}"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label for="fHip">Hip (cm)</label>
+        <div class="field"><label for="fHip">دور باسن (سانتی‌متر)</label>
           <input id="fHip" name="hip" inputmode="numeric" value="${esc(f.hip)}"></div>
-        <div class="field"><label for="fHeight">Height (cm)</label>
+        <div class="field"><label for="fHeight">قد (سانتی‌متر)</label>
           <input id="fHeight" name="height" inputmode="numeric" value="${esc(f.height)}"></div>
       </div>
       <p class="tiny" id="fitOut" style="min-height:20px"></p>
       <div style="height:12px"></div>
-      <button class="btn btn-ink btn-block" type="submit">Save my fit</button>
+      <button class="btn btn-ink btn-block" type="submit">ثبت اندازه‌ها</button>
       <div style="height:9px"></div>
-      <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">Cancel</button>
+      <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">بی‌خیال</button>
     </form>`,
   {
-    label: 'Your fit',
+    label: 'اندازه‌های من',
     onMount(sheet) {
       const out = sheet.querySelector('#fitOut');
       const preview = () => {
@@ -56,7 +56,8 @@ export function fitSheet() {
         Object.assign(state.fit, v);
         const rec = recommendSize({ sizes: SIZES.map((s) => s.id), fit: 'true' });
         Object.assign(state.fit, before);
-        out.textContent = rec ? `Looks like a ${rec.size} in our ready-to-wear.` : '';
+        out.innerHTML = rec
+          ? `به نظر می‌آید سایز <span dir="ltr">${rec.size}</span> بهت می‌خورد.` : '';
       };
       sheet.querySelectorAll('input').forEach((i) =>
         i.addEventListener('input', preview));
@@ -72,7 +73,7 @@ export function fitSheet() {
           height: String(d.get('height') || '').trim(),
         });
         closeSheet();
-        toast('Fit saved', 'ruler');
+        toast('اندازه‌ها ذخیره شد', 'ruler');
         document.dispatchEvent(new CustomEvent('view:refresh'));
       });
     },
@@ -84,27 +85,28 @@ function addressSheet() {
   const a = state.address;
   const p = state.profile;
   openSheet(`
-    <h2>Delivery details</h2>
-    <p class="lede">Filled in for you at checkout. Stored on this phone, nowhere else.</p>
+    <h2>اطلاعات ارسال</h2>
+    <p class="lede">موقع تکمیل خرید خودکار پر می‌شود. فقط روی همین گوشی ذخیره می‌شود، جای دیگری نه.</p>
     <form id="adForm" novalidate>
-      <div class="field"><label for="aName">Full name</label>
+      <div class="field"><label for="aName">نام و نام خانوادگی</label>
         <input id="aName" name="name" autocomplete="name" value="${esc(p.name)}"></div>
-      <div class="field"><label for="aPhone">Phone</label>
-        <input id="aPhone" name="phone" inputmode="tel" autocomplete="tel"
-               value="${esc(p.phone)}" placeholder="09xx xxx xxxx"></div>
-      <div class="field"><label for="aLine">Address</label>
+      <div class="field"><label for="aPhone">شمارهٔ موبایل</label>
+        <input id="aPhone" name="phone" inputmode="tel" autocomplete="tel" dir="ltr"
+               value="${esc(p.phone)}" placeholder="۰۹۱۲ ۰۰۰ ۰۰۰۰"></div>
+      <div class="field"><label for="aLine">نشانی</label>
         <textarea id="aLine" name="line" autocomplete="street-address">${esc(a.line)}</textarea></div>
       <div class="field-row">
-        <div class="field"><label for="aCity">City</label>
+        <div class="field"><label for="aCity">شهر</label>
           <input id="aCity" name="city" autocomplete="address-level2" value="${esc(a.city)}"></div>
-        <div class="field"><label for="aPostal">Post code</label>
-          <input id="aPostal" name="postal" inputmode="numeric" value="${esc(a.postal)}"></div>
+        <div class="field"><label for="aPostal">کد پستی</label>
+          <input id="aPostal" name="postal" inputmode="numeric" dir="ltr"
+                 value="${esc(a.postal)}"></div>
       </div>
       <div style="height:12px"></div>
-      <button class="btn btn-ink btn-block" type="submit">Save</button>
+      <button class="btn btn-ink btn-block" type="submit">ذخیره</button>
     </form>`,
   {
-    label: 'Delivery details',
+    label: 'اطلاعات ارسال',
     onMount(sheet) {
       sheet.querySelector('#adForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -113,7 +115,7 @@ function addressSheet() {
         patch('profile', { name: g('name'), phone: g('phone') });
         patch('address', { line: g('line'), city: g('city'), postal: g('postal') });
         closeSheet();
-        toast('Details saved', 'check');
+        toast('اطلاعات ذخیره شد', 'check');
         document.dispatchEvent(new CustomEvent('view:refresh'));
       });
     },
@@ -122,31 +124,31 @@ function addressSheet() {
 
 /* ----------------------------------------------------------------- about */
 const aboutSheet = () => openSheet(`
-  <h2>${BRAND.full}</h2>
-  <p class="lede">${BRAND.tagline} Three collections a year, cut in small runs,
-    sold through the studio and through Instagram.</p>
+  <h2 dir="ltr" style="text-align:start">${BRAND.full}</h2>
+  <p class="lede">${BRAND.tagline} سالی سه کالکشن، در تیراژ کم، از خود استودیو
+    و از اینستاگرام فروخته می‌شود.</p>
   <div style="height:14px"></div>
   <a class="row" href="${BRAND.instagramUrl}" target="_blank" rel="noopener">
-    ${icon('instagram', 19)}<span class="row-label">@${BRAND.instagram}</span>
+    ${icon('instagram', 19)}<span class="row-label" dir="ltr">@${BRAND.instagram}</span>
     ${icon('arrow', 16, 'chev')}</a>
-  <div class="notice">This is a preview build made by Alpha Agency. The
-    photography is the studio’s own; every price, product name, fabric,
-    measurement and delivery promise is placeholder copy and none of it is
-    live. Nothing typed here leaves the phone.</div>
+  <div class="notice">این یک نسخهٔ پیش‌نمایش است که Alpha Agency ساخته. عکس‌ها
+    مال خود برند است؛ قیمت‌ها، اسم محصول‌ها، جنس پارچه، اندازه‌ها و قول‌های
+    ارسال همگی نمونه‌اند و هیچ‌کدام واقعی نیست. هر چیزی هم اینجا تایپ کنی از
+    گوشی‌ات بیرون نمی‌رود.</div>
   <div style="height:18px"></div>
-  <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">Close</button>`,
-{ label: 'About' });
+  <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">بستن</button>`,
+{ label: 'درباره' });
 
 function resetSheet() {
   openSheet(`
-    <h2>Clear everything</h2>
-    <p class="lede">Bag, saved pieces, orders and your fit are removed from this
-      phone. There is no undo.</p>
-    <button class="btn btn-ink btn-block" id="yes" type="button">Yes, clear it</button>
+    <h2>پاک کردن همه چیز</h2>
+    <p class="lede">سبد، ذخیره‌شده‌ها، سفارش‌ها و اندازه‌هایت از این گوشی پاک
+      می‌شود. برگشتی ندارد.</p>
+    <button class="btn btn-ink btn-block" id="yes" type="button">آره، پاک کن</button>
     <div style="height:9px"></div>
-    <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">Keep it</button>`,
+    <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">بی‌خیال</button>`,
   {
-    label: 'Clear data',
+    label: 'پاک کردن اطلاعات',
     onMount(sheet) {
       sheet.querySelector('#yes').addEventListener('click', () => {
         try { localStorage.removeItem('tiffany.v1'); } catch { /* private mode */ }
@@ -158,19 +160,19 @@ function resetSheet() {
 
 /* ------------------------------------------------------------------ view */
 const COLOUR_MODES = [
-  { id: 'touch', name: 'On touch' },
-  { id: 'always', name: 'Always' },
-  { id: 'never', name: 'Never' },
+  { id: 'touch', name: 'با لمس' },
+  { id: 'always', name: 'همیشه' },
+  { id: 'never', name: 'هیچ‌وقت' },
 ];
 const THEMES = [
-  { id: 'auto', name: 'Auto' },
-  { id: 'light', name: 'Light' },
-  { id: 'dark', name: 'Dark' },
+  { id: 'auto', name: 'خودکار' },
+  { id: 'light', name: 'روشن' },
+  { id: 'dark', name: 'تیره' },
 ];
 
 export default {
   tab: 'profile',
-  title: 'Profile',
+  title: 'پروفایل',
   topbarAt: 20,
 
   render() {
@@ -181,52 +183,52 @@ export default {
     <header class="phead">
       <div class="avatar">${esc(initials(p.name))}</div>
       <div style="flex:1;min-width:0">
-        <h1 class="serif" style="font-size:24px">${named ? esc(p.name) : 'Welcome'}</h1>
+        <h1 class="serif" style="font-size:24px">${named ? esc(p.name) : 'خوش آمدی'}</h1>
         <p class="tiny" style="margin:2px 0 0">${named
-          ? esc(p.phone || 'Tap to add a phone number')
-          : 'Add your details once and checkout fills itself in.'}</p>
+          ? esc(p.phone || 'برای افزودن شماره بزن')
+          : 'یک بار اطلاعاتت را بده، بعد تکمیل خرید خودش پر می‌شود.'}</p>
       </div>
       <button class="btn btn-line btn-s" data-act="address" type="button">
-        ${named ? 'Edit' : 'Add'}</button>
+        ${named ? 'ویرایش' : 'افزودن'}</button>
     </header>
 
     <div class="stats">
-      <div class="stat"><b>${num(state.wish.length)}</b><span>Saved</span></div>
-      <div class="stat"><b>${num(state.orders.length)}</b><span>Orders</span></div>
-      <div class="stat"><b>${num(bagCount())}</b><span>In bag</span></div>
+      <div class="stat"><b>${num(state.wish.length)}</b><span>ذخیره‌شده</span></div>
+      <div class="stat"><b>${num(state.orders.length)}</b><span>سفارش</span></div>
+      <div class="stat"><b>${num(bagCount())}</b><span>توی سبد</span></div>
     </div>
 
     <div class="rows">
       <button class="row" data-act="nav" data-to="/saved" type="button">
-        ${icon('heart', 19)}<span class="row-label">Saved pieces</span>
+        ${icon('heart', 19)}<span class="row-label">ذخیره‌شده‌ها</span>
         <span class="row-val">${num(state.wish.length)}</span>${icon('chev', 16, 'chev')}</button>
 
       <button class="row" data-act="nav" data-to="/orders" type="button">
-        ${icon('box', 19)}<span class="row-label">Orders</span>
+        ${icon('box', 19)}<span class="row-label">سفارش‌ها</span>
         <span class="row-val">${num(state.orders.length)}</span>${icon('chev', 16, 'chev')}</button>
 
       <button class="row" data-act="fit" type="button">
-        ${icon('ruler', 19)}<span class="row-label">Your fit</span>
-        <span class="row-val">${fitSaved()
+        ${icon('ruler', 19)}<span class="row-label">اندازه‌های من</span>
+        <span class="row-val" dir="ltr">${fitSaved()
           ? `${esc(state.fit.bust || '–')}/${esc(state.fit.waist || '–')}/${esc(state.fit.hip || '–')}`
-          : 'Not set'}</span>${icon('chev', 16, 'chev')}</button>
+          : '—'}</span>${icon('chevL', 16, 'chev')}</button>
 
       <button class="row" data-act="address" type="button">
-        ${icon('pin', 19)}<span class="row-label">Delivery details</span>
-        <span class="row-val">${state.address.city ? esc(state.address.city) : 'Not set'}</span>
-        ${icon('chev', 16, 'chev')}</button>
+        ${icon('pin', 19)}<span class="row-label">اطلاعات ارسال</span>
+        <span class="row-val">${state.address.city ? esc(state.address.city) : 'ثبت نشده'}</span>
+        ${icon('chevL', 16, 'chev')}</button>
     </div>
 
     <div class="rows">
       <div class="row" style="cursor:default">
-        ${icon('drop', 19)}<span class="row-label">Colour</span>
+        ${icon('drop', 19)}<span class="row-label">رنگ</span>
         <span class="segset" id="colourSet">
           ${COLOUR_MODES.map((m) => `<button data-colour-mode="${m.id}" type="button"
             class="${state.prefs.colour === m.id ? 'on' : ''}">${m.name}</button>`).join('')}
         </span>
       </div>
       <div class="row" style="cursor:default">
-        ${icon('contrast', 19)}<span class="row-label">Appearance</span>
+        ${icon('contrast', 19)}<span class="row-label">ظاهر</span>
         <span class="segset" id="themeSet">
           ${THEMES.map((t) => `<button data-theme-mode="${t.id}" type="button"
             class="${state.prefs.theme === t.id ? 'on' : ''}">${t.name}</button>`).join('')}
@@ -237,25 +239,25 @@ export default {
     <div class="rows">
       ${standalone() ? '' : `
       <button class="row" data-act="install" type="button">
-        ${icon('download', 19)}<span class="row-label">Add to home screen</span>
-        ${icon('chev', 16, 'chev')}</button>`}
+        ${icon('download', 19)}<span class="row-label">افزودن به صفحهٔ خانه</span>
+        ${icon('chevL', 16, 'chev')}</button>`}
       <a class="row" href="${BRAND.instagramUrl}" target="_blank" rel="noopener">
-        ${icon('instagram', 19)}<span class="row-label">@${BRAND.instagram}</span>
-        ${icon('arrow', 16, 'chev')}</a>
+        ${icon('instagram', 19)}<span class="row-label" dir="ltr">@${BRAND.instagram}</span>
+        ${icon('chevL', 16, 'chev')}</a>
       <button class="row" data-act="about" type="button">
-        ${icon('info', 19)}<span class="row-label">About this preview</span>
-        ${icon('chev', 16, 'chev')}</button>
+        ${icon('info', 19)}<span class="row-label">دربارهٔ این پیش‌نمایش</span>
+        ${icon('chevL', 16, 'chev')}</button>
       <button class="row" data-act="reset" type="button">
-        ${icon('trash', 19)}<span class="row-label">Clear everything</span>
-        ${icon('chev', 16, 'chev')}</button>
+        ${icon('trash', 19)}<span class="row-label">پاک کردن همه چیز</span>
+        ${icon('chevL', 16, 'chev')}</button>
     </div>
 
     <div class="footer">
       <div class="footer-mark"></div>
-      <p>${BRAND.full} · ${BRAND.country}</p>
+      <p><span dir="ltr">${BRAND.full}</span> — ${BRAND.country}</p>
       <div class="footer-rule"></div>
       ${alphaSig()}
-      <p class="footer-legal">© ${new Date().getFullYear()} ${BRAND.full}</p>
+      <p class="footer-legal" dir="ltr">© ${new Date().getFullYear()} ${BRAND.full}</p>
     </div>`;
   },
 

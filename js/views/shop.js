@@ -3,13 +3,13 @@
 import { CATEGORIES, COLLECTIONS, PRODUCTS, SIZES } from '../data.js';
 import { icon } from '../icons.js';
 import { productCard, empty, openSheet, closeSheet } from '../ui.js';
-import { esc } from '../util.js';
+import { esc, num } from '../util.js';
 import { go } from '../router.js';
 
 const SORTS = [
-  { id: 'new', name: 'Newest' },
-  { id: 'low', name: 'Price, low to high' },
-  { id: 'high', name: 'Price, high to low' },
+  { id: 'new', name: 'جدیدترین' },
+  { id: 'low', name: 'ارزان‌ترین' },
+  { id: 'high', name: 'گران‌ترین' },
 ];
 
 function read(q) {
@@ -49,33 +49,33 @@ function filterSheet(f) {
        type="button" ${style}>${label}</button>`;
 
   openSheet(`
-    <h2>Filter</h2>
-    <p class="lede">Everything is cut in one small run per season.</p>
+    <h2>فیلتر</h2>
+    <p class="lede">هر فصل یک تیراژ کم دوخته می‌شود.</p>
 
-    <p class="eyebrow" style="margin:20px 0 10px">Collection</p>
+    <p class="eyebrow" style="margin:20px 0 10px">کالکشن</p>
     <div class="sizes">
-      ${chip(!f.col, 'col', '', 'All')}
+      ${chip(!f.col, 'col', '', 'همه')}
       ${COLLECTIONS.map((c) => chip(f.col === c.id, 'col', c.id,
-        `<i class="chip-sw" style="--dot:${c.accent}"></i>${esc(c.name)}`)).join('')}
+        `<i class="chip-sw" style="--dot:${c.accent}"></i><span dir="ltr">${esc(c.name)}</span>`)).join('')}
     </div>
 
-    <p class="eyebrow" style="margin:22px 0 10px">Size</p>
+    <p class="eyebrow" style="margin:22px 0 10px">سایز</p>
     <div class="sizes">
-      ${chip(!f.size, 'size', '', 'Any')}
+      ${chip(!f.size, 'size', '', 'فرقی نداره')}
       ${SIZES.map((s) => chip(f.size === s.id, 'size', s.id, s.id)).join('')}
     </div>
 
-    <p class="eyebrow" style="margin:22px 0 10px">Sort</p>
+    <p class="eyebrow" style="margin:22px 0 10px">ترتیب</p>
     <div class="sizes">
       ${SORTS.map((s) => chip(f.sort === s.id, 'sort', s.id, esc(s.name))).join('')}
     </div>
 
     <div style="height:24px"></div>
-    <button class="btn btn-ink btn-block" data-act="sheet-close" type="button">Show results</button>
+    <button class="btn btn-ink btn-block" data-act="sheet-close" type="button">نمایش نتیجه‌ها</button>
     <div style="height:9px"></div>
-    <button class="btn btn-quiet btn-block" data-fset="clear" type="button">Clear all</button>`,
+    <button class="btn btn-quiet btn-block" data-fset="clear" type="button">پاک کردن همه</button>`,
   {
-    label: 'Filter',
+    label: 'فیلتر',
     onMount(sheet) {
       sheet.addEventListener('click', (e) => {
         const b = e.target.closest('[data-fset]');
@@ -92,7 +92,7 @@ function filterSheet(f) {
 
 export default {
   tab: 'shop',
-  title: 'Shop',
+  title: 'فروشگاه',
   topbarAt: 30,
 
   render(parts, q) {
@@ -103,10 +103,10 @@ export default {
     <div class="topgap-bar"></div>
     <div class="shopbar">
       <div class="shopbar-row">
-        <span class="count">${list.length} piece${list.length === 1 ? '' : 's'}${
-          f.col ? ` · ${esc(COLLECTIONS.find((c) => c.id === f.col)?.name || '')}` : ''}</span>
+        <span class="count">${num(list.length)} قطعه${
+          f.col ? ` — <span dir="ltr">${esc(COLLECTIONS.find((c) => c.id === f.col)?.name || '')}</span>` : ''}</span>
         <button class="chip ${n ? 'on' : ''}" data-act="filters" type="button">
-          ${icon('sliders', 15)}Filter${n ? ` · ${n}` : ''}</button>
+          ${icon('sliders', 15)}فیلتر${n ? ` ${num(n)}` : ''}</button>
       </div>
       <div class="seg">
         ${CATEGORIES.map((c) => `
@@ -117,9 +117,9 @@ export default {
 
     <div style="height:16px"></div>
     ${list.length ? `<div class="grid-p">${list.map((p) => productCard(p)).join('')}</div>`
-      : empty('search', 'Nothing in that combination',
-        'Try another size or clear the filters.',
-        '<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">Clear filters</button>')}
+      : empty('search', 'با این فیلترها چیزی نیست',
+        'یک سایز دیگر را امتحان کن یا فیلترها را پاک کن.',
+        '<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">پاک کردن فیلترها</button>')}
     <div style="height:26px"></div>`;
   },
 
