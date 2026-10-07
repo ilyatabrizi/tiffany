@@ -1,32 +1,53 @@
-/* Home — the film, the three collections, what is new, and the looks. */
+/* Home — the film, the three collections, what is new, and the stories. */
 import { BRAND } from '../config.js';
 import { COLLECTIONS, LOOKS, newIn } from '../data.js';
 import { icon } from '../icons.js';
+import { esc } from '../util.js';
 import {
   collectionCard, productCard, lookTile, secHead, moreLink, shot, alphaSig,
 } from '../ui.js';
 import { mountHero } from '../hero.js';
+import { L, LANGS, ORDER, lang, setLang } from '../i18n.js';
+
+/* The language switch: one small glass pill in the hero's top corner, a menu
+   of three under it. Every option is written in its own language, so a
+   visitor who reads none of the other two still finds theirs. */
+const langSwitch = () => `
+  <div class="lang" id="langSwitch">
+    <button class="lang-btn" data-act="lang-menu" type="button" aria-haspopup="menu"
+            aria-expanded="false" aria-controls="langMenu"
+            aria-label="${esc(L('زبان', 'Language', 'Dil'))}">
+      ${icon('globe', 16)}<span>${esc(LANGS[lang].name)}</span></button>
+    <div class="lang-menu" id="langMenu" role="menu" hidden>
+      ${ORDER.map((k) => `
+        <button class="lang-opt ${k === lang ? 'on' : ''}" role="menuitemradio"
+                aria-checked="${k === lang}" data-lang="${k}" type="button"
+                lang="${k}" dir="${LANGS[k].dir}">
+          <span>${esc(LANGS[k].name)}</span>${k === lang ? icon('check', 15) : ''}</button>`).join('')}
+    </div>
+  </div>`;
 
 const hero = () => `
 <section class="hero">
   <div class="hero-media full-colour">
     <img src="media/hero-poster.webp" alt="" width="576" height="1024" fetchpriority="high">
     <video src="media/hero.mp4" poster="media/hero-poster.webp" muted playsinline
-           loop preload="metadata" aria-label="فیلم کمپین"></video>
+           loop preload="metadata" aria-label="${esc(L('فیلم کمپین', 'Campaign film', 'Kampanya filmi'))}"></video>
   </div>
+  ${langSwitch()}
   <div class="hero-body">
     <h1 class="hero-mark" aria-label="${BRAND.name} ${BRAND.sub}"></h1>
-    <p class="hero-lede">${BRAND.lede}</p>
+    <p class="hero-lede">${esc(BRAND.lede)}</p>
     <div class="hero-cta">
-      <button class="btn btn-ink" data-act="nav" data-to="/shop" type="button">خرید کالکشن</button>
-      <button class="btn btn-line" data-act="look" data-i="0" type="button">لوک‌ها</button>
+      <button class="btn btn-ink" data-act="nav" data-to="/shop" type="button">${esc(L('خرید', 'Shop', 'Alışveriş'))}</button>
+      <button class="btn btn-line" data-act="look" data-i="0" type="button">${esc(L('استوری‌ها', 'Stories', 'Hikâyeler'))}</button>
     </div>
   </div>
 </section>`;
 
 const collections = () => `
 <section class="sec">
-  ${secHead('کالکشن‌ها')}
+  ${secHead(L('کالکشن‌ها', 'Collections', 'Koleksiyonlar'))}
   <div class="rail rail-c">
     ${COLLECTIONS.map((c) => collectionCard(c)).join('')}
   </div>
@@ -34,7 +55,7 @@ const collections = () => `
 
 const fresh = () => `
 <section class="sec">
-  ${secHead('تازه‌رسیده‌ها', moreLink('/shop'))}
+  ${secHead(L('جدید', 'New', 'Yeni'), moreLink('/shop'))}
   <div class="rail rail-p">
     ${newIn().map((p) => productCard(p, { sizes: '(max-width:520px) 63vw, 250px' })).join('')}
   </div>
@@ -42,7 +63,8 @@ const fresh = () => `
 
 const looks = () => `
 <section class="sec">
-  ${secHead('لوک‌ها', moreLink('/shop', 'همه رو ببین'))}
+  ${secHead(L('استوری‌ها', 'Stories', 'Hikâyeler'),
+    moreLink('/shop', L('همه رو ببین', 'Shop all', 'Hepsini gör')))}
   <div class="looks-strip">
     ${LOOKS.map((l, i) => lookTile(l, i)).join('')}
   </div>
@@ -52,48 +74,80 @@ const editorial = () => `
 <section class="sec">
   <article class="ed">
     <span class="shot">
-      <img ${shot('ed-noir', '(max-width:520px) 92vw, 470px')} alt="کمپین Lace Noir"
+      <img ${shot('ed-noir', '(max-width:520px) 92vw, 470px')}
+           alt="${esc(L('کمپین Lace Noir', 'Lace Noir, campaign', 'Lace Noir kampanyası'))}"
            loading="lazy" decoding="async" width="480" height="300">
     </span>
     <div class="ed-body">
-      <p class="eyebrow">خط اصلی برند</p>
+      <p class="eyebrow">${esc(L('خط اصلی برند', 'The house line', 'Markanın ana serisi'))}</p>
       <h3 class="serif" dir="ltr">Lace Noir</h3>
-      <p class="lede">مشکی، سفید، و دانتلی که با هر دوشان بحث می‌کند. هر سال
-        دوباره دوخته می‌شود، چون هیچ‌وقت فروشش تمام نمی‌شود.</p>
+      <p class="lede">${esc(L(
+        'مشکی، سفید، و دانتلی که با جفتشون کل‌کل می‌کنه. هر سال دوباره می‌دوزیمش، چون فروشش هیچ‌وقت تموم نمی‌شه.',
+        'Black, white, and the lace that argues with both. Remade every year because it never stops selling.',
+        'Siyah, beyaz ve ikisiyle de atışan dantel. Satışı hiç bitmediği için her yıl yeniden dikiliyor.'))}</p>
       <div style="height:16px"></div>
       <button class="btn btn-line btn-s" data-act="collection" data-id="noir"
-              type="button">دیدن کالکشن</button>
+              type="button">${esc(L('دیدن کالکشن', 'See the collection', 'Koleksiyonu gör'))}</button>
     </div>
   </article>
 </section>`;
 
-const quote = () => `
-<section class="quote">
-  <p>رنگ مال لباس‌هاست، نه صفحه.</p>
-  <cite class="swap" data-touch="یکی رو لمس کن تا رنگش بیاد"
-        data-hover="نشانگر رو روی یکی ببر تا رنگش بیاد"></cite>
+/* What used to be a quote is just the hint now: how the colour works. */
+const hint = () => `
+<section class="quote quote-hint">
+  <cite class="swap"
+        data-touch="${esc(L('یکی رو لمس کن تا رنگش بیاد', 'Touch a piece to see its colour', 'Rengini görmek için bir parçaya dokun'))}"
+        data-hover="${esc(L('نشانگر رو ببر روی یکی تا رنگش بیاد', 'Hover a piece to see its colour', 'Rengini görmek için imleci bir parçanın üstüne getir'))}"></cite>
 </section>`;
 
 const footer = () => `
 <footer class="footer">
   <div class="footer-mark"></div>
-  <p>${BRAND.tagline}</p>
-  <p>ارسال رایگان برای خرید بالای ۳٬۵۰۰٬۰۰۰ تومان.</p>
-  <a class="ig" href="${BRAND.instagramUrl}" target="_blank" rel="noopener">
-    ${icon('instagram', 17)}@${BRAND.instagram}</a>
+  <a class="ig" href="${BRAND.instagramUrl}" target="_blank" rel="noopener" dir="ltr">
+    ${icon('instagram', 17)}<span>@${BRAND.instagram}</span></a>
+  <nav class="footer-links" aria-label="${esc(L('اطلاعات فروشگاه', 'Shop information', 'Mağaza bilgileri'))}">
+    <a href="#/about">${esc(L('درباره‌ی ما', 'About us', 'Hakkımızda'))}</a>
+    <a href="#/contact">${esc(L('شعبه‌ها و تماس', 'Stores & contact', 'Mağazalar ve iletişim'))}</a>
+    <a href="#/terms">${esc(L('قوانین و شرایط', 'Terms & policies', 'Koşullar ve politikalar'))}</a>
+  </nav>
 
   <div class="footer-rule"></div>
   ${alphaSig()}
   <p class="footer-legal" dir="ltr">© ${new Date().getFullYear()} ${BRAND.full}</p>
-
-  <div class="notice">نسخهٔ پیش‌نمایش. عکس‌ها مال خود برند است؛ قیمت‌ها، اسم‌ها،
-    جنس پارچه و زمان ارسال روی این سایت همگی نمونه‌اند.</div>
 </footer>`;
+
+/* The menu opens and closes here; the pick itself reloads the page. */
+function mountLang(app, signal) {
+  const box = app.querySelector('#langSwitch');
+  if (!box) return;
+  const btn = box.querySelector('.lang-btn');
+  const menu = box.querySelector('.lang-menu');
+  const set = (open) => {
+    menu.hidden = !open;
+    box.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) menu.querySelector('.lang-opt.on')?.focus({ preventScroll: true });
+  };
+  btn.addEventListener('click', (e) => { e.stopPropagation(); set(menu.hidden); }, { signal });
+  menu.addEventListener('click', (e) => {
+    const o = e.target.closest('[data-lang]');
+    if (!o) return;
+    e.stopPropagation();
+    if (o.dataset.lang === lang) { set(false); return; }
+    setLang(o.dataset.lang);
+  }, { signal });
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !box.contains(e.target)) set(false);
+  }, { signal });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) { set(false); btn.focus(); }
+  }, { signal });
+}
 
 export default {
   tab: 'home',
   title: BRAND.name,
   topbarAt: 320,
-  render: () => hero() + collections() + fresh() + looks() + editorial() + quote() + footer(),
-  mount: (app, signal) => mountHero(app, signal),
+  render: () => hero() + collections() + fresh() + looks() + editorial() + hint() + footer(),
+  mount: (app, signal) => { mountHero(app, signal); mountLang(app, signal); },
 };

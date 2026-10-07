@@ -1,15 +1,16 @@
 /* Shop — every piece, filtered. Categories live in the sticky bar; collection,
    size and sort live in a sheet so the bar stays one line on a phone. */
-import { CATEGORIES, COLLECTIONS, PRODUCTS, SIZES } from '../data.js';
+import { CATEGORIES, COLLECTIONS, PRODUCTS, SIZES, inCategory, getCategory } from '../data.js';
 import { icon } from '../icons.js';
 import { productCard, empty, openSheet, closeSheet } from '../ui.js';
 import { esc, num } from '../util.js';
 import { go } from '../router.js';
+import { L } from '../i18n.js';
 
 const SORTS = [
-  { id: 'new', name: 'جدیدترین' },
-  { id: 'low', name: 'ارزان‌ترین' },
-  { id: 'high', name: 'گران‌ترین' },
+  { id: 'new', name: L('جدیدترین', 'Newest', 'En yeni') },
+  { id: 'low', name: L('ارزون‌ترین', 'Lowest price', 'En düşük fiyat') },
+  { id: 'high', name: L('گرون‌ترین', 'Highest price', 'En yüksek fiyat') },
 ];
 
 function read(q) {
@@ -41,6 +42,10 @@ function select(f) {
   return list;
 }
 
+/* A category the studio listed but has not stocked yet says so, rather than
+   blaming the visitor's filters. */
+const soon = (f) => f.cat !== 'all' && Boolean(getCategory(f.cat)) && !inCategory(f.cat).length;
+
 const activeCount = (f) => (f.col ? 1 : 0) + (f.size ? 1 : 0) + (f.sort !== 'new' ? 1 : 0);
 
 function filterSheet(f) {
@@ -49,33 +54,34 @@ function filterSheet(f) {
        type="button" ${style}>${label}</button>`;
 
   openSheet(`
-    <h2>فیلتر</h2>
-    <p class="lede">هر فصل یک تیراژ کم دوخته می‌شود.</p>
+    <h2>${esc(L('فیلتر', 'Filter', 'Filtre'))}</h2>
+    <p class="lede">${esc(L('هر فصل فقط یه تیراژ کم دوخته می‌شه.', 'Every season is cut in one small run.',
+      'Her sezon tek ve küçük bir seri halinde dikilir.'))}</p>
 
-    <p class="eyebrow" style="margin:20px 0 10px">کالکشن</p>
+    <p class="eyebrow" style="margin:20px 0 10px">${esc(L('کالکشن', 'Collection', 'Koleksiyon'))}</p>
     <div class="sizes">
-      ${chip(!f.col, 'col', '', 'همه')}
+      ${chip(!f.col, 'col', '', esc(L('همه', 'All', 'Tümü')))}
       ${COLLECTIONS.map((c) => chip(f.col === c.id, 'col', c.id,
         `<i class="chip-sw" style="--dot:${c.accent}"></i><span dir="ltr">${esc(c.name)}</span>`)).join('')}
     </div>
 
-    <p class="eyebrow" style="margin:22px 0 10px">سایز</p>
+    <p class="eyebrow" style="margin:22px 0 10px">${esc(L('سایز', 'Size', 'Beden'))}</p>
     <div class="sizes">
-      ${chip(!f.size, 'size', '', 'فرقی نداره')}
+      ${chip(!f.size, 'size', '', esc(L('فرقی نداره', 'Any', 'Fark etmez')))}
       ${SIZES.map((s) => chip(f.size === s.id, 'size', s.id, s.id)).join('')}
     </div>
 
-    <p class="eyebrow" style="margin:22px 0 10px">ترتیب</p>
+    <p class="eyebrow" style="margin:22px 0 10px">${esc(L('ترتیب', 'Sort', 'Sırala'))}</p>
     <div class="sizes">
       ${SORTS.map((s) => chip(f.sort === s.id, 'sort', s.id, esc(s.name))).join('')}
     </div>
 
     <div style="height:24px"></div>
-    <button class="btn btn-ink btn-block" data-act="sheet-close" type="button">نمایش نتیجه‌ها</button>
+    <button class="btn btn-ink btn-block" data-act="sheet-close" type="button">${esc(L('نشونم بده', 'Show results', 'Sonuçları göster'))}</button>
     <div style="height:9px"></div>
-    <button class="btn btn-quiet btn-block" data-fset="clear" type="button">پاک کردن همه</button>`,
+    <button class="btn btn-quiet btn-block" data-fset="clear" type="button">${esc(L('پاک کردن همه', 'Clear all', 'Hepsini temizle'))}</button>`,
   {
-    label: 'فیلتر',
+    label: L('فیلتر', 'Filter', 'Filtre'),
     onMount(sheet) {
       sheet.addEventListener('click', (e) => {
         const b = e.target.closest('[data-fset]');
@@ -92,21 +98,23 @@ function filterSheet(f) {
 
 export default {
   tab: 'shop',
-  title: 'فروشگاه',
+  title: L('فروشگاه', 'Shop', 'Mağaza'),
   topbarAt: 30,
 
+  /* No piece count in the bar — the studio asked for it gone. A collection
+     filter still names itself, so a filtered grid says what it is. */
   render(parts, q) {
     const f = read(q);
     const list = select(f);
     const n = activeCount(f);
+    const colName = f.col ? COLLECTIONS.find((c) => c.id === f.col)?.name || '' : '';
     return `
     <div class="topgap-bar"></div>
     <div class="shopbar">
       <div class="shopbar-row">
-        <span class="count">${num(list.length)} قطعه${
-          f.col ? ` — <span dir="ltr">${esc(COLLECTIONS.find((c) => c.id === f.col)?.name || '')}</span>` : ''}</span>
+        <span class="count">${colName ? `<span dir="ltr">${esc(colName)}</span>` : ''}</span>
         <button class="chip ${n ? 'on' : ''}" data-act="filters" type="button">
-          ${icon('sliders', 15)}فیلتر${n ? ` ${num(n)}` : ''}</button>
+          ${icon('sliders', 15)}${esc(L('فیلتر', 'Filter', 'Filtre'))}${n ? ` ${num(n)}` : ''}</button>
       </div>
       <div class="seg">
         ${CATEGORIES.map((c) => `
@@ -117,9 +125,16 @@ export default {
 
     <div style="height:16px"></div>
     ${list.length ? `<div class="grid-p">${list.map((p) => productCard(p)).join('')}</div>`
-      : empty('search', 'با این فیلترها چیزی نیست',
-        'یک سایز دیگر را امتحان کن یا فیلترها را پاک کن.',
-        '<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">پاک کردن فیلترها</button>')}
+      : soon(f) ? empty('hanger', L(`${getCategory(f.cat).name} به‌زودی میاد`,
+        `${getCategory(f.cat).name} — coming soon`, `${getCategory(f.cat).name} çok yakında`),
+        L('هنوز چیزی توی این دسته نذاشتیم. یه سر به بقیه‌ی دسته‌ها بزن.',
+          'Nothing in this one yet. Have a look round the others.',
+          'Bu kategoride henüz bir şey yok. Diğerlerine bir göz at.'),
+        `<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">${esc(L('دیدن همه', 'Shop everything', 'Hepsini gör'))}</button>`)
+      : empty('search', L('با این فیلترها چیزی پیدا نشد', 'Nothing matches those filters', 'Bu filtrelere uyan bir şey yok'),
+        L('یه سایز دیگه رو امتحان کن یا فیلترها رو پاک کن.', 'Try another size or clear the filters.',
+          'Başka bir beden dene ya da filtreleri temizle.'),
+        `<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">${esc(L('پاک کردن فیلترها', 'Clear filters', 'Filtreleri temizle'))}</button>`)}
     <div style="height:26px"></div>`;
   },
 

@@ -3,6 +3,7 @@ import { COLLECTIONS, getCollection, inCollection, LOOKS } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, num } from '../util.js';
 import { shot, bigShot, productCard, collectionCard, empty } from '../ui.js';
+import { L } from '../i18n.js';
 
 export default {
   tab: '',
@@ -11,14 +12,15 @@ export default {
 
   meta(parts) {
     const c = getCollection(parts[1]);
-    return { title: c ? c.name : 'کالکشن' };
+    return { title: c ? c.name : L('کالکشن', 'Collection', 'Koleksiyon') };
   },
 
   render(parts) {
     const c = getCollection(parts[1]);
     if (!c) {
-      return empty('search', 'چنین کالکشنی نیست', 'شاید کامل فروش رفته باشد.',
-        '<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">دیدن همه</button>');
+      return empty('search', L('همچین کالکشنی نداریم', 'No such collection', 'Böyle bir koleksiyon yok'),
+        L('شاید کامل فروش رفته باشه.', 'It may have sold through.', 'Belki tamamen satılmıştır.'),
+        `<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">${esc(L('دیدن همه', 'Shop everything', 'Hepsini gör'))}</button>`);
     }
     const items = inCollection(c.id);
     const looks = LOOKS.filter((l) => l.col === c.id);
@@ -26,8 +28,8 @@ export default {
 
     return `
     <article style="--accent:${c.accent};--dot:${c.accent}">
-      <button class="pdp-back" data-act="back" type="button" aria-label="برگشت">
-        ${icon('chev', 20)}</button>
+      <button class="pdp-back" data-act="back" type="button" aria-label="${esc(L('برگشت', 'Back', 'Geri'))}">
+        ${icon('chev', 20, 'back-ico')}</button>
       <span class="shot full-colour" style="border-radius:0;display:block;aspect-ratio:3/4">
         <img ${shot(c.img, '100vw')} alt="${esc(c.name)}" fetchpriority="high"
              decoding="async" width="480" height="640">
@@ -44,7 +46,7 @@ export default {
 
       ${looks.length ? `
       <section class="sec">
-        <div class="sec-head"><h2 class="serif">توی این لوک‌ها</h2></div>
+        <div class="sec-head"><h2 class="serif">${esc(L('توی این استوری‌ها', 'Shot in', 'Bu hikâyelerde'))}</h2></div>
         <div class="rail" style="grid-auto-columns:74vw">
           ${looks.map((l) => `
             <figure style="margin:0">
@@ -58,13 +60,13 @@ export default {
       </section>` : ''}
 
       <section class="sec">
-        <div class="sec-head"><h2 class="serif">قطعه‌ها</h2>
+        <div class="sec-head"><h2 class="serif">${esc(L('قطعه‌ها', 'The pieces', 'Parçalar'))}</h2>
           <span class="tiny">${num(items.length)}</span></div>
         <div class="grid-p">${items.map((p) => productCard(p)).join('')}</div>
       </section>
 
       <section class="sec">
-        <div class="sec-head"><h2 class="serif">کالکشن‌های دیگر امسال</h2></div>
+        <div class="sec-head"><h2 class="serif">${esc(L('بقیه‌ی کالکشن‌های امسال', 'Also this year', 'Bu yılın diğer koleksiyonları'))}</h2></div>
         <div class="rail rail-c">${others.map((x) => collectionCard(x)).join('')}</div>
       </section>
 

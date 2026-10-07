@@ -1,15 +1,19 @@
-/* The product page. One real photograph per piece, plus the look it was shot
+/* The product page. One real photograph per piece, plus the story it was shot
    in and the collection frame — which is how a lookbook shop actually reads. */
-import { LOOKS, PRODUCTS, SIZES, colById, getProduct } from '../data.js';
+import { LOOKS, PRODUCTS, SIZES, colById, getProduct, sizeLabel, isOneSize } from '../data.js';
 import { icon } from '../icons.js';
-import { esc, toman, tap } from '../util.js';
+import { esc, toman, tap, COMMA } from '../util.js';
 import { addToBag, isWished } from '../store.js';
 import {
   shot, bigShot, productCard, openSheet, closeSheet, toast, recommendSize,
 } from '../ui.js';
+import { L } from '../i18n.js';
 
 /* Chosen size and colour live for as long as the page does. */
 let pick = { id: null, size: null, colour: 0 };
+
+/* A size code is a name and stays Latin; one-size reads in the page's language. */
+const sizeTag = (s) => (isOneSize(s) ? esc(sizeLabel(s)) : `<span dir="ltr">${esc(s)}</span>`);
 
 const galleryFor = (p) => {
   const look = LOOKS.find((l) => l.items.includes(p.id));
@@ -17,16 +21,18 @@ const galleryFor = (p) => {
   return [
     { img: p.img, wide: false, alt: p.name },
     ...(look ? [{ img: look.img, wide: true, alt: `${p.name} — ${look.title}` }] : []),
-    { img: col.img, wide: false, alt: `${col.name} collection` },
+    { img: col.img, wide: false, alt: L(`کالکشن ${col.name}`, `${col.name} collection`, `${col.name} koleksiyonu`) },
   ];
 };
 
 const sizeGuideSheet = () => openSheet(`
-  <h2>راهنمای سایز</h2>
-  <p class="lede">اندازه‌های بدن به سانتی‌متر — نه اندازهٔ لباس. روی همان چیزی
-    که معمولاً زیرش می‌پوشی اندازه بگیر.</p>
+  <h2>${esc(L('راهنمای سایز', 'Size guide', 'Beden rehberi'))}</h2>
+  <p class="lede">${esc(L(
+    'اندازه‌های بدن به سانتی‌متره، نه اندازه‌ی لباس. روی همون چیزی که معمولاً زیرش می‌پوشی اندازه بگیر.',
+    'Body measurements in centimetres — not garment measurements. Measure over what you usually wear underneath.',
+    'Ölçüler santimetre cinsinden vücut ölçüsüdür, giysi ölçüsü değil. Genelde altına giydiğin şeyin üstünden ölç.'))}</p>
   <div class="guide">
-    <div class="guide-row guide-head"><b>سایز</b><span>سینه</span><span>کمر</span><span>باسن</span></div>
+    <div class="guide-row guide-head"><b>${esc(L('سایز', 'Size', 'Beden'))}</b><span>${esc(L('سینه', 'Bust', 'Göğüs'))}</span><span>${esc(L('کمر', 'Waist', 'Bel'))}</span><span>${esc(L('باسن', 'Hip', 'Kalça'))}</span></div>
     ${SIZES.map((s) => `<div class="guide-row"><b>${s.id}</b>
       <span>${s.bust[0]}–${s.bust[1]}</span>
       <span>${s.waist[0]}–${s.waist[1]}</span>
@@ -34,24 +40,26 @@ const sizeGuideSheet = () => openSheet(`
   </div>
   <div style="height:20px"></div>
   <button class="btn btn-ink btn-block" data-act="fit" type="button">
-    ${icon('ruler', 18)}ثبت اندازه‌های من</button>
+    ${icon('ruler', 18)}${esc(L('ثبت اندازه‌هام', 'Save my measurements', 'Ölçülerimi kaydet'))}</button>
   <div style="height:9px"></div>
-  <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">بستن</button>`,
-{ label: 'راهنمای سایز' });
+  <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">${esc(L('بستن', 'Close', 'Kapat'))}</button>`,
+{ label: L('راهنمای سایز', 'Size guide', 'Beden rehberi') });
 
 function addSheet(p) {
   const rec = recommendSize(p);
   openSheet(`
-    <h2>سایزت را انتخاب کن</h2>
+    <h2>${esc(L('سایزت رو انتخاب کن', 'Choose your size', 'Bedenini seç'))}</h2>
     <p class="lede">${esc(p.name)} — ${toman(p.price)}</p>
     <div class="sizes" id="sheetSizes">
       ${p.sizes.map((s) => `<button class="size ${rec?.size === s ? 'rec' : ''}"
-        data-size="${s}" type="button"><span dir="ltr">${esc(s)}</span></button>`).join('')}
+        data-size="${s}" type="button">${sizeTag(s)}</button>`).join('')}
     </div>
-    ${rec ? `<p class="tiny" style="margin-top:12px">سایزی که نقطه دارد،
-      پیشنهاد ما بر اساس اندازه‌های توست.</p>` : ''}`,
+    ${rec ? `<p class="tiny" style="margin-top:12px">${esc(L(
+      'سایزی که نقطه داره، پیشنهاد ما بر اساس اندازه‌های خودته.',
+      'The dotted size is our pick, based on your measurements.',
+      'Noktalı beden, ölçülerine göre bizim önerimiz.'))}</p>` : ''}`,
   {
-    label: 'انتخاب سایز',
+    label: L('انتخاب سایز', 'Choose a size', 'Beden seç'),
     onMount(sheet) {
       sheet.addEventListener('click', (e) => {
         const b = e.target.closest('[data-size]');
@@ -66,9 +74,11 @@ function addSheet(p) {
 
 function commit(p) {
   const colour = p.colours[pick.colour] || p.colours[0];
-  addToBag(p.id, pick.size, colour.name);
+  /* The bag keeps the hex, not the label — labels change with the language. */
+  addToBag(p.id, pick.size, colour.hex);
   tap(12);
-  toast(`به سبد اضافه شد — ${p.name}، ${pick.size}`, 'bag');
+  const what = `${p.name}${COMMA}${sizeLabel(pick.size)}`;
+  toast(L(`به سبد اضافه شد — ${what}`, `Added — ${what}`, `Sepete eklendi — ${what}`), 'bag');
   document.dispatchEvent(new CustomEvent('bag:changed'));
 }
 
@@ -91,16 +101,16 @@ export default {
 
   meta(parts) {
     const p = getProduct(parts[1]);
-    return { title: p ? p.name : 'قطعه', wishId: p ? p.id : null };
+    return { title: p ? p.name : L('قطعه', 'Piece', 'Parça'), wishId: p ? p.id : null };
   },
 
   render(parts) {
     const p = getProduct(parts[1]);
     if (!p) {
-      return `<div class="empty"><h3 class="serif">توی کالکشن نیست</h3>
-        <p>این قطعه در این فصل دوخته نشده.</p>
+      return `<div class="empty"><h3 class="serif">${esc(L('توی کالکشن نیست', 'Not in the collection', 'Koleksiyonda yok'))}</h3>
+        <p>${esc(L('این قطعه این فصل دوخته نشده.', 'This piece was not made this season.', 'Bu parça bu sezon dikilmedi.'))}</p>
         <button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">
-          برگرد به فروشگاه</button></div>`;
+          ${esc(L('برگرد به فروشگاه', 'Back to the shop', 'Mağazaya dön'))}</button></div>`;
     }
     if (pick.id !== p.id) pick = { id: p.id, size: p.sizes.length === 1 ? p.sizes[0] : null, colour: 0 };
 
@@ -111,8 +121,8 @@ export default {
 
     return `
     <article style="--accent:${col.accent};--dot:${col.accent}">
-      <button class="pdp-back" data-act="back" type="button" aria-label="برگشت">
-        ${icon('chev', 20)}</button>
+      <button class="pdp-back" data-act="back" type="button" aria-label="${esc(L('برگشت', 'Back', 'Geri'))}">
+        ${icon('chev', 20, 'back-ico')}</button>
 
       <div class="pdp-gallery rail" style="grid-auto-columns:100%;padding:0">
         ${galleryFor(p).map((g, i) => `
@@ -133,7 +143,7 @@ export default {
 
       ${p.colours.length > 1 ? `
       <div class="opt">
-        <div class="opt-head"><span class="eyebrow">رنگ</span>
+        <div class="opt-head"><span class="eyebrow">${esc(L('رنگ', 'Colour', 'Renk'))}</span>
           <span class="tiny" id="colourName">${esc(p.colours[pick.colour].name)}</span></div>
         <div class="swatches">
           ${p.colours.map((c, i) => `
@@ -143,40 +153,48 @@ export default {
       </div>` : ''}
 
       <div class="opt">
-        <div class="opt-head"><span class="eyebrow">سایز</span>
+        <div class="opt-head"><span class="eyebrow">${esc(L('سایز', 'Size', 'Beden'))}</span>
           <button class="link-more" data-act="guide" type="button">
-            ${icon('ruler', 14)}راهنمای سایز</button></div>
+            ${icon('ruler', 14)}${esc(L('راهنمای سایز', 'Size guide', 'Beden rehberi'))}</button></div>
         <div class="sizes" id="pdpSizes">
           ${p.sizes.map((s) => `<button class="size ${pick.size === s ? 'on' : ''}
-            ${rec?.size === s ? 'rec' : ''}" data-size="${s}" type="button"><span
-            dir="ltr">${esc(s)}</span></button>`).join('')}
+            ${rec?.size === s ? 'rec' : ''}" data-size="${s}" type="button">${sizeTag(s)}</button>`).join('')}
         </div>
       </div>
 
       ${rec ? `<div class="fitbox">${icon('ruler', 19)}
-        <div><b>سایزت احتمالاً <span dir="ltr">${esc(rec.size)}</span> است</b>
+        <div><b>${L(
+          `احتمالاً سایزت <span dir="ltr">${esc(rec.size)}</span> باشه`,
+          `You are probably a ${esc(rec.size)}`,
+          `Bedenin büyük ihtimalle ${esc(rec.size)}`)}</b>
         <p>${esc(rec.why)}</p></div></div>`
       : `<div class="fitbox">${icon('ruler', 19)}
-        <div><b>سایزت را نمی‌دانی؟</b>
-        <p>یک بار سه تا اندازه را ثبت کن، بعد هر صفحه خودش می‌گوید چه سایزی بگیری.</p>
+        <div><b>${esc(L('سایزت رو نمی‌دونی؟', 'Not sure of your size?', 'Bedeninden emin değil misin?'))}</b>
+        <p>${esc(L(
+          'یه بار سه تا اندازه ثبت کن، بعدش هر صفحه خودش بهت می‌گه چه سایزی بگیری.',
+          'Save three measurements once and every product page names your size.',
+          'Üç ölçünü bir kez kaydet, sonra her ürün sayfası sana hangi bedeni alacağını söylesin.'))}</p>
         <div style="height:9px"></div>
-        <button class="btn btn-line btn-s" data-act="fit" type="button">ثبت اندازه‌ها</button>
+        <button class="btn btn-line btn-s" data-act="fit" type="button">${esc(L('ثبت اندازه‌ها', 'Add measurements', 'Ölçü ekle'))}</button>
         </div></div>`}
 
       <div class="spec">
-        <details open><summary>جزئیات${icon('chevD', 17)}</summary>
+        <details open><summary>${esc(L('جزئیات', 'Details', 'Detaylar'))}${icon('chevD', 17)}</summary>
           <div class="body">${esc(p.detail)}</div></details>
-        <details><summary>جنس${icon('chevD', 17)}</summary>
+        <details><summary>${esc(L('جنس', 'Fabric', 'Kumaş'))}${icon('chevD', 17)}</summary>
           <div class="body">${esc(p.fabric)}</div></details>
-        <details><summary>نگهداری${icon('chevD', 17)}</summary>
+        <details><summary>${esc(L('نگهداری', 'Care', 'Bakım'))}${icon('chevD', 17)}</summary>
           <div class="body">${esc(p.care)}</div></details>
-        <details><summary>ارسال و مرجوعی${icon('chevD', 17)}</summary>
-          <div class="body">یک تا دو روز کاری بعد ارسال می‌شود. بالای
-            ۳٬۵۰۰٬۰۰۰ تومان رایگان. تا ۷ روز، نپوشیده و با برچسب، قابل تعویض.</div></details>
+        <details><summary>${esc(L('ارسال و مرجوعی', 'Delivery and returns', 'Teslimat ve iade'))}${icon('chevD', 17)}</summary>
+          <div class="body">${esc(L(
+            'ارسال رایگانه و نهایتاً ۳ روز کاری طول می‌کشه. تا ۷ روز بعد از تحویل، اگه نپوشیده باشی و برچسبش سالم باشه، عوض یا مرجوعش می‌کنیم.',
+            'Free delivery, within 3 working days at most. Exchange or return within 7 days of delivery, unworn with tags intact.',
+            'Ücretsiz teslimat, en geç 3 iş günü içinde. Teslimattan sonraki 7 gün içinde, giyilmemiş ve etiketi sağlamsa değişim ya da iade.'))}
+            <a class="more-link" href="#/terms">${esc(L('قوانین کامل', 'Full terms', 'Tüm koşullar'))}</a></div></details>
       </div>
 
       <section class="sec">
-        <div class="sec-head"><h2 class="serif">با این‌ها بپوش</h2></div>
+        <div class="sec-head"><h2 class="serif">${esc(L('با اینا بپوش', 'Wear it with', 'Bununla giy'))}</h2></div>
         <div class="rail rail-p">${also.map((x) => productCard(x,
           { sizes: '(max-width:520px) 63vw, 250px' })).join('')}</div>
       </section>
@@ -186,10 +204,11 @@ export default {
 
     <div class="buybar">
       <button class="icon-btn ${wished ? 'on' : ''}" data-act="wish" data-id="${p.id}"
-        type="button" aria-pressed="${wished}" aria-label="ذخیرهٔ ${esc(p.name)}">
+        type="button" aria-pressed="${wished}"
+        aria-label="${esc(L(`ذخیره کردن ${p.name}`, `Save ${p.name}`, `${p.name} kaydet`))}">
         ${icon('heart', 19)}</button>
       <button class="btn btn-ink btn-block" data-act="add" data-id="${p.id}" type="button">
-        افزودن به سبد — ${toman(p.price)}</button>
+        ${esc(L('افزودن به سبد', 'Add to bag', 'Sepete ekle'))} — ${toman(p.price)}</button>
     </div>`;
   },
 

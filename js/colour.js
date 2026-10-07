@@ -5,19 +5,18 @@
    the middle third of the screen is in colour, and it drains again as it
    leaves. Scrolling the shop paints it.
 
-   Honours the profile setting — Always and Never both switch this off, since
-   CSS already forces those. */
-import { state } from './store.js';
-
+   There used to be a profile switch for this (On touch / Always / Never). The
+   studio asked for it gone, so the rule is fixed at "on touch" for everyone —
+   including a visitor whose phone still remembers an old Always or Never. */
 const BAND = '-36% 0px -36% 0px';
+const MODE = 'touch';
 
 export function applyColourPref() {
-  document.documentElement.dataset.colour = state.prefs.colour || 'touch';
+  document.documentElement.dataset.colour = MODE;
 }
 
 export function mountColour(root, signal) {
   applyColourPref();
-  if (state.prefs.colour !== 'touch') return;
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (!('IntersectionObserver' in window)) return;
 

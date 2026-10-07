@@ -1,9 +1,10 @@
-/* لوک‌ها — the look viewer: full-bleed campaign frames you swipe through, each
+/* استوری‌ها — the story viewer: full-bleed campaign frames you swipe through, each
    one carrying the pieces it was shot in. Always in colour — this is the one
    place the shop stops holding back.
 
-   The track scrolls horizontally inside an RTL page, which is the one piece of
-   geometry a direction flip genuinely breaks. Engines disagree about the sign
+   The track scrolls horizontally inside an RTL page (and an LTR one when the
+   visitor switches language), which is the one piece of geometry a direction
+   flip genuinely breaks. Engines disagree about the sign
    of scrollLeft in RTL, so nothing below assumes one: the sign is measured off
    the live element once and every read and write goes through it. */
 import { LOOKS, getProduct } from './data.js';
@@ -12,6 +13,7 @@ import { esc, toman } from './util.js';
 import { bigShot } from './ui.js';
 import { $ } from './util.js';
 import { go } from './router.js';
+import { L } from './i18n.js';
 
 let wired = false;
 
@@ -45,7 +47,7 @@ export function openLooks(index = 0) {
       ${LOOKS.map(() => '<i></i>').join('')}
     </div>
     <button class="viewer-close" data-act="viewer-close" type="button"
-            aria-label="بستن لوک‌ها">${icon('close', 19)}</button>
+            aria-label="${L('بستن استوری‌ها', 'Close stories', 'Hikâyeleri kapat')}">${icon('close', 19)}</button>
     <div class="viewer-track" id="viewerTrack" tabindex="-1">
       ${LOOKS.map(slide).join('')}
     </div>`;

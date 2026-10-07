@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
-<title>TIFFANY BY VANDA — لباس زنانه، دوخت ایران</title>
-<meta name="description" content="TIFFANY by Vanda — لباس زنانه، دوخت ایران. سالی سه کالکشن در تیراژ کم. کالکشن‌های Pastel Play، Lace Noir و Desert Hours.">
+<title>TIFFANY BY VANDA</title>
+<!-- Persian is the default on every visit. A visitor who picked English or
+     Türkçe in the hero keeps it for this visit only (sessionStorage), and the
+     page has to know before the first paint which way it reads. -->
+<script>try{var l=sessionStorage.getItem('tiffany.lang');if(l==='en'||l==='tr'){document.documentElement.lang=l;document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta name="description" content="TIFFANY by Vanda — سالی سه تا کالکشن، هر کدوم با تیراژ کم. کالکشن‌های Pastel Play، Lace Noir و Desert Hours.">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0E" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,7 +20,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TIFFANY by Vanda">
 <meta property="og:title" content="TIFFANY BY VANDA">
-<meta property="og:description" content="لباس زنانه، دوخت ایران. سالی سه کالکشن در تیراژ کم.">
+<meta property="og:description" content="سالی سه تا کالکشن، هر کدوم با تیراژ کم.">
 <meta property="og:image" content="assets/img/og.jpg">
 <meta property="og:locale" content="fa_IR">
 <meta name="twitter:card" content="summary_large_image">
@@ -35,15 +39,22 @@
 </head>
 <body>
 
-<!-- the boot veil: the wordmark wipes in, then lifts -->
+<!-- the boot veil: the wordmark wipes in, Alpha's credit settles under it,
+     then the veil lifts. The credit is English on every page, like the footer. -->
 <div class="boot" id="boot" aria-hidden="true">
-  <div class="boot-mark"></div>
+  <div class="boot-stack">
+    <div class="boot-mark"></div>
+    <div class="boot-sig" dir="ltr" lang="en">
+      <span class="alphasig__mark"></span>
+      <span class="boot-sig__txt">Powered by <b>Alpha Agency</b></span>
+    </div>
+  </div>
 </div>
 
 <!-- glass top bar — earns its place only once the hero has scrolled away -->
 <header class="topbar" id="topbar">
   <button class="topbar-back" id="topbarBack" data-act="back" type="button" aria-label="برگشت" hidden>
-    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+    <svg class="back-ico" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
          stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 5l7 7-7 7"/></svg>
   </button>
@@ -54,11 +65,11 @@
 <main id="app" class="app" tabindex="-1"></main>
 
 <!-- glass tab bar -->
-<nav class="tabbar" id="tabbar" aria-label="ناوبری اصلی">
+<nav class="tabbar" id="tabbar" aria-label="منوی اصلی">
   <div class="tab-pill" id="tabPill" aria-hidden="true"></div>
 </nav>
 
-<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="لوک‌ها"></div>
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="استوری‌ها"></div>
 <div class="toast-dock" id="toastDock" aria-live="polite"></div>
 <div class="sheet-root" id="sheetRoot"></div>
 
@@ -66,7 +77,7 @@
 <noscript>
   <div style="padding:40px 24px;text-align:center;font:400 15px/1.7 system-ui">
     <h1 dir="ltr" style="font:400 30px/1.1 Georgia,serif;letter-spacing:.06em">TIFFANY</h1>
-    <p>این فروشگاه به جاوااسکریپت نیاز دارد. روشنش کن، یا ما را توی اینستاگرام
+    <p>این فروشگاه بدون جاوااسکریپت کار نمی‌کنه. روشنش کن، یا ما رو توی اینستاگرام
       پیدا کن: <a dir="ltr" href="https://instagram.com/tiffanyiran">@tiffanyiran</a></p>
   </div>
 </noscript>

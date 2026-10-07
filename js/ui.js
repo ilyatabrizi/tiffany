@@ -4,6 +4,7 @@ import { SIZES, colById, getProduct } from './data.js';
 import { icon } from './icons.js';
 import { $, esc, toman, clamp } from './util.js';
 import { isWished, toggleWish, state } from './store.js';
+import { L } from './i18n.js';
 
 /* ---------------------------------------------------------------- images */
 export const shot = (name, sizes, widths = [480, 960]) =>
@@ -36,7 +37,7 @@ export function productCard(p, { sizes = '(max-width:620px) 44vw, 230px' } = {})
     </button>
     <button class="card-wish ${wished ? 'on' : ''}" data-act="wish" data-id="${p.id}"
             type="button" aria-pressed="${wished}"
-            aria-label="ذخیرهٔ ${esc(p.name)}">${icon('heart', 17)}</button>
+            aria-label="${esc(L(`ذخیره کردن ${p.name}`, `Save ${p.name}`, `${p.name} kaydet`))}">${icon('heart', 17)}</button>
   </div>`;
 }
 
@@ -93,10 +94,16 @@ export function recommendSize(product) {
   if (product.fit === 'relaxed' && best.score === 0) idx = clamp(idx - 0, 0, SIZES.length - 1);
 
   const why = product.fit === 'small'
-    ? 'این یکی تنگ دوخته شده — یک سایز بالاتر گرفتیم برایت.'
+    ? L('این یکی تنگ دوخته شده؛ واسه همین یه سایز بزرگ‌تر برات زدیم.',
+      'This one is cut close — we have sized you up.',
+      'Bu parça dar kesim; o yüzden bir beden büyüğünü önerdik.')
     : product.fit === 'relaxed'
-      ? 'گشاد دوخته شده. اگر چسبان‌تر می‌خواهی یک سایز پایین‌تر بگیر.'
-      : 'بر اساس اندازه‌هایی که توی پروفایلت ذخیره کرده‌ای.';
+      ? L('گشاد دوخته شده. اگه چسبون‌تر می‌خوای، یه سایز کوچیک‌تر بگیر.',
+        'Cut relaxed. Size down if you want it closer to the body.',
+        'Bol kesim. Daha vücuda oturan istersen bir beden küçük al.')
+      : L('بر اساس اندازه‌هایی که توی پروفایلت ذخیره کردی.',
+        'Based on the measurements saved in your profile.',
+        'Profilinde kayıtlı ölçülere göre.');
   return { size: SIZES[idx].id, why };
 }
 
@@ -113,7 +120,10 @@ export function flipWish(id) {
     if (el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', String(now));
   });
   const p = getProduct(id);
-  toast(now ? `ذخیره شد — ${p ? p.name : 'این قطعه'}` : 'از ذخیره‌ها برداشته شد', 'heart');
+  const name = p ? p.name : L('این قطعه', 'piece', 'bu parça');
+  toast(now
+    ? L(`ذخیره شد — ${name}`, `Saved — ${name}`, `Kaydedildi — ${name}`)
+    : L('از ذخیره‌ها درش آوردیم', 'Removed from saved', 'Kaydedilenlerden çıkarıldı'), 'heart');
   return now;
 }
 
@@ -193,7 +203,7 @@ export const sheetIsOpen = () => $('#sheetRoot')?.classList.contains('open');
 export const empty = (ico, title, body, cta = '') => `
   <div class="empty">
     <div class="ring">${icon(ico, 24)}</div>
-    <h3 class="serif">${esc(title)}</h3><p>${esc(body)}</p>${cta}
+    <h3 class="serif">${esc(title)}</h3>${body ? `<p>${esc(body)}</p>` : ''}${cta}
   </div>`;
 
 export const secHead = (title, more = '') => `
@@ -204,17 +214,20 @@ export const secHead = (title, more = '') => `
 
 /* The agency signature. Its own block, not a few words tacked onto the
    copyright — the lockup already reads "alpha", so the words beside it carry
-   the rest of the phrase rather than saying the name twice. */
+   the rest of the phrase rather than saying the name twice.
+
+   Always English and always left-to-right, in every language the shop
+   speaks: it is Alpha's lockup, not a line of the shop's copy. */
 export const alphaSig = () => `
   <a class="alphasig" href="https://alphaa.agency" target="_blank" rel="noopener"
-     aria-label="ساخته شده در Alpha Agency">
+     dir="ltr" lang="en" aria-label="Powered by Alpha Agency">
     <span class="alphasig__mark" aria-hidden="true"></span>
     <span class="alphasig__txt">
-      <span class="alphasig__by">ساخته شده در</span>
-      <span class="alphasig__name" dir="ltr">Alpha Agency</span>
+      <span class="alphasig__by">Powered by</span>
+      <span class="alphasig__name">Alpha Agency</span>
     </span>
   </a>`;
 
-export const moreLink = (to, label = 'همه') =>
+export const moreLink = (to, label = L('همه', 'See all', 'Tümü')) =>
   `<button class="link-more" data-act="nav" data-to="${to}" type="button">
      ${esc(label)}${icon('arrow', 14)}</button>`;

@@ -1,4 +1,5 @@
 /* Boot, routing, the two glass bars, and one click delegate for the lot. */
+import { L, dir } from './i18n.js';
 import { BRAND } from './config.js';
 import { icon } from './icons.js';
 import { $, $$, num } from './util.js';
@@ -16,22 +17,28 @@ import product, { addToBagFlow } from './views/product.js';
 import bag from './views/bag.js';
 import orders from './views/orders.js';
 import saved from './views/saved.js';
-import profile, { addressSheet, aboutSheet, resetSheet } from './views/profile.js';
+import profile, { addressSheet, resetSheet } from './views/profile.js';
+import { about, contact, terms } from './views/info.js';
 import { fitSheet } from './views/profile.js';
 
 const VIEWS = {
   '/': home, '/shop': shop, '/bag': bag, '/orders': orders, '/profile': profile,
   '/saved': saved, '/p': product, '/c': collection,
+  '/about': about, '/contact': contact, '/terms': terms,
 };
 
 /* Each tab owns one of the five colours. It is the only colour in the chrome,
-   and it only shows on the tab you are standing on. */
+   and it only shows on the tab you are standing on.
+
+   The labels are English in every language the shop speaks — the studio asked
+   for it, and like the wordmark they read as names. Order still follows the
+   page: Home sits at the start edge, right in Persian, left in the others. */
 const TABS = [
-  { id: 'home', to: '/', label: 'خانه', ico: 'home', c: 'var(--c-blush)' },
-  { id: 'shop', to: '/shop', label: 'فروشگاه', ico: 'hanger', c: 'var(--c-sky)' },
-  { id: 'bag', to: '/bag', label: 'سبد', ico: 'bag', c: 'var(--c-cherry)' },
-  { id: 'orders', to: '/orders', label: 'سفارش‌ها', ico: 'box', c: 'var(--c-rust)' },
-  { id: 'profile', to: '/profile', label: 'پروفایل', ico: 'user', c: 'var(--c-lilac)' },
+  { id: 'home', to: '/', label: 'Home', ico: 'home', c: 'var(--c-blush)' },
+  { id: 'shop', to: '/shop', label: 'Shop', ico: 'hanger', c: 'var(--c-sky)' },
+  { id: 'bag', to: '/bag', label: 'Bag', ico: 'bag', c: 'var(--c-cherry)' },
+  { id: 'orders', to: '/orders', label: 'Orders', ico: 'box', c: 'var(--c-rust)' },
+  { id: 'profile', to: '/profile', label: 'Profile', ico: 'user', c: 'var(--c-lilac)' },
 ];
 
 const app = $('#app');
@@ -58,7 +65,7 @@ function buildTabs() {
     b.dataset.act = 'nav';
     b.dataset.to = t.to;
     b.style.setProperty('--tab-c', t.c);
-    b.innerHTML = `${icon(t.ico, 22)}<span class="tab-label">${t.label}</span>
+    b.innerHTML = `${icon(t.ico, 22)}<span class="tab-label" lang="en">${t.label}</span>
       <span class="tab-dot" hidden></span>`;
     tabbar.appendChild(b);
   });
@@ -109,8 +116,8 @@ function wireTopbar(view, parts, signal) {
 
   topTitle.textContent = isHome ? BRAND.name : title;
   topTitle.classList.toggle('mark', isHome);
-  /* The wordmark is Latin; everything else in the bar is Persian. */
-  topTitle.setAttribute('dir', isHome ? 'ltr' : 'rtl');
+  /* The wordmark is Latin; everything else in the bar follows the page. */
+  topTitle.setAttribute('dir', isHome ? 'ltr' : dir);
   topBack.hidden = !view.back;
   topAct.hidden = !meta.wishId;
   if (meta.wishId) {
@@ -118,7 +125,7 @@ function wireTopbar(view, parts, signal) {
     topAct.dataset.id = meta.wishId;
     topAct.innerHTML = icon('heart', 19);
     topAct.setAttribute('aria-pressed', String(isWished(meta.wishId)));
-    topAct.setAttribute('aria-label', 'ذخیرهٔ این قطعه');
+    topAct.setAttribute('aria-label', L('ذخیره کردن این قطعه', 'Save this piece', 'Bu parçayı kaydet'));
     topAct.classList.toggle('on', isWished(meta.wishId));
   }
 
@@ -157,9 +164,7 @@ function render(route, { keepScroll = false } = {}) {
   });
 
   const t = view.meta?.(route.parts)?.title || view.title || BRAND.name;
-  document.title = t === BRAND.name
-    ? `${BRAND.name} ${BRAND.sub} — ${BRAND.tagline}`
-    : `${t} — ${BRAND.name}`;
+  document.title = t === BRAND.name ? `${BRAND.name} ${BRAND.sub}` : `${t} — ${BRAND.name}`;
 }
 
 const refresh = () => render(parse(), { keepScroll: true });
@@ -184,7 +189,7 @@ document.addEventListener('click', (e) => {
     case 'install': promptInstall(); break;
     case 'fit': closeSheet(); setTimeout(fitSheet, 220); break;
     case 'address': addressSheet(); break;
-    case 'about': aboutSheet(); break;
+    case 'about': go('/about'); break;
     case 'reset': resetSheet(); break;
     case 'share': share(); break;
     default: break;
@@ -212,7 +217,7 @@ async function share() {
   try {
     if (navigator.share) { await navigator.share({ title: BRAND.full, url }); return; }
     await navigator.clipboard.writeText(url);
-    toast('لینک کپی شد', 'check');
+    toast(L('لینک کپی شد', 'Link copied', 'Bağlantı kopyalandı'), 'check');
   } catch { /* the user dismissed it */ }
 }
 
@@ -229,7 +234,7 @@ function liftVeil() {
   const lift = () => (lifted ? null : (lifted = true, setTimeout(() => {
     boot.classList.add('gone');
     setTimeout(() => boot.remove(), 560);
-  }, standalone() ? 780 : 620)));
+  }, standalone() ? 1150 : 1000)));   // long enough to read Alpha's line
   if (document.fonts?.ready) document.fonts.ready.then(lift).catch(lift); else lift();
   setTimeout(lift, 2600);   // a font that never resolves must not trap the app
 }
@@ -239,8 +244,17 @@ addEventListener('resize', () => {
   if (on) movePill(on.dataset.tab);
 });
 
+/* The shell's own labels are written in Persian in index.html; the other two
+   languages swap them here, before anything can read them. */
+function labelShell() {
+  topBack.setAttribute('aria-label', L('برگشت', 'Back', 'Geri'));
+  tabbar.setAttribute('aria-label', L('منوی اصلی', 'Main navigation', 'Ana menü'));
+  $('#viewer')?.setAttribute('aria-label', L('استوری‌ها', 'Stories', 'Hikâyeler'));
+}
+
 applyTheme();
 applyColourPref();
+labelShell();
 buildTabs();
 liftVeil();
 onRoute((r) => render(r));

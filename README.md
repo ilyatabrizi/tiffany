@@ -39,6 +39,29 @@ Two rules that cost real bugs on the way:
 - **`·` and `۰` are the same circle in this face.** The middot is banned
   outright as a separator, and the suite fails the build if one appears.
 
+## Three languages (since 5 Oct 2026)
+
+Persian is the default, and **every fresh visit opens in Persian**. A small
+glass pill in the hero's top corner switches to **English** or **Türkçe** for
+the rest of that visit (`sessionStorage`, key `tiffany.lang`); the switch
+reloads the page so every formatter and string is read once, in one language.
+
+- Strings live where they are shown as `L('فارسی', 'English', 'Türkçe')` —
+  `js/i18n.js` holds the switch, the catalogue in `js/data.js` is trilingual.
+- The **tab bar is English in all three** (the studio's call), and so is
+  Alpha's signature — "Powered by Alpha Agency", never Persian.
+- English and Turkish run left to right in **Inter** with Latin digits
+  (`1,680,000 Toman` / `1.680.000 Toman`); Persian keeps IRANYekanX and ۰–۹.
+  Turkish ğ ş İ come from Latin-Extended halves of Inter and Cormorant that
+  only download when those letters are on the page.
+- The bag stores a colour's **hex** and one-size as **`OS`**, never a
+  translated label, so a bag filled in one language reads right in another.
+- Persian copy is written colloquially (خودمونی), not in book Persian.
+- Removed at the studio's request: the piece count in the shop, the footer
+  tagline / free-delivery line / preview notice, the colour quote, the empty-bag
+  line about small runs, and the Profile → Colour switch (the rule is fixed at
+  "on touch"). «لوک‌ها» is now «استوری‌ها».
+
 ## The idea
 
 Two rules hold the whole design together.
@@ -89,7 +112,7 @@ python3 serve.py          # http://localhost:8131
 ```
 
 ```bash
-python3 e2e.py            # 85 checks in a real browser, plus docs/shots/
+python3 e2e.py            # 121 checks in a real browser, plus docs/shots/
 ```
 
 `e2e.py` drives the system Chrome through Playwright — no browser download. It
