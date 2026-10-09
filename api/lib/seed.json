@@ -1,0 +1,966 @@
+[
+ {
+  "id": "alphabet-tee",
+  "name": {
+   "fa": "تی‌شرت الفبا",
+   "en": "Alphabet Lace Tee",
+   "tr": "Alfabe Dantel Tişört"
+  },
+  "cat": "tee",
+  "col": "pastel",
+  "price": 1680000,
+  "images": [
+   "assets/img/p-alphabet-tee"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "relaxed",
+  "badge": "new",
+  "colours": [
+   {
+    "hex": "#A9C9E8",
+    "fa": "آبی آسمونی",
+    "en": "Sky",
+    "tr": "Gök mavisi"
+   },
+   {
+    "hex": "#F2EFE9",
+    "fa": "شیری",
+    "en": "Ivory",
+    "tr": "Fildişi"
+   }
+  ],
+  "note": {
+   "fa": "تریکوی نخی ضخیم با یه تیکه گیپور که دستی روش دوخته شده.",
+   "en": "Heavy cotton jersey with a broderie panel appliquéd by hand.",
+   "tr": "Elle aplike edilmiş brode panelli, kalın pamuklu süprem."
+  },
+  "detail": {
+   "fa": "سرشونه افتاده، تن جعبه‌ای، یقه کبریتی. تیکه‌ی رویی بعد از دوخت تی‌شرت اضافه می‌شه، واسه همین جای هیچ دو تاش دقیقاً یکی نیست.",
+   "en": "Drop shoulder, boxy body, ribbed neck. The panel is stitched on after the tee is made, so no two sit in exactly the same place.",
+   "tr": "Düşük omuz, kutu kesim, ribanalı yaka. Panel tişört dikildikten sonra eklenir; bu yüzden hiçbiri tam aynı yerde durmaz."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ نخ، ۲۲۰ گرم. حاشیه‌ی دانتل ۶۰٪ نخ و ۴۰٪ نایلون.",
+   "en": "100% cotton, 220gsm. Lace trim 60% cotton / 40% nylon.",
+   "tr": "%100 pamuk, 220 g/m². Dantel şerit %60 pamuk / %40 naylon."
+  },
+  "care": {
+   "fa": "با آب سرد و پشت‌ورو بشورش. خشک‌کن نه. اتوی ملایم، ولی هیچ‌وقت روی دانتل.",
+   "en": "Cold wash, inside out. Do not tumble. Warm iron, never on the lace.",
+   "tr": "Ters çevirip soğuk suda yıka. Kurutma makinesine atma. Ilık ütü; ama dantelin üstüne asla."
+  },
+  "visible": true,
+  "sort": 0
+ },
+ {
+  "id": "organza-skirt",
+  "name": {
+   "fa": "دامن ابری ارگانزا",
+   "en": "Organza Cloud Skirt",
+   "tr": "Organze Bulut Etek"
+  },
+  "cat": "skirts",
+  "col": "pastel",
+  "price": 2950000,
+  "images": [
+   "assets/img/p-organza-skirt"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "campaign",
+  "colours": [
+   {
+    "hex": "#EF8FAB",
+    "fa": "صورتی",
+    "en": "Blush",
+    "tr": "Pudra pembe"
+   },
+   {
+    "hex": "#EDEAE4",
+    "fa": "گچی",
+    "en": "Chalk",
+    "tr": "Tebeşir beyazı"
+   }
+  ],
+  "note": {
+   "fa": "دو لایه ارگانزای مچاله روی یه زیرپوش نخی.",
+   "en": "Two layers of crushed organza over a cotton slip.",
+   "tr": "Pamuklu bir astarın üzerinde iki kat buruşuk organze."
+  },
+  "detail": {
+   "fa": "کمرش از پشت کش‌داره و جلوش صاف. روی قد ۱۶۸ تا وسط ساق میاد و جوری تکون می‌خوره که انگار یه سایز بزرگ‌تره.",
+   "en": "Elasticated back waist, flat front. Falls mid-calf on 168cm and moves like it is a size larger than it is.",
+   "tr": "Arkası lastikli, önü düz bel. 168 cm boyda baldır ortasına iner ve olduğundan bir beden büyükmüş gibi hareket eder."
+  },
+  "fabric": {
+   "fa": "رویه ۱۰۰٪ ارگانزای پلی‌استر. آستر ۱۰۰٪ نخ.",
+   "en": "Shell 100% polyester organza. Lining 100% cotton.",
+   "tr": "Dış kumaş %100 polyester organze. Astar %100 pamuk."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور، آویزون خشکش کن. فقط بخار؛ اتوی داغ خوابش می‌کنه.",
+   "en": "Hand wash cold, hang to dry. Steam only — a hot iron will flatten it.",
+   "tr": "Elde soğuk suda yıka, asarak kurut. Sadece buhar; sıcak ütü onu yassılaştırır."
+  },
+  "visible": true,
+  "sort": 1
+ },
+ {
+  "id": "heart-belt",
+  "name": {
+   "fa": "کمربند زنجیری قلب",
+   "en": "Heart Chain Belt",
+   "tr": "Kalpli Zincir Kemer"
+  },
+  "cat": "accessories",
+  "col": "pastel",
+  "price": 1150000,
+  "images": [
+   "assets/img/p-heart-belt"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C6C8CC",
+    "fa": "نقره‌ای",
+    "en": "Silver",
+    "tr": "Gümüş"
+   }
+  ],
+  "note": {
+   "fa": "قلب‌های ریخته‌گری روی زنجیر مهره‌ای، با قلاب.",
+   "en": "Cast hearts on a beaded chain, hook clasp.",
+   "tr": "Boncuklu zincir üzerinde döküm kalpler, kancalı kopça."
+  },
+  "detail": {
+   "fa": "از ۶۸ تا ۹۶ سانتی‌متر تنظیم می‌شه. اون‌قدر سنگین هست که کمر چین‌دار رو سر جاش نگه داره.",
+   "en": "Adjustable 68–96cm. Heavy enough to hold a gathered waist in place.",
+   "tr": "68–96 cm arası ayarlanır. Büzgülü bir beli yerinde tutacak kadar ağır."
+  },
+  "fabric": {
+   "fa": "آلیاژ روی، براش‌خورده و لاک‌خورده.",
+   "en": "Zinc alloy, brushed and lacquered.",
+   "tr": "Çinko alaşım, fırçalanmış ve cilalı."
+  },
+  "care": {
+   "fa": "خشک نگهش دار. با یه پارچه‌ی نرم پاکش کن.",
+   "en": "Keep dry. Wipe with a soft cloth.",
+   "tr": "Kuru tut. Yumuşak bir bezle sil."
+  },
+  "visible": true,
+  "sort": 2
+ },
+ {
+  "id": "crinkle-shirt",
+  "name": {
+   "fa": "رویی چین‌خورده",
+   "en": "Crinkle Overshirt",
+   "tr": "Kırışık Gömlek Ceket"
+  },
+  "cat": "shirt",
+  "col": "pastel",
+  "price": 2380000,
+  "images": [
+   "assets/img/p-crinkle-shirt"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "relaxed",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F49CB6",
+    "fa": "صورتی آدامسی",
+    "en": "Bubblegum",
+    "tr": "Sakız pembesi"
+   },
+   {
+    "hex": "#A9C9E8",
+    "fa": "آبی آسمونی",
+    "en": "Sky",
+    "tr": "Gök mavisi"
+   }
+  ],
+  "note": {
+   "fa": "نایلون چین‌خورده و پَرمانند؛ همونی که دور شونه گره‌ش می‌زنی.",
+   "en": "Featherweight crinkle nylon — the one you tie at the shoulders.",
+   "tr": "Tüy hafifliğinde kırışık naylon; omuzlara bağladığın o parça."
+  },
+  "detail": {
+   "fa": "پشتش بلنده، جلوش کوتاه. تا اندازه‌ی یه مشت جمع می‌شه.",
+   "en": "Cut long in the back, cropped in front. Packs to the size of a fist.",
+   "tr": "Arkası uzun, önü kısa kesim. Bir yumruk boyutuna kadar katlanır."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ نایلون با پرداخت چین‌خورده.",
+   "en": "100% nylon, crinkle finish.",
+   "tr": "%100 naylon, kırışık bitiş."
+  },
+  "care": {
+   "fa": "ماشین، آب سرد. اتوش نکن؛ چین‌هاش خودِ ماجراست.",
+   "en": "Cold machine wash. Do not iron; the crinkle is the point.",
+   "tr": "Makinede soğuk yıka. Ütüleme; kırışıklık işin ta kendisi."
+  },
+  "visible": true,
+  "sort": 3
+ },
+ {
+  "id": "pleat-trouser",
+  "name": {
+   "fa": "شلوار پیلی‌دار گشاد",
+   "en": "Wide Pleat Trouser",
+   "tr": "Pileli Bol Pantolon"
+  },
+  "cat": "trousers",
+  "col": "pastel",
+  "price": 2180000,
+  "images": [
+   "assets/img/p-pleat-trouser"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "relaxed",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#A9C9E8",
+    "fa": "آبی آسمونی",
+    "en": "Sky",
+    "tr": "Gök mavisi"
+   },
+   {
+    "hex": "#22232A",
+    "fa": "سرمه‌ای",
+    "en": "Ink",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "کمر کش‌دار، جیب‌های گود، پاچه‌ای که تمومی نداره.",
+   "en": "Elastic waist, deep pockets, a leg that keeps going.",
+   "tr": "Lastikli bel, derin cepler, bitmek bilmeyen paçalar."
+  },
+  "detail": {
+   "fa": "روی گودی کمر می‌شینه. قد داخل پا توی سایز M ۷۴ سانته و می‌شه کوتاهش کرد بدون این‌که ریزشش از بین بره.",
+   "en": "Sits at the natural waist. 74cm inseam on M, hemmable without losing the drape.",
+   "tr": "Doğal bel hizasında durur. M bedende iç boy 74 cm; dökümü bozulmadan kısaltılabilir."
+  },
+  "fabric": {
+   "fa": "۵۵٪ ویسکوز و ۴۵٪ کتان.",
+   "en": "55% viscose / 45% linen.",
+   "tr": "%55 viskon / %45 keten."
+  },
+  "care": {
+   "fa": "آب سرد، برنامه‌ی ملایم. آویزون خشکش کن. نم‌دار اتوش کن.",
+   "en": "Cold wash on gentle. Line dry. Iron damp.",
+   "tr": "Hassas programda soğuk yıka. Asarak kurut. Nemliyken ütüle."
+  },
+  "visible": true,
+  "sort": 4
+ },
+ {
+  "id": "polka-skirt",
+  "name": {
+   "fa": "دامن میدی خال‌خالی",
+   "en": "Polka Midi Skirt",
+   "tr": "Puantiyeli Midi Etek"
+  },
+  "cat": "skirts",
+  "col": "pastel",
+  "price": 2290000,
+  "images": [
+   "assets/img/p-polka-skirt"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#EDEAE4",
+    "fa": "گچی",
+    "en": "Chalk",
+    "tr": "Tebeşir beyazı"
+   }
+  ],
+  "note": {
+   "fa": "وال نخی چاپی، ترک‌های اریب، و دامنی که تاب می‌خوره.",
+   "en": "Printed cotton voile, bias panels, a hem that swings.",
+   "tr": "Baskılı pamuklu vual, verev parçalar, salınan bir etek ucu."
+  },
+  "detail": {
+   "fa": "شش تا ترک اریب بریده شده تا بدون حتی یه پنس بیفته.",
+   "en": "Six panels cut on the bias so it hangs without a single dart.",
+   "tr": "Tek bir pens olmadan dökülsün diye verevden kesilmiş altı parça."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ وال نخی، چاپ سیلک.",
+   "en": "100% cotton voile, screen printed.",
+   "tr": "%100 pamuklu vual, serigrafi baskı."
+  },
+  "care": {
+   "fa": "آب سرد. توی سایه خشکش کن. اتوی ملایم.",
+   "en": "Cold wash. Line dry in shade. Warm iron.",
+   "tr": "Soğuk yıka. Gölgede asarak kurut. Ilık ütü."
+  },
+  "visible": true,
+  "sort": 5
+ },
+ {
+  "id": "rib-tee",
+  "name": {
+   "fa": "تی‌شرت کبریتی ساده",
+   "en": "Essential Rib Tee",
+   "tr": "Basic Fitilli Tişört"
+  },
+  "cat": "tee",
+  "col": "pastel",
+  "price": 890000,
+  "images": [
+   "assets/img/p-rib-tee"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "small",
+  "badge": "restock",
+  "colours": [
+   {
+    "hex": "#FFFFFF",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#111114",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#EF8FAB",
+    "fa": "صورتی",
+    "en": "Blush",
+    "tr": "Pudra pembe"
+   }
+  ],
+  "note": {
+   "fa": "لایه‌ی زیرِ هر چیز دیگه‌ای که توی این فروشگاه هست.",
+   "en": "The base layer under everything else in this shop.",
+   "tr": "Bu mağazadaki her şeyin altına giyilen temel katman."
+  },
+  "detail": {
+   "fa": "تنگ و کوتاه دوخته شده. اگه می‌خوای راحت روی تنت بشینه، یه سایز بزرگ‌تر بگیر.",
+   "en": "Cut close and short. Take a size up if you want it to skim.",
+   "tr": "Dar ve kısa kesim. Vücuduna hafifçe değsin istiyorsan bir beden büyük al."
+  },
+  "fabric": {
+   "fa": "۹۵٪ نخ و ۵٪ الاستان، کبریتی ۲×۲.",
+   "en": "95% cotton / 5% elastane, 2x2 rib.",
+   "tr": "%95 pamuk / %5 elastan, 2x2 ribana."
+  },
+  "care": {
+   "fa": "ماشین، آب سرد. تا نم داره فرمش رو درست کن.",
+   "en": "Machine wash cold. Reshape while damp.",
+   "tr": "Makinede soğuk yıka. Nemliyken şeklini düzelt."
+  },
+  "visible": true,
+  "sort": 6
+ },
+ {
+  "id": "lace-bandeau",
+  "name": {
+   "fa": "تی‌شرت با بالاتنه‌ی دانتل",
+   "en": "Lace Bandeau Tee",
+   "tr": "Dantel Bandolu Tişört"
+  },
+  "cat": "tee",
+  "col": "noir",
+  "price": 1890000,
+  "images": [
+   "assets/img/p-lace-bandeau"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "bestseller",
+  "colours": [
+   {
+    "hex": "#141417",
+    "fa": "مشکی و شیری",
+    "en": "Black / Ivory",
+    "tr": "Siyah / Fildişi"
+   }
+  ],
+  "note": {
+   "fa": "یه تی‌شرت نخی که یه بالاتنه‌ی دانتل مستقیم روش دوخته شده.",
+   "en": "A cotton tee with a lace bandeau sewn straight onto it.",
+   "tr": "Üstüne doğrudan dantel bando dikilmiş pamuklu bir tişört."
+  },
+  "detail": {
+   "fa": "دو تا لباس، یه درز. بندهاش تزئینیه؛ کل لباس از سر رد می‌شه.",
+   "en": "Two garments, one seam. Straps are decorative — the whole thing comes on and off over the head.",
+   "tr": "İki giysi, tek dikiş. Askılar süs; hepsi baştan giyilip çıkarılır."
+  },
+  "fabric": {
+   "fa": "تنه ۱۰۰٪ نخ. بالاتنه دانتل ۶۵٪ نایلون و ۳۵٪ نخ.",
+   "en": "Body 100% cotton. Bandeau 65% nylon / 35% cotton lace.",
+   "tr": "Gövde %100 pamuk. Bando %65 naylon / %35 pamuk dantel."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور، خوابیده خشکش کن. دانتل رو نچلون.",
+   "en": "Hand wash cold, dry flat. Do not wring the lace.",
+   "tr": "Elde soğuk suda yıka, sererek kurut. Danteli sıkma."
+  },
+  "visible": true,
+  "sort": 7
+ },
+ {
+  "id": "mesh-cami",
+  "name": {
+   "fa": "تاپ توری",
+   "en": "Mesh Slip Cami",
+   "tr": "File Askılı Bluz"
+  },
+  "cat": "top",
+  "col": "noir",
+  "price": 1450000,
+  "images": [
+   "assets/img/p-mesh-cami"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7C7C82",
+    "fa": "دودی",
+    "en": "Smoke",
+    "tr": "Füme"
+   },
+   {
+    "hex": "#111114",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "توری نازک با لبه‌ی چین‌دار، که روی تی‌شرت پوشیده می‌شه.",
+   "en": "Sheer mesh with a ruffled edge, worn over a tee.",
+   "tr": "Tişört üstüne giyilen, fırfırlı kenarlı ince file."
+  },
+  "detail": {
+   "fa": "بندهاش تنظیم می‌شه. لایه‌ای بپوشش؛ برای تنها پوشیدن ساخته نشده.",
+   "en": "Adjustable straps. Layer it — it is not built to be worn alone.",
+   "tr": "Ayarlanabilir askılar. Katmanlı giy; tek başına giyilmek için yapılmadı."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ توری پلی‌استر با حاشیه‌ی پیکو.",
+   "en": "100% polyester mesh, picot trim.",
+   "tr": "%100 polyester file, pikot şerit."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور. آویزون خشکش کن. اتو نکن.",
+   "en": "Hand wash cold. Hang to dry. Do not iron.",
+   "tr": "Elde soğuk suda yıka. Asarak kurut. Ütüleme."
+  },
+  "visible": true,
+  "sort": 8
+ },
+ {
+  "id": "linen-trouser",
+  "name": {
+   "fa": "شلوار کتان گشاد",
+   "en": "Linen Wide Trouser",
+   "tr": "Bol Keten Pantolon"
+  },
+  "cat": "trousers",
+  "col": "noir",
+  "price": 2480000,
+  "images": [
+   "assets/img/p-linen-trouser"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "relaxed",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#EDEAE4",
+    "fa": "گچی",
+    "en": "Chalk",
+    "tr": "Tebeşir beyazı"
+   },
+   {
+    "hex": "#111114",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "کتان مچاله، پیلی جلو، و جاکمربندی‌هایی که یه کمربند واقعی رو جا می‌دن.",
+   "en": "Crushed linen, pleated front, belt loops that take a real belt.",
+   "tr": "Buruşuk keten, önden pileli, gerçek bir kemer alan kemer köprüleri."
+  },
+  "detail": {
+   "fa": "فاق بلند، پاچه‌ی گشاد و صاف، جیب بغلی اون‌قدر گود که گوشی توش جا بشه.",
+   "en": "High waist, wide straight leg, side pockets deep enough for a phone.",
+   "tr": "Yüksek bel, geniş düz paça, telefon sığacak kadar derin yan cepler."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ کتان شسته.",
+   "en": "100% washed linen.",
+   "tr": "%100 yıkanmış keten."
+  },
+  "care": {
+   "fa": "ماشین، آب سرد. برای نرم شدن، خشک‌کن ملایم. چروک‌هاش طبیعیه.",
+   "en": "Machine wash cold. Tumble low to soften. Creases are correct.",
+   "tr": "Makinede soğuk yıka. Yumuşasın diye düşük ısıda kurut. Kırışıklar olması gerektiği gibi."
+  },
+  "visible": true,
+  "sort": 9
+ },
+ {
+  "id": "pearl-cap",
+  "name": {
+   "fa": "کلاه قلاب‌بافی مرواریدی",
+   "en": "Pearl Crochet Cap",
+   "tr": "İncili Tığ İşi Şapka"
+  },
+  "cat": "accessories",
+  "col": "noir",
+  "price": 980000,
+  "images": [
+   "assets/img/p-pearl-cap"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F2EFE9",
+    "fa": "شیری",
+    "en": "Ivory",
+    "tr": "Fildişi"
+   }
+  ],
+  "note": {
+   "fa": "بافت باز قلاب‌بافی، با مرواریدهای شیشه‌ای روی لبه.",
+   "en": "Open-stitch crochet, glass pearls set along the brim.",
+   "tr": "Açık örgü tığ işi, kenarı boyunca cam inciler."
+  },
+  "detail": {
+   "fa": "تا دور سر ۵۸ باز می‌شه. عقب سر می‌شینه، نه پایین روی گوش‌ها.",
+   "en": "Stretches to 58cm. Sits back on the head, not down over the ears.",
+   "tr": "58 cm’ye kadar esner. Kulakların üstüne değil, başın arkasına oturur."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ نخ کاموا، مروارید شیشه‌ای.",
+   "en": "100% cotton yarn, glass pearl trim.",
+   "tr": "%100 pamuk ip, cam inci süsleme."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور، دور از آفتاب و خوابیده خشکش کن.",
+   "en": "Hand wash cold, dry flat away from sun.",
+   "tr": "Elde soğuk suda yıka, güneşten uzakta sererek kurut."
+  },
+  "visible": true,
+  "sort": 10
+ },
+ {
+  "id": "tinted-shades",
+  "name": {
+   "fa": "عینک دودی رنگی",
+   "en": "Tinted Aviator",
+   "tr": "Renkli Aviator Gözlük"
+  },
+  "cat": "accessories",
+  "col": "noir",
+  "price": 1650000,
+  "images": [
+   "assets/img/p-tinted-shades"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "new",
+  "colours": [
+   {
+    "hex": "#B4762F",
+    "fa": "کهربایی و بنفش",
+    "en": "Amber / Violet",
+    "tr": "Kehribar / Mor"
+   },
+   {
+    "hex": "#111114",
+    "fa": "مشکی و طوسی",
+    "en": "Black / Grey",
+    "tr": "Siyah / Gri"
+   }
+  ],
+  "note": {
+   "fa": "فریم استات با عدسی بنفش سایه‌دار.",
+   "en": "Acetate frame, graduated violet lens.",
+   "tr": "Asetat çerçeve, renk geçişli mor cam."
+  },
+  "detail": {
+   "fa": "پل پهن، میله‌ی بالایی صاف. روی صورت گرد بهتر می‌شینه تا صورت کشیده.",
+   "en": "Wide bridge, flat top bar. Suits a round face better than a long one.",
+   "tr": "Geniş köprü, düz üst çubuk. Uzun yüzden çok yuvarlak yüze yakışır."
+  },
+  "fabric": {
+   "fa": "استات ایتالیایی، عدسی CR-39، محافظ UV400.",
+   "en": "Italian acetate, CR-39 lens, UV400.",
+   "tr": "İtalyan asetat, CR-39 cam, UV400."
+  },
+  "care": {
+   "fa": "توی کیفش بمونه. با دستمال مخصوص تمیزش کن، نه با لباس.",
+   "en": "Keep in the pouch. Clean with the cloth, never a shirt.",
+   "tr": "Kılıfında sakla. Tişörtünle değil, beziyle temizle."
+  },
+  "visible": true,
+  "sort": 11
+ },
+ {
+  "id": "prairie-blouse",
+  "name": {
+   "fa": "بلوز ابریشمی چین‌دار",
+   "en": "Prairie Silk Blouse",
+   "tr": "Fırfırlı İpek Bluz"
+  },
+  "cat": "shirt",
+  "col": "desert",
+  "price": 3150000,
+  "images": [
+   "assets/img/p-prairie-blouse"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "last",
+  "colours": [
+   {
+    "hex": "#8E8189",
+    "fa": "خاکی",
+    "en": "Dust",
+    "tr": "Toz"
+   },
+   {
+    "hex": "#5C4038",
+    "fa": "قهوه‌ای سوخته",
+    "en": "Umber",
+    "tr": "Toprak kahve"
+   }
+  ],
+  "note": {
+   "fa": "ابریشم مچاله با یقه‌ی هفتِ باز و دامنی که از کمر باز می‌شه.",
+   "en": "Crushed silk with a deep V and a peplum that flares off the waist.",
+   "tr": "Derin V yakalı, belden açılan peplumlu buruşuk ipek."
+  },
+  "detail": {
+   "fa": "آستین پفی، مچ کش‌دار، بند داخلی. یقه رو با تاپ بپوش یا بدونش.",
+   "en": "Blouson sleeve, elasticated cuff, self-tie inside. Wear the V with a cami or without.",
+   "tr": "Balon kol, lastikli manşet, içten bağlama. V yakayı askılıyla ya da onsuz giy."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ ابریشم شسته با شن. حاشیه‌ی قیطان فلزی.",
+   "en": "100% silk, sand-washed. Metallic braid trim.",
+   "tr": "%100 ipek, kum yıkamalı. Metalik kordon şerit."
+  },
+  "care": {
+   "fa": "خشک‌شویی. اتوی خنک، از روی یه پارچه.",
+   "en": "Dry clean. Cool iron through a cloth.",
+   "tr": "Kuru temizleme. Bir bez üstünden serin ütü."
+  },
+  "visible": true,
+  "sort": 12
+ },
+ {
+  "id": "concho-belt",
+  "name": {
+   "fa": "کمربند چرم سکه‌دار",
+   "en": "Concho Leather Belt",
+   "tr": "Konçolu Deri Kemer"
+  },
+  "cat": "accessories",
+  "col": "desert",
+  "price": 2450000,
+  "images": [
+   "assets/img/p-concho-belt"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7A4B2E",
+    "fa": "عسلی",
+    "en": "Saddle",
+    "tr": "Bal rengi"
+   }
+  ],
+  "note": {
+   "fa": "سکه‌های نقره‌ای که دستی روی چرم گیاهی نشونده شدن.",
+   "en": "Hand-set silver conchos on vegetable-tanned leather.",
+   "tr": "Bitkisel tabaklanmış deri üzerine elle çakılmış gümüş konçolar."
+  },
+  "detail": {
+   "fa": "سه حالت بستن، از ۷۶ تا ۹۶ سانتی‌متر. تیکه‌ی آویزش تا وسط ران می‌رسه.",
+   "en": "Three fit positions, 76–96cm. The drop panel hangs to mid-thigh.",
+   "tr": "Üç ayar, 76–96 cm. Sarkan parça uyluk ortasına iner."
+  },
+  "fabric": {
+   "fa": "چرم طبیعی، سکه‌ی نقره‌ی نیکلی.",
+   "en": "Full-grain leather, nickel silver conchos.",
+   "tr": "Tam damarlı deri, nikel gümüş konçolar."
+  },
+  "care": {
+   "fa": "سالی دو بار واکسش بزن. از آب دورش نگه دار.",
+   "en": "Condition twice a year. Keep out of standing water.",
+   "tr": "Yılda iki kez bakım yap. Sudan uzak tut."
+  },
+  "visible": true,
+  "sort": 13
+ },
+ {
+  "id": "brim-hat",
+  "name": {
+   "fa": "کلاه جیر لبه‌دار",
+   "en": "Suede Brim Hat",
+   "tr": "Geniş Kenarlı Süet Şapka"
+  },
+  "cat": "accessories",
+  "col": "desert",
+  "price": 2280000,
+  "images": [
+   "assets/img/p-brim-hat"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5A3A2A",
+    "fa": "قهوه‌ای",
+    "en": "Cocoa",
+    "tr": "Kakao"
+   },
+   {
+    "hex": "#B99168",
+    "fa": "شنی",
+    "en": "Sand",
+    "tr": "Kum"
+   }
+  ],
+  "note": {
+   "fa": "جیر دوخته‌شده، لبه‌ی ۹ سانتی، تاج با بخیه‌ی دورپیچ.",
+   "en": "Stitched suede, 9cm brim, whipstitched crown.",
+   "tr": "Dikişli süet, 9 cm kenar, kırma dikişli tepe."
+  },
+  "detail": {
+   "fa": "نوار داخلیش از ۵۶ تا ۵۹ تنظیم می‌شه. حتی خوابیده هم فرمش رو نگه می‌داره.",
+   "en": "Internal band adjusts 56–59cm. Holds its shape packed flat.",
+   "tr": "İç bant 56–59 cm arası ayarlanır. Düz katlansa da formunu korur."
+  },
+  "fabric": {
+   "fa": "جیر بز با نوار عرق‌گیر نخی.",
+   "en": "Goat suede, cotton sweatband.",
+   "tr": "Keçi süeti, pamuklu ter bandı."
+  },
+  "care": {
+   "fa": "در جهت پرزش برس بکش. هیچ‌وقت خیسش نکن.",
+   "en": "Brush with the grain. Never wet.",
+   "tr": "Tüy yönünde fırçala. Asla ıslatma."
+  },
+  "visible": true,
+  "sort": 14
+ },
+ {
+  "id": "print-skirt",
+  "name": {
+   "fa": "دامن طرح‌دار کویری",
+   "en": "Desert Print Skirt",
+   "tr": "Çöl Desenli Etek"
+  },
+  "cat": "skirts",
+  "col": "desert",
+  "price": 2690000,
+  "images": [
+   "assets/img/p-print-skirt"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#B7AFA6",
+    "fa": "طرح سنگ",
+    "en": "Stone print",
+    "tr": "Taş desen"
+   }
+  ],
+  "note": {
+   "fa": "حریر طبقه‌طبقه روی یه زیرپوش کوتاه، با طرحی که از یه عکس چاپ شده.",
+   "en": "Tiered chiffon over a short slip, printed from a photograph.",
+   "tr": "Kısa bir astar üzerinde katlı şifon; desen bir fotoğraftan basıldı."
+  },
+  "detail": {
+   "fa": "سه طبقه، کمر کش‌دار. آسترش ۲۰ سانت بالاتر از لبه تموم می‌شه.",
+   "en": "Three tiers, elastic waist. Lining sits 20cm above the hem.",
+   "tr": "Üç kat, lastikli bel. Astar etek ucunun 20 cm yukarısında biter."
+  },
+  "fabric": {
+   "fa": "۱۰۰٪ حریر پلی‌استر. آستر ۱۰۰٪ ویسکوز.",
+   "en": "100% polyester chiffon. Lining 100% viscose.",
+   "tr": "%100 polyester şifon. Astar %100 viskon."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور. آویزون خشکش کن. اتوی خنک.",
+   "en": "Hand wash cold. Line dry. Cool iron.",
+   "tr": "Elde soğuk yıka. Asarak kurut. Serin ütü."
+  },
+  "visible": true,
+  "sort": 15
+ },
+ {
+  "id": "sheer-blouse",
+  "name": {
+   "fa": "بلوز راه‌راه توری",
+   "en": "Sheer Stripe Blouse",
+   "tr": "Transparan Çizgili Bluz"
+  },
+  "cat": "shirt",
+  "col": "desert",
+  "price": 2890000,
+  "images": [
+   "assets/img/p-sheer-blouse"
+  ],
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "relaxed",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A3730",
+    "fa": "قهوه‌ای سوخته",
+    "en": "Umber",
+    "tr": "Toprak kahve"
+   }
+  ],
+  "note": {
+   "fa": "راه‌راه بافته‌شده روی زمینه‌ی توری، که توی کمر جمع شده.",
+   "en": "Woven stripe in a sheer ground, gathered at the waist.",
+   "tr": "Transparan zemin üzerine dokuma çizgiler, belden büzgülü."
+  },
+  "detail": {
+   "fa": "جلوش بندداره با یه بند داخلی. توریه؛ برند با یه تاپ ستش می‌فروشه.",
+   "en": "Wrap front with an inner tie. Sheer — the studio sells it with a matching cami.",
+   "tr": "İç bağlamalı kruvaze ön. Transparan; atölye onu takım bir askılıyla satıyor."
+  },
+  "fabric": {
+   "fa": "۷۰٪ ویسکوز و ۳۰٪ ابریشم.",
+   "en": "70% viscose / 30% silk.",
+   "tr": "%70 viskon / %30 ipek."
+  },
+  "care": {
+   "fa": "با دست و آب سرد بشور، آویزون خشکش کن. اتوی خنک.",
+   "en": "Hand wash cold, hang to dry. Cool iron.",
+   "tr": "Elde soğuk suda yıka, asarak kurut. Serin ütü."
+  },
+  "visible": true,
+  "sort": 16
+ }
+]

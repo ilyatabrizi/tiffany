@@ -1,0 +1,6 @@
+# JSON endpoints only. lib/ has its own deny-all.
+Options -Indexes
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+  Header always set X-Frame-Options "DENY"
+</IfModule>

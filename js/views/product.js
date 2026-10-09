@@ -1,6 +1,8 @@
 /* The product page. One real photograph per piece, plus the story it was shot
    in and the collection frame — which is how a lookbook shop actually reads. */
-import { LOOKS, PRODUCTS, SIZES, colById, getProduct, sizeLabel, isOneSize } from '../data.js';
+import {
+  LOOKS, PRODUCTS, SIZES, colById, getProduct, sizeLabel, isOneSize, NO_COL, soldOut,
+} from '../data.js';
 import { icon } from '../icons.js';
 import { esc, toman, tap, COMMA } from '../util.js';
 import { addToBag, isWished } from '../store.js';
@@ -15,14 +17,23 @@ let pick = { id: null, size: null, colour: 0 };
 /* A size code is a name and stays Latin; one-size reads in the page's language. */
 const sizeTag = (s) => (isOneSize(s) ? esc(sizeLabel(s)) : `<span dir="ltr">${esc(s)}</span>`);
 
+/* Every photo the back office holds for the piece, then the story it was shot
+   in, then its collection's frame (a piece outside every collection has none). */
 const galleryFor = (p) => {
   const look = LOOKS.find((l) => l.items.includes(p.id));
   const col = colById[p.col];
   return [
-    { img: p.img, wide: false, alt: p.name },
+    ...p.images.map((im, i) => ({ img: im, wide: false, alt: i ? `${p.name} — ${i + 1}` : p.name })),
     ...(look ? [{ img: look.img, wide: true, alt: `${p.name} — ${look.title}` }] : []),
-    { img: col.img, wide: false, alt: L(`کالکشن ${col.name}`, `${col.name} collection`, `${col.name} koleksiyonu`) },
+    ...(col ? [{ img: col.img, wide: false, alt: L(`کالکشن ${col.name}`, `${col.name} collection`, `${col.name} koleksiyonu`) }] : []),
   ];
+};
+const isOut = (p, s) => p.soldout.includes(s);
+const sizeBtn = (p, s, cls = '') => `<button class="size ${cls} ${isOut(p, s) ? 'out' : ''}"
+  data-size="${s}" type="button" ${isOut(p, s) ? `disabled aria-disabled="true" title="${esc(L('تموم شد', 'Sold out', 'Tükendi'))}"` : ''}>${sizeTag(s)}</button>`;
+const firstSize = (p) => {
+  const open = p.sizes.filter((s) => !isOut(p, s));
+  return open.length === 1 && p.sizes.length === 1 ? open[0] : null;
 };
 
 const sizeGuideSheet = () => openSheet(`
@@ -51,8 +62,7 @@ function addSheet(p) {
     <h2>${esc(L('سایزت رو انتخاب کن', 'Choose your size', 'Bedenini seç'))}</h2>
     <p class="lede">${esc(p.name)} — ${toman(p.price)}</p>
     <div class="sizes" id="sheetSizes">
-      ${p.sizes.map((s) => `<button class="size ${rec?.size === s ? 'rec' : ''}"
-        data-size="${s}" type="button">${sizeTag(s)}</button>`).join('')}
+      ${p.sizes.map((s) => sizeBtn(p, s, rec?.size === s ? 'rec' : '')).join('')}
     </div>
     ${rec ? `<p class="tiny" style="margin-top:12px">${esc(L(
       'سایزی که نقطه داره، پیشنهاد ما بر اساس اندازه‌های خودته.',
@@ -85,10 +95,15 @@ function commit(p) {
 export function addToBagFlow(id) {
   const p = getProduct(id);
   if (!p) return;
+  if (soldOut(p)) {
+    toast(L('این قطعه تموم شده.', 'This piece has sold out.', 'Bu parça tükendi.'), 'info');
+    return;
+  }
   if (pick.id !== id) pick = { id, size: null, colour: 0 };
+  if (pick.size && isOut(p, pick.size)) pick.size = null;
   if (!pick.size) {
-    if (p.sizes.length === 1) pick.size = p.sizes[0];
-    else { addSheet(p); return; }
+    pick.size = firstSize(p);
+    if (!pick.size) { addSheet(p); return; }
   }
   commit(p);
 }
@@ -112,12 +127,13 @@ export default {
         <button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">
           ${esc(L('برگرد به فروشگاه', 'Back to the shop', 'Mağazaya dön'))}</button></div>`;
     }
-    if (pick.id !== p.id) pick = { id: p.id, size: p.sizes.length === 1 ? p.sizes[0] : null, colour: 0 };
+    if (pick.id !== p.id) pick = { id: p.id, size: firstSize(p), colour: 0 };
 
-    const col = colById[p.col];
+    const col = colById[p.col] || NO_COL;
     const rec = recommendSize(p);
-    const also = PRODUCTS.filter((x) => x.col === p.col && x.id !== p.id).slice(0, 6);
+    const also = PRODUCTS.filter((x) => (col.id ? x.col === p.col : x.cat === p.cat) && x.id !== p.id).slice(0, 6);
     const wished = isWished(p.id);
+    const out = soldOut(p);
 
     return `
     <article style="--accent:${col.accent};--dot:${col.accent}">
@@ -134,8 +150,8 @@ export default {
       </div>
 
       <header class="pdp-head">
-        <button class="pdp-col" data-act="collection" data-id="${col.id}" type="button">
-          <i class="chip-sw" style="--dot:${col.accent}"></i><span dir="ltr">${esc(col.name)}</span></button>
+        ${col.id ? `<button class="pdp-col" data-act="collection" data-id="${col.id}" type="button">
+          <i class="chip-sw" style="--dot:${col.accent}"></i><span dir="ltr">${esc(col.name)}</span></button>` : ''}
         <h1 class="pdp-title serif">${esc(p.name)}</h1>
         <div class="pdp-price">${toman(p.price)}</div>
         <p class="pdp-note">${esc(p.note)}</p>
@@ -157,8 +173,7 @@ export default {
           <button class="link-more" data-act="guide" type="button">
             ${icon('ruler', 14)}${esc(L('راهنمای سایز', 'Size guide', 'Beden rehberi'))}</button></div>
         <div class="sizes" id="pdpSizes">
-          ${p.sizes.map((s) => `<button class="size ${pick.size === s ? 'on' : ''}
-            ${rec?.size === s ? 'rec' : ''}" data-size="${s}" type="button">${sizeTag(s)}</button>`).join('')}
+          ${p.sizes.map((s) => sizeBtn(p, s, `${pick.size === s ? 'on' : ''} ${rec?.size === s ? 'rec' : ''}`)).join('')}
         </div>
       </div>
 
@@ -193,11 +208,11 @@ export default {
             <a class="more-link" href="#/terms">${esc(L('قوانین کامل', 'Full terms', 'Tüm koşullar'))}</a></div></details>
       </div>
 
-      <section class="sec">
+      ${also.length ? `<section class="sec">
         <div class="sec-head"><h2 class="serif">${esc(L('با اینا بپوش', 'Wear it with', 'Bununla giy'))}</h2></div>
         <div class="rail rail-p">${also.map((x) => productCard(x,
           { sizes: '(max-width:520px) 63vw, 250px' })).join('')}</div>
-      </section>
+      </section>` : ''}
 
       <div style="height:40px"></div>
     </article>
@@ -207,8 +222,9 @@ export default {
         type="button" aria-pressed="${wished}"
         aria-label="${esc(L(`ذخیره کردن ${p.name}`, `Save ${p.name}`, `${p.name} kaydet`))}">
         ${icon('heart', 19)}</button>
-      <button class="btn btn-ink btn-block" data-act="add" data-id="${p.id}" type="button">
-        ${esc(L('افزودن به سبد', 'Add to bag', 'Sepete ekle'))} — ${toman(p.price)}</button>
+      <button class="btn btn-ink btn-block" data-act="add" data-id="${p.id}" type="button" ${out ? 'disabled' : ''}>
+        ${out ? esc(L('تموم شد', 'Sold out', 'Tükendi'))
+    : `${esc(L('افزودن به سبد', 'Add to bag', 'Sepete ekle'))} — ${toman(p.price)}`}</button>
     </div>`;
   },
 
@@ -216,7 +232,7 @@ export default {
     const p = getProduct(location.hash.split('/')[2]?.split('?')[0]);
 
     app.addEventListener('click', (e) => {
-      const size = e.target.closest('#pdpSizes [data-size]');
+      const size = e.target.closest('#pdpSizes [data-size]:not(.out)');
       if (size) {
         pick.size = size.dataset.size;
         app.querySelectorAll('#pdpSizes .size').forEach((b) =>

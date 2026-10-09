@@ -1,0 +1,701 @@
+<?php
+/* TIFFANY's back office — the one file every endpoint starts with.
+
+   Storage is a single SQLite file OUTSIDE the web root
+   (/home/tiffany1/tiffany-data on the host), next to the setup key and the
+   admin sessions. Nothing in that folder can ever be fetched over HTTP.
+
+   Security, in one place:
+   - passwords: password_hash() (bcrypt); never stored or logged in clear
+   - sessions: own save path, HttpOnly + Secure + SameSite=Strict cookie
+     scoped to /api/, id regenerated on login, a per-user "session version"
+     that logs every device out when the password changes
+   - every admin write carries an X-CSRF token and must be same-origin
+   - logins, the setup key, orders and tracking are rate-limited per IP
+   - every query is a prepared statement; every input is validated here
+   - the first CEO account can only be created with the setup key, which
+     sits in a file only someone with cPanel access can read */
+declare(strict_types=1);
+
+ini_set('display_errors', '0');      // errors go to tiffany-data/error.log, never to the page
+date_default_timezone_set('Asia/Tehran');
+mb_internal_encoding('UTF-8');
+
+const TF_ROLES    = ['ceo', 'admin'];
+const TF_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const TF_CATS     = ['knit', 'tee', 'top', 'hoodie', 'vest', 'shirt', 'trousers', 'skirts',
+                     'jacket', 'cardigan', 'accessories', 'shoes'];
+const TF_COLS     = ['', 'pastel', 'noir', 'desert'];
+const TF_SIZES    = ['XS', 'S', 'M', 'L', 'XL', 'OS'];
+const TF_FITS     = ['small', 'true', 'relaxed'];
+const TF_BADGES   = ['', 'new', 'campaign', 'bestseller', 'restock', 'last'];
+const TF_LANGS    = ['fa', 'en', 'tr'];
+const TF_SESSION_DAYS = 30;
+
+/* --------------------------------------------------------------- output */
+function tf_json(array $data, int $code = 200): void
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    header('X-Content-Type-Options: nosniff');
+    header('X-Robots-Tag: noindex, nofollow');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function tf_fail(int $code, string $error, array $extra = []): void
+{
+    tf_json(['ok' => false, 'error' => $error] + $extra, $code);
+}
+
+/** A validation problem the panel can show next to the field it names. */
+final class TfInvalid extends RuntimeException
+{
+    public string $field;
+    public function __construct(string $field, string $message)
+    {
+        parent::__construct($message);
+        $this->field = $field;
+    }
+}
+
+set_exception_handler(static function (Throwable $e): void {
+    if ($e instanceof TfInvalid) {
+        tf_fail(422, 'invalid', ['field' => $e->field, 'message' => $e->getMessage()]);
+    }
+    tf_log_error($e);
+    tf_fail(500, 'server');
+});
+
+function tf_log_error(Throwable $e): void
+{
+    try {
+        $line = date('c') . ' ' . get_class($e) . ': ' . $e->getMessage()
+            . ' @ ' . basename($e->getFile()) . ':' . $e->getLine() . "\n";
+        @file_put_contents(tf_data_dir() . '/error.log', $line, FILE_APPEND | LOCK_EX);
+    } catch (Throwable $ignored) {
+        // nowhere left to write; the 500 still goes out
+    }
+}
+
+function tf_input(): array
+{
+    $raw = file_get_contents('php://input', false, null, 0, 2000000);
+    $data = json_decode($raw ?: '[]', true);
+    return is_array($data) ? $data : [];
+}
+
+/* --------------------------------------------------------------- storage */
+function tf_data_dir(): string
+{
+    static $dir = null;
+    if ($dir !== null) {
+        return $dir;
+    }
+    $want = getenv('TIFFANY_DATA') ?: dirname(__DIR__, 3) . '/tiffany-data';
+    if (!is_dir($want)) {
+        @mkdir($want, 0700, true);
+    }
+    if (!is_dir($want) || !is_writable($want)) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo '{"ok":false,"error":"storage"}';
+        exit;
+    }
+    $dir = rtrim((string) realpath($want), '/');
+    return $dir;
+}
+
+/** The public web root (public_html on the host). */
+function tf_web_root(): string
+{
+    return dirname(__DIR__, 2);
+}
+
+function db(): PDO
+{
+    static $pdo = null;
+    if ($pdo instanceof PDO) {
+        return $pdo;
+    }
+    $pdo = new PDO('sqlite:' . tf_data_dir() . '/tiffany.sqlite', null, null, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_TIMEOUT => 8,
+    ]);
+    $pdo->exec('PRAGMA journal_mode = WAL');
+    $pdo->exec('PRAGMA busy_timeout = 8000');
+    $pdo->exec('PRAGMA foreign_keys = ON');
+    tf_migrate($pdo);
+    return $pdo;
+}
+
+function tf_migrate(PDO $db): void
+{
+    $version = (int) $db->query('PRAGMA user_version')->fetchColumn();
+    if ($version >= 1) {
+        return;
+    }
+    $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  pass TEXT NOT NULL,
+  role TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  sv INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  last_login INTEGER
+);
+CREATE TABLE IF NOT EXISTS products (
+  id TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  cat TEXT NOT NULL,
+  price INTEGER NOT NULL,
+  visible INTEGER NOT NULL DEFAULT 1,
+  sort INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'new',
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  city TEXT NOT NULL,
+  address TEXT NOT NULL,
+  postal TEXT NOT NULL DEFAULT '',
+  pay TEXT NOT NULL,
+  items TEXT NOT NULL,
+  subtotal INTEGER NOT NULL,
+  shipping INTEGER NOT NULL,
+  total INTEGER NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  admin_note TEXT NOT NULL DEFAULT '',
+  day TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS orders_day ON orders(day);
+CREATE INDEX IF NOT EXISTS orders_phone ON orders(phone);
+CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS attempts (k TEXT NOT NULL, at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS attempts_k ON attempts(k, at);
+CREATE TABLE IF NOT EXISTS daily (day TEXT PRIMARY KEY, views INTEGER NOT NULL DEFAULT 0,
+  visitors INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS seen (day TEXT NOT NULL, vid TEXT NOT NULL, PRIMARY KEY (day, vid));
+CREATE TABLE IF NOT EXISTS pageviews (day TEXT NOT NULL, page TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, page));
+CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY, at INTEGER NOT NULL, who TEXT NOT NULL,
+  action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '');
+PRAGMA user_version = 1;
+SQL);
+    tf_seed($db);
+}
+
+/** First run only: the catalogue that was on the site before the panel. */
+function tf_seed(PDO $db): void
+{
+    $have = $db->query("SELECT v FROM settings WHERE k = 'seeded'")->fetchColumn();
+    if ($have) {
+        return;
+    }
+    $file = __DIR__ . '/seed.json';
+    $list = is_file($file) ? json_decode((string) file_get_contents($file), true) : [];
+    $now = time();
+    $ins = $db->prepare('INSERT OR IGNORE INTO products (id, data, cat, price, visible, sort, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $db->beginTransaction();
+    foreach ((array) $list as $i => $p) {
+        $clean = tf_product_clean($p, (string) $p['id']);
+        $ins->execute([$clean['id'], json_encode($clean, JSON_UNESCAPED_UNICODE), $clean['cat'],
+            $clean['price'], $clean['visible'] ? 1 : 0, $i, $now - $i, $now]);
+    }
+    $db->prepare('INSERT OR REPLACE INTO settings (k, v) VALUES (?, ?)')->execute(['seeded', (string) $now]);
+    $db->commit();
+}
+
+function setting(string $k, string $default = ''): string
+{
+    $st = db()->prepare('SELECT v FROM settings WHERE k = ?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    return $v === false ? $default : (string) $v;
+}
+
+function setting_set(string $k, string $v): void
+{
+    db()->prepare('INSERT OR REPLACE INTO settings (k, v) VALUES (?, ?)')->execute([$k, $v]);
+}
+
+/** What the storefront needs to know besides the products. */
+function tf_public_settings(): array
+{
+    return [
+        'store_open' => setting('store_open', '0') === '1',
+        'shipping' => 0,
+        'delivery_days' => 3,
+    ];
+}
+
+/* --------------------------------------------------------------- helpers */
+function tf_ip(): string
+{
+    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'), 0, 64);
+}
+
+/** Persian and Arabic digits typed on a phone become ASCII. */
+function tf_digits(string $s): string
+{
+    return strtr($s, [
+        '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+        '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+        '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+    ]);
+}
+
+/** One line of text: trimmed, no control characters, capped. */
+function tf_line($v, int $max): string
+{
+    $s = is_scalar($v) ? (string) $v : '';
+    $s = preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $s) ?? '';
+    $s = trim(preg_replace('/\s+/u', ' ', $s) ?? '');
+    return mb_substr($s, 0, $max);
+}
+
+/** A paragraph: line breaks kept, everything else as tf_line. */
+function tf_text($v, int $max): string
+{
+    $s = is_scalar($v) ? (string) $v : '';
+    $s = str_replace(["\r\n", "\r"], "\n", $s);
+    $s = preg_replace('/[\x00-\x09\x0B-\x1F\x7F]+/u', ' ', $s) ?? '';
+    $s = preg_replace("/\n{3,}/", "\n\n", $s) ?? '';
+    return mb_substr(trim($s), 0, $max);
+}
+
+function tf_int($v): int
+{
+    $s = preg_replace('/[^0-9]/', '', tf_digits(is_scalar($v) ? (string) $v : '')) ?? '';
+    return $s === '' ? 0 : (int) substr($s, 0, 12);
+}
+
+/** Iranian mobile, normalised to 09xxxxxxxxx; '' when it is not one. */
+function tf_phone($v): string
+{
+    $s = preg_replace('/[^0-9]/', '', tf_digits(is_scalar($v) ? (string) $v : '')) ?? '';
+    if (strpos($s, '0098') === 0) {
+        $s = '0' . substr($s, 4);
+    } elseif (strpos($s, '98') === 0 && strlen($s) === 12) {
+        $s = '0' . substr($s, 2);
+    } elseif (strlen($s) === 10 && $s[0] === '9') {
+        $s = '0' . $s;
+    }
+    return preg_match('/^09\d{9}$/', $s) ? $s : '';
+}
+
+function tf_log(string $who, string $action, string $detail = ''): void
+{
+    db()->prepare('INSERT INTO log (at, who, action, detail) VALUES (?, ?, ?, ?)')
+        ->execute([time(), mb_substr($who, 0, 80), $action, mb_substr($detail, 0, 300)]);
+}
+
+/* ---------------------------------------------------------- rate limits */
+function tf_too_many(string $key, int $max, int $window): bool
+{
+    $st = db()->prepare('SELECT COUNT(*) FROM attempts WHERE k = ? AND at > ?');
+    $st->execute([$key, time() - $window]);
+    return (int) $st->fetchColumn() >= $max;
+}
+
+function tf_note_attempt(string $key): void
+{
+    db()->prepare('INSERT INTO attempts (k, at) VALUES (?, ?)')->execute([$key, time()]);
+    if (random_int(1, 50) === 1) {
+        db()->prepare('DELETE FROM attempts WHERE at < ?')->execute([time() - 86400]);
+    }
+}
+
+function tf_clear_attempts(string $key): void
+{
+    db()->prepare('DELETE FROM attempts WHERE k = ?')->execute([$key]);
+}
+
+function tf_throttle(string $key, int $max, int $window): void
+{
+    if (tf_too_many($key, $max, $window)) {
+        tf_fail(429, 'too_many');
+    }
+    tf_note_attempt($key);
+}
+
+/* ------------------------------------------------------------ setup key */
+function tf_key_file(): string
+{
+    return tf_data_dir() . '/SETUP-KEY.txt';
+}
+
+function tf_key_rotate(): void
+{
+    $abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    $groups = [];
+    for ($g = 0; $g < 4; $g++) {
+        $chunk = '';
+        for ($i = 0; $i < 4; $i++) {
+            $chunk .= $abc[random_int(0, strlen($abc) - 1)];
+        }
+        $groups[] = $chunk;
+    }
+    $key = implode('-', $groups);
+    $text = "TIFFANY admin panel — setup / recovery key\n"
+        . "کلید راه‌اندازی و بازیابی پنل مدیریت تیفانی\n\n"
+        . $key . "\n\n"
+        . "Use it at https://tiffanybv.com/admin to create the first CEO account,\n"
+        . "or to set a new CEO password if it is forgotten.\n"
+        . "It changes by itself after every use. Never send it to anyone.\n";
+    file_put_contents(tf_key_file(), $text, LOCK_EX);
+    @chmod(tf_key_file(), 0600);
+}
+
+function tf_key_ensure(): void
+{
+    if (!is_file(tf_key_file())) {
+        tf_key_rotate();
+    }
+}
+
+function tf_key_matches(string $typed): bool
+{
+    tf_key_ensure();
+    if (!preg_match('/\b([A-Z2-9]{4}(?:-[A-Z2-9]{4}){3})\b/', (string) file_get_contents(tf_key_file()), $m)) {
+        return false;
+    }
+    $want = str_replace('-', '', $m[1]);
+    $got = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', tf_digits($typed)) ?? '');
+    return strlen($got) === 16 && hash_equals($want, $got);
+}
+
+/* ------------------------------------------------------------- sessions */
+function tf_session(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+    $dir = tf_data_dir() . '/sessions';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    session_save_path($dir);
+    ini_set('session.gc_maxlifetime', (string) (TF_SESSION_DAYS * 86400));
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    session_name('tf_admin');
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['SERVER_PORT'] ?? '') === '443');
+    session_set_cookie_params([
+        'lifetime' => TF_SESSION_DAYS * 86400,
+        'path' => '/api/',
+        'secure' => $https,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
+    session_start();
+}
+
+function tf_user_public(array $u): array
+{
+    return ['id' => (int) $u['id'], 'name' => $u['name'], 'email' => $u['email'], 'role' => $u['role']];
+}
+
+/** The signed-in admin, or null. A password change bumps sv and ends every other session. */
+function tf_user(): ?array
+{
+    tf_session();
+    $id = (int) ($_SESSION['uid'] ?? 0);
+    if (!$id) {
+        return null;
+    }
+    $st = db()->prepare('SELECT * FROM users WHERE id = ? AND active = 1');
+    $st->execute([$id]);
+    $u = $st->fetch();
+    if (!$u || (int) $u['sv'] !== (int) ($_SESSION['sv'] ?? -1)) {
+        $_SESSION = [];
+        return null;
+    }
+    return $u;
+}
+
+function tf_sign_in(array $u): void
+{
+    tf_session();
+    session_regenerate_id(true);
+    $_SESSION['uid'] = (int) $u['id'];
+    $_SESSION['sv'] = (int) $u['sv'];
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    db()->prepare('UPDATE users SET last_login = ? WHERE id = ?')->execute([time(), $u['id']]);
+}
+
+function tf_sign_out(): void
+{
+    tf_session();
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000, 'path' => $p['path'], 'secure' => $p['secure'],
+            'httponly' => true, 'samesite' => 'Strict',
+        ]);
+    }
+    session_destroy();
+}
+
+/** Writes must come from this site: same origin, and with the session's token. */
+function tf_same_origin(): void
+{
+    $site = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? '';
+    if ($site !== '' && $site !== 'same-origin' && $site !== 'none') {
+        tf_fail(403, 'origin');
+    }
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin !== '') {
+        $host = parse_url($origin, PHP_URL_HOST) . (parse_url($origin, PHP_URL_PORT) ? ':' . parse_url($origin, PHP_URL_PORT) : '');
+        if (strcasecmp($host, (string) ($_SERVER['HTTP_HOST'] ?? '')) !== 0) {
+            tf_fail(403, 'origin');
+        }
+    }
+}
+
+function tf_require_csrf(): void
+{
+    $sent = (string) ($_SERVER['HTTP_X_CSRF'] ?? '');
+    $want = (string) ($_SESSION['csrf'] ?? '');
+    if ($want === '' || !hash_equals($want, $sent)) {
+        tf_fail(403, 'csrf');
+    }
+}
+
+/* -------------------------------------------------------------- catalog */
+/** The three-language text block every product field uses. */
+function tf_i18n($v, int $max, bool $multiline = false): array
+{
+    $v = is_array($v) ? $v : ['fa' => $v];
+    $out = [];
+    foreach (TF_LANGS as $l) {
+        $out[$l] = $multiline ? tf_text($v[$l] ?? '', $max) : tf_line($v[$l] ?? '', $max);
+    }
+    return $out;
+}
+
+function tf_slug(string $s): string
+{
+    $s = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $s) ?? '', '-'));
+    return substr($s, 0, 48);
+}
+
+/** Validate and normalise one product. Throws TfInvalid naming the field. */
+function tf_product_clean(array $in, ?string $id = null): array
+{
+    $name = tf_i18n($in['name'] ?? [], 80);
+    if ($name['fa'] === '') {
+        throw new TfInvalid('name', 'اسم محصول رو بنویس.');
+    }
+    $cat = (string) ($in['cat'] ?? '');
+    if (!in_array($cat, TF_CATS, true)) {
+        throw new TfInvalid('cat', 'یه دسته‌بندی انتخاب کن.');
+    }
+    $col = (string) ($in['col'] ?? '');
+    if (!in_array($col, TF_COLS, true)) {
+        $col = '';
+    }
+    $price = tf_int($in['price'] ?? 0);
+    if ($price < 1000 || $price > 100000000000) {
+        throw new TfInvalid('price', 'قیمت رو به تومان بنویس.');
+    }
+
+    $sizes = array_values(array_unique(array_filter((array) ($in['sizes'] ?? []),
+        static fn ($s) => in_array($s, TF_SIZES, true))));
+    usort($sizes, static fn ($a, $b) => array_search($a, TF_SIZES, true) <=> array_search($b, TF_SIZES, true));
+    if (!$sizes) {
+        throw new TfInvalid('sizes', 'حداقل یه سایز انتخاب کن.');
+    }
+    if (in_array('OS', $sizes, true)) {
+        $sizes = ['OS'];
+    }
+
+    $stock = null;
+    if (isset($in['stock']) && is_array($in['stock'])) {
+        $stock = [];
+        foreach ($sizes as $s) {
+            $stock[$s] = max(0, min(99999, tf_int($in['stock'][$s] ?? 0)));
+        }
+    }
+
+    $colours = [];
+    foreach (array_slice((array) ($in['colours'] ?? []), 0, 12) as $c) {
+        if (!is_array($c)) {
+            continue;
+        }
+        $hex = strtoupper((string) ($c['hex'] ?? ''));
+        if (!preg_match('/^#[0-9A-F]{6}$/', $hex)) {
+            throw new TfInvalid('colours', 'کد یکی از رنگ‌ها درست نیست.');
+        }
+        $names = tf_i18n($c, 30);
+        if ($names['fa'] === '') {
+            throw new TfInvalid('colours', 'برای هر رنگ یه اسم بنویس.');
+        }
+        foreach ($colours as $prev) {
+            if ($prev['hex'] === $hex) {
+                throw new TfInvalid('colours', 'یه رنگ دو بار اضافه شده.');
+            }
+        }
+        $colours[] = ['hex' => $hex] + $names;
+    }
+    if (!$colours) {
+        throw new TfInvalid('colours', 'حداقل یه رنگ اضافه کن.');
+    }
+
+    $images = [];
+    foreach (array_slice((array) ($in['images'] ?? []), 0, 10) as $img) {
+        $img = (string) $img;
+        if (preg_match('#^assets/img/[a-z0-9-]{2,60}$#', $img)) {
+            $images[] = $img;
+        } elseif (preg_match('#^uploads/p/[a-f0-9]{20}$#', $img)
+            && is_file(tf_web_root() . '/' . $img . '-480.webp')) {
+            $images[] = $img;
+        }
+    }
+    $images = array_values(array_unique($images));
+    if (!$images) {
+        throw new TfInvalid('images', 'حداقل یه عکس بذار.');
+    }
+
+    $fit = in_array($in['fit'] ?? '', TF_FITS, true) ? $in['fit'] : 'true';
+    $badge = in_array($in['badge'] ?? '', TF_BADGES, true) ? $in['badge'] : '';
+
+    if ($id === null || $id === '') {
+        $id = tf_slug((string) ($name['en'] ?: ''));
+        if (strlen($id) < 3) {
+            $id = 'p-' . bin2hex(random_bytes(3));
+        }
+        $base = $id;
+        $n = 2;
+        $st = db()->prepare('SELECT 1 FROM products WHERE id = ?');
+        while (true) {
+            $st->execute([$id]);
+            if (!$st->fetchColumn()) {
+                break;
+            }
+            $id = $base . '-' . $n++;
+        }
+    }
+    if (!preg_match('/^[a-z0-9][a-z0-9-]{1,60}$/', $id)) {
+        throw new TfInvalid('id', 'bad id');
+    }
+
+    return [
+        'id' => $id,
+        'name' => $name,
+        'cat' => $cat,
+        'col' => $col,
+        'price' => $price,
+        'images' => $images,
+        'sizes' => $sizes,
+        'stock' => $stock,
+        'fit' => $fit,
+        'badge' => $badge,
+        'colours' => $colours,
+        'note' => tf_i18n($in['note'] ?? [], 300, true),
+        'detail' => tf_i18n($in['detail'] ?? [], 1200, true),
+        'fabric' => tf_i18n($in['fabric'] ?? [], 600, true),
+        'care' => tf_i18n($in['care'] ?? [], 600, true),
+        'visible' => !empty($in['visible']),
+    ];
+}
+
+function tf_product_row(array $row): array
+{
+    $p = json_decode((string) $row['data'], true) ?: [];
+    $p['id'] = $row['id'];
+    $p['visible'] = (bool) $row['visible'];
+    $p['sort'] = (int) $row['sort'];
+    $p['updated_at'] = (int) $row['updated_at'];
+    $p['created_at'] = (int) $row['created_at'];
+    return $p;
+}
+
+function tf_products(bool $onlyVisible): array
+{
+    $sql = 'SELECT * FROM products' . ($onlyVisible ? ' WHERE visible = 1' : '')
+        . ' ORDER BY sort ASC, created_at DESC';
+    return array_map('tf_product_row', db()->query($sql)->fetchAll());
+}
+
+function tf_product(string $id): ?array
+{
+    $st = db()->prepare('SELECT * FROM products WHERE id = ?');
+    $st->execute([$id]);
+    $row = $st->fetch();
+    return $row ? tf_product_row($row) : null;
+}
+
+/* --------------------------------------------------------------- orders */
+const TF_PAY = ['card', 'online'];
+
+function tf_order_public(array $o): array
+{
+    return [
+        'code' => $o['code'],
+        'status' => $o['status'],
+        'name' => $o['name'],
+        'phone' => $o['phone'],
+        'city' => $o['city'],
+        'address' => $o['address'],
+        'postal' => $o['postal'],
+        'pay' => $o['pay'],
+        'items' => json_decode((string) $o['items'], true) ?: [],
+        'subtotal' => (int) $o['subtotal'],
+        'shipping' => (int) $o['shipping'],
+        'total' => (int) $o['total'],
+        'note' => $o['note'],
+        'admin_note' => $o['admin_note'],
+        'created_at' => (int) $o['created_at'],
+        'updated_at' => (int) $o['updated_at'],
+    ];
+}
+
+/** Put the pieces of an order back on the shelf (when it is cancelled). */
+function tf_restock(array $items): void
+{
+    foreach ($items as $it) {
+        $p = tf_product((string) ($it['id'] ?? ''));
+        if (!$p || !is_array($p['stock'] ?? null) || !array_key_exists($it['size'], $p['stock'])) {
+            continue;
+        }
+        $p['stock'][$it['size']] += (int) $it['qty'];
+        tf_product_store($p);
+    }
+}
+
+/** Write a product back. updated_at moves, so the shop's catalogue ETag moves too. */
+function tf_product_store(array $p): void
+{
+    $data = $p;
+    unset($data['sort'], $data['updated_at'], $data['created_at']);
+    db()->prepare('UPDATE products SET data = ?, cat = ?, price = ?, visible = ?, updated_at = ? WHERE id = ?')
+        ->execute([json_encode($data, JSON_UNESCAPED_UNICODE), $p['cat'], $p['price'],
+            !empty($p['visible']) ? 1 : 0, time(), $p['id']]);
+}
+
+/* --------------------------------------------------------------- stats */
+/** Days back from today, oldest first, as Y-m-d in Tehran time. */
+function tf_days(int $n): array
+{
+    $out = [];
+    for ($i = $n - 1; $i >= 0; $i--) {
+        $out[] = date('Y-m-d', strtotime("-$i days"));
+    }
+    return $out;
+}

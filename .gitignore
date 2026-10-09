@@ -7,3 +7,6 @@ media/raw/campaign-film.mp4
 
 # the upload bundle is built on demand, never committed
 dist/
+
+# product photos uploaded from the back office live on the server only
+uploads/

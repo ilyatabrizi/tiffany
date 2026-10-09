@@ -1,8 +1,9 @@
 /* The bag, and the checkout that empties it.
 
-   Nothing here talks to a payment gateway — placing an order writes a record
-   into localStorage and lands it in Orders. That is the whole point of a
-   preview: the studio can walk the flow end to end without a merchant account. */
+   With online ordering switched on in the back office, checkout sends the
+   order to /api/order.php (paid by card on delivery until the gateway is in);
+   switched off, it stays the preview: the order is only written on this
+   phone, so the studio can still walk the flow end to end. */
 import { BRAND } from '../config.js';
 import { getProduct, colourLabel, sizeLabel, isOneSize } from '../data.js';
 import { icon } from '../icons.js';
@@ -13,6 +14,7 @@ import {
 import { shot, empty, openSheet, closeSheet, toast } from '../ui.js';
 import { go } from '../router.js';
 import { L } from '../i18n.js';
+import { live } from '../live.js';
 
 export const subtotal = () => state.bag.reduce((n, l) => {
   const p = getProduct(l.id);
@@ -58,15 +60,47 @@ function lineHTML(l) {
   </div>`;
 }
 
+const ORDER_ERR = {
+  name: () => L('اسم و فامیل رو کامل بنویس.', 'Please give your full name.', 'Lütfen adını ve soyadını yaz.'),
+  phone: () => L('شماره موبایل درست نیست.', 'That mobile number does not look right.', 'Cep numarası doğru görünmüyor.'),
+  city: () => L('شهر رو بنویس.', 'Please add your city.', 'Lütfen şehrini yaz.'),
+  address: () => L('آدرس کامل رو بنویس.', 'Please give your full address.', 'Lütfen açık adresini yaz.'),
+  postal: () => L('کد پستی ۱۰ رقمیه.', 'The post code has 10 digits.', 'Posta kodu 10 hanelidir.'),
+};
+
+/** What to tell the customer when the server says no. */
+function orderError(status, j) {
+  if (status === 403 && j.error === 'closed') {
+    return L('خرید آنلاین الان بسته‌ست؛ از شعبه‌ها یا اینستاگرام سفارش بده.',
+      'Online ordering is closed right now — order in store or on Instagram.',
+      'Online sipariş şu an kapalı; mağazadan ya da Instagram’dan sipariş ver.');
+  }
+  if (status === 429) return L('چند دقیقه دیگه دوباره امتحان کن.', 'Please try again in a few minutes.', 'Birkaç dakika sonra tekrar dene.');
+  if (status === 422 && ORDER_ERR[j.field]) return ORDER_ERR[j.field]();
+  if (status === 422 && j.field === 'items') {
+    return L(j.message || 'یکی از قطعه‌های سبدت دیگه موجود نیست.',
+      'One of the pieces in your bag is no longer available in that size.',
+      'Sepetindeki parçalardan biri o bedende artık yok.');
+  }
+  return L('سفارش ثبت نشد؛ دوباره امتحان کن.', 'The order did not go through — please try again.', 'Sipariş alınamadı; tekrar dene.');
+}
+
+/* With the store switched on (back office → Settings), the order goes to the
+   shop for real: the server prices it, keeps it and the team sees it in the
+   panel. Switched off, checkout stays the preview it always was. */
 function checkoutSheet() {
   const sub = subtotal();
   const ship = shippingFor(sub);
   const { profile, address } = state;
+  const real = live.storeOpen;
 
   openSheet(`
     <h2>${esc(L('تکمیل خرید', 'Checkout', 'Ödeme'))}</h2>
-    <p class="lede">${esc(L(
-      'این فقط پیش‌نمایشه؛ نه پولی کم می‌شه، نه چیزی فرستاده می‌شه.',
+    <p class="lede">${esc(real
+    ? L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${'۳'} روز کاری طول می‌کشه.`,
+      `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
+      `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
+    : L('این فقط پیش‌نمایشه؛ نه پولی کم می‌شه، نه چیزی فرستاده می‌شه.',
       'Preview only — no card is charged and nothing is sent.',
       'Yalnızca önizleme; karttan para çekilmez, hiçbir şey gönderilmez.'))}</p>
 
@@ -90,11 +124,14 @@ function checkoutSheet() {
           <input id="coPostal" name="postal" inputmode="numeric" dir="ltr"
                  autocomplete="postal-code" value="${esc(address.postal)}"></div>
       </div>
+      <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <p class="eyebrow" style="margin:20px 0 10px">${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}</p>
       <div class="sizes">
         <button class="chip on" data-pay="card" type="button">${icon('card', 15)}${esc(L('کارت، موقع تحویل', 'Card, on delivery', 'Kapıda kart'))}</button>
-        <button class="chip" data-pay="online" type="button">${icon('lock', 15)}${esc(L('پرداخت آنلاین', 'Pay online', 'Online öde'))}</button>
+        ${real
+    ? `<button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>`
+    : `<button class="chip" data-pay="online" type="button">${icon('lock', 15)}${esc(L('پرداخت آنلاین', 'Pay online', 'Online öde'))}</button>`}
       </div>
 
       ${totals(sub, ship)}
@@ -114,9 +151,10 @@ function checkoutSheet() {
         sheet.querySelectorAll('[data-pay]').forEach((x) => x.classList.toggle('on', x === b));
       });
 
-      sheet.querySelector('#coForm').addEventListener('submit', (e) => {
+      sheet.querySelector('#coForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const f = new FormData(e.target);
+        const form = e.target;
+        const f = new FormData(form);
         const get = (k) => String(f.get(k) || '').trim();
         if (!get('name') || !get('phone') || !get('line') || !get('city')) {
           toast(L('اسم، شماره، آدرس و شهر رو پر کن', 'Fill in name, phone, address and city',
@@ -126,15 +164,44 @@ function checkoutSheet() {
         patch('profile', { name: get('name'), phone: get('phone') });
         patch('address', { line: get('line'), city: get('city'), postal: get('postal') });
 
-        const code = orderCode(Date.now() + get('phone'));
+        let placed;
+        if (real) {
+          const btn = form.querySelector('[type="submit"]');
+          btn.disabled = true;
+          try {
+            const r = await fetch('api/order.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                items: state.bag.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
+                name: get('name'), phone: get('phone'), city: get('city'),
+                address: get('line'), postal: get('postal'), website: get('website'),
+              }),
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok || !j.ok) {
+              if (j.error === 'closed') live.storeOpen = false;
+              toast(orderError(r.status, j), 'info', 4200);
+              return;
+            }
+            placed = {
+              code: j.code, placed: j.created_at * 1000, pay: 'card',
+              subtotal: j.subtotal, shipping: j.shipping, total: j.total,
+              server: true, status: j.status, phone: get('phone'),
+            };
+          } catch {
+            toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
+            return;
+          } finally { btn.disabled = false; }
+        } else {
+          placed = {
+            code: orderCode(Date.now() + get('phone')), placed: Date.now(), pay,
+            subtotal: sub, shipping: ship, total: sub + ship,
+          };
+        }
         addOrder({
-          code,
-          placed: Date.now(),
-          pay,
+          ...placed,
           items: state.bag.map((l) => ({ ...l })),
-          subtotal: sub,
-          shipping: ship,
-          total: sub + ship,
           address: { ...state.address },
           step: 0,
         });
@@ -143,7 +210,8 @@ function checkoutSheet() {
         closeSheet();
         document.dispatchEvent(new CustomEvent('bag:changed'));
         go('/orders');
-        setTimeout(() => toast(L(`سفارش \u2066${code}\u2069 ثبت شد`, `Order ${code} placed`,
+        const code = placed.code;
+        setTimeout(() => toast(L(`سفارش ⁦${code}⁩ ثبت شد`, `Order ${code} placed`,
           `${code} numaralı sipariş alındı`), 'check', 3200), 260);
       });
     },

@@ -203,3 +203,29 @@ git add -A && git commit -m "…" && git push
 ```
 
 Built by Alpha Agency.
+
+
+## Back office (پنل مدیریت) — added 2026-10-09
+
+The shop now runs on a small PHP + SQLite backend on the same cPanel host.
+
+| Path | What it is |
+|---|---|
+| `/admin/` | The panel: dashboard + income stats, orders, products (with photo upload), customers, site visits, settings and team. Persian, phone first. |
+| `/api/catalog.php` | The live catalogue the shop loads at boot (ETag, never cached by the service worker). |
+| `/api/order.php` | Places a real order — only while the CEO has switched online ordering on. Prices come from the database, never the browser. |
+| `/api/track.php` | Order status for the customer's Orders tab (code + phone). |
+| `/api/hit.php` | Page-view counter: no cookies, no IPs stored (daily-salted hash). |
+| `/api/admin.php` | Everything the panel does (session + CSRF, rate-limited logins). |
+| `~/tiffany-data/` | Outside the web root: `tiffany.sqlite`, `SETUP-KEY.txt`, admin sessions, `error.log`. |
+
+**First sign-in:** open `/admin/`, enter the setup key from `tiffany-data/SETUP-KEY.txt`
+(cPanel → File Manager), and create the CEO account. The key rotates after every use
+and also resets a forgotten CEO password. Roles: `ceo` (everything) and `admin`
+(products, orders, customers — no money totals, settings or team).
+
+The database's first catalogue is `api/lib/seed.json` (the 17 preview pieces).
+Uploaded photos are re-encoded to 4:5 WebP at 480/960 in `uploads/p/`.
+
+**Tests:** `api_test.py` (78 API checks), `admin_e2e.py` (36 browser checks, panel ↔ shop),
+`e2e.py` (storefront) — all run against `php -S` with `TIFFANY_DATA` pointing at a fresh folder.

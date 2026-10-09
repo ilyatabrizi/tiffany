@@ -1,13 +1,15 @@
 /* Orders and tracking.
 
-   An order's stage is derived from how long ago it was placed, so a demo left
-   open for ten minutes moves on its own instead of sitting on "placed"
-   forever. Real fulfilment replaces STAGES and nothing else changes. */
+   A real order (placed while online ordering is on) carries the status the
+   team sets in the back office; opening this tab asks /api/track.php for the
+   latest, keyed by the order code AND the phone it was placed with.
+   A preview order (store switched off) still walks the stages on the clock,
+   so the demo moves on its own. */
 import { getProduct } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, toman, num, fullDate, timeOf, relDay, COMMA } from '../util.js';
-import { state, getOrder } from '../store.js';
-import { shot, empty, openSheet } from '../ui.js';
+import { state, getOrder, save } from '../store.js';
+import { shot, empty, openSheet, imgSrc } from '../ui.js';
 import { lineOpt, totals } from './bag.js';
 import { L } from '../i18n.js';
 
@@ -25,7 +27,13 @@ const STAGES = [
     note: L('تا ۷ روز می‌تونی عوضش کنی.', 'Exchanges are open for 7 days.', '7 gün içinde değişim yapabilirsin.') },
 ];
 
+/* The back office's statuses on this page's five steps. */
+const FROM_STATUS = { new: 0, confirmed: 1, shipped: 2, delivered: 4 };
+const cancelled = (o) => o.server && o.status === 'cancelled';
+const CANCELLED = () => L('لغو شد', 'Cancelled', 'İptal edildi');
+
 export function stageOf(order) {
+  if (order.server) return FROM_STATUS[order.status] ?? 0;
   const mins = (Date.now() - order.placed) / 60000;
   let i = 0;
   STAGES.forEach((s, idx) => { if (mins >= s.at) i = idx; });
@@ -39,18 +47,18 @@ const ETA = (order) => {
 
 function orderCard(o) {
   const i = stageOf(o);
-  const stage = STAGES[i];
+  const stage = cancelled(o) ? { name: CANCELLED() } : STAGES[i];
   const items = o.items.map((l) => getProduct(l.id)).filter(Boolean);
   const placed = new Date(o.placed);
   return `
   <button class="order" data-act="order" data-code="${esc(o.code)}" type="button"
-          style="--dot:${i === STAGES.length - 1 ? 'var(--muted)' : 'var(--c-cherry)'}">
+          style="--dot:${i === STAGES.length - 1 || cancelled(o) ? 'var(--muted)' : 'var(--c-cherry)'}">
     <span class="order-top">
       <span class="order-code" dir="ltr">${esc(o.code)}</span>
       <span class="status"><i></i>${esc(stage.name)}</span>
     </span>
     <span class="order-thumbs">
-      ${items.slice(0, 5).map((p) => `<img src="assets/img/${p.img}-480.webp"
+      ${items.slice(0, 5).map((p) => `<img src="${imgSrc(p.img, 480)}"
         alt="${esc(p.name)}" loading="lazy" decoding="async" width="42" height="52">`).join('')}
       ${items.length > 5 ? `<span class="tiny" style="align-self:center">${num(items.length - 5)}+</span>` : ''}
     </span>
@@ -70,14 +78,18 @@ function trackSheet(o, { sample = false } = {}) {
     <p class="lede">${sample
       ? esc(L('وقتی یه سفارش توی راهه، این شکلی می‌بینیش.', 'This is what an order on its way looks like.',
         'Yoldaki bir sipariş böyle görünür.'))
-      : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
+      : cancelled(o)
+        ? esc(L('این سفارش لغو شد. اگه سؤالی داری با شعبه‌ها تماس بگیر.',
+          'This order was cancelled. Questions? Call any of our stores.',
+          'Bu sipariş iptal edildi. Sorun varsa mağazalarımızı ara.'))
+        : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
 
-    <div class="track" style="--accent:var(--c-cherry)">
+    ${cancelled(o) ? '' : `<div class="track" style="--accent:var(--c-cherry)">
       ${STAGES.map((s, i) => `
         <div class="step ${i < now ? 'done' : ''} ${i === now ? 'now' : ''}">
           <b>${esc(s.name)}</b><span>${esc(s.note)}</span>
         </div>`).join('')}
-    </div>
+    </div>`}
 
     ${items.length ? `
     <p class="eyebrow" style="margin:12px 0 4px">${esc(L('توی این سفارش', 'In this order', 'Bu siparişte'))}</p>
@@ -110,6 +122,31 @@ const SAMPLE = () => ({
   subtotal: 0, shipping: 0, total: 0,
   address: null,
 });
+
+/** Ask the shop where the real orders are; refresh the list if anything moved. */
+async function trackReal(signal) {
+  const byPhone = {};
+  state.orders.filter((o) => o.server && o.phone && !['delivered', 'cancelled'].includes(o.status))
+    .forEach((o) => { (byPhone[o.phone] ||= []).push(o.code); });
+  let moved = false;
+  for (const [phone, codes] of Object.entries(byPhone)) {
+    try {
+      const r = await fetch('api/track.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, codes }), signal,
+      });
+      const j = await r.json();
+      for (const [code, s] of Object.entries(j.orders || {})) {
+        const o = getOrder(code);
+        if (o && o.status !== s.status) { o.status = s.status; moved = true; }
+      }
+    } catch { return; }       // offline or left the page: keep what we had
+  }
+  if (moved && !signal?.aborted) {
+    save();
+    document.dispatchEvent(new CustomEvent('view:refresh'));
+  }
+}
 
 export default {
   tab: 'orders',
@@ -151,10 +188,12 @@ export default {
       if (e.target.closest('[data-act="sample"]')) trackSheet(SAMPLE(), { sample: true });
     }, { signal });
 
-    /* Stages move with the clock; a minute tick keeps the list honest. */
+    /* Preview stages move with the clock; real ones move when the team moves
+       them. A minute tick does both. */
     const t = setInterval(() => {
       document.dispatchEvent(new CustomEvent('view:refresh'));
     }, 60000);
     signal?.addEventListener('abort', () => clearInterval(t));
+    trackReal(signal);
   },
 };

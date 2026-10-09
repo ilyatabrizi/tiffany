@@ -9,6 +9,7 @@ import { state, bagCount, isWished } from './store.js';
 import { promptInstall, standalone } from './install.js';
 import { mountColour, applyColourPref } from './colour.js';
 import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
+import { loadCatalogue, beacon } from './live.js';
 
 import home from './views/home.js';
 import shop from './views/shop.js';
@@ -165,6 +166,7 @@ function render(route, { keepScroll = false } = {}) {
 
   const t = view.meta?.(route.parts)?.title || view.title || BRAND.name;
   document.title = t === BRAND.name ? `${BRAND.name} ${BRAND.sub}` : `${t} — ${BRAND.name}`;
+  if (!keepScroll) beacon(route);
 }
 
 const refresh = () => render(parse(), { keepScroll: true });
@@ -227,16 +229,22 @@ function applyTheme() {
 }
 
 /* -------------------------------------------------------------- the boot */
-function liftVeil() {
+/* The veil lifts once the fonts AND the catalogue are in (a font that never
+   resolves gives up after 2.6s; the catalogue has its own 9s limit), then
+   holds long enough to read Alpha's line. */
+function liftVeil(ready) {
   const boot = $('#boot');
   if (!boot) return;
   let lifted = false;
   const lift = () => (lifted ? null : (lifted = true, setTimeout(() => {
     boot.classList.add('gone');
     setTimeout(() => boot.remove(), 560);
-  }, standalone() ? 1150 : 1000)));   // long enough to read Alpha's line
-  if (document.fonts?.ready) document.fonts.ready.then(lift).catch(lift); else lift();
-  setTimeout(lift, 2600);   // a font that never resolves must not trap the app
+  }, standalone() ? 1150 : 1000)));
+  const fonts = document.fonts?.ready
+    ? Promise.race([document.fonts.ready, new Promise((r) => { setTimeout(r, 2600); })])
+    : Promise.resolve();
+  Promise.all([fonts.catch(() => {}), ready.catch(() => {})]).then(lift);
+  setTimeout(lift, 12000);    // nothing may trap the shop behind the veil
 }
 
 addEventListener('resize', () => {
@@ -256,9 +264,12 @@ applyTheme();
 applyColourPref();
 labelShell();
 buildTabs();
-liftVeil();
-onRoute((r) => render(r));
-start();
+const catalogue = loadCatalogue();
+liftVeil(catalogue);
+catalogue.finally(() => {
+  onRoute((r) => render(r));
+  start();
+});
 
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

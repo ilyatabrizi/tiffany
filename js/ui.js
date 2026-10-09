@@ -1,15 +1,20 @@
 /* The shared pieces: image helpers, the three card shapes, the size engine,
    sheets, toasts. Views compose these and never build the same DOM twice. */
-import { SIZES, colById, getProduct } from './data.js';
+import { SIZES, colById, getProduct, NO_COL, soldOut } from './data.js';
 import { icon } from './icons.js';
 import { $, esc, toman, clamp } from './util.js';
 import { isWished, toggleWish, state } from './store.js';
 import { L } from './i18n.js';
 
 /* ---------------------------------------------------------------- images */
+/* A bare name is one of the shop's own frames (assets/img); a path is a
+   photo uploaded from the back office (uploads/p/…), made at 480 and 960. */
+const base = (name) => (name.includes('/') ? name : `assets/img/${name}`);
+/** One file of a frame: imgSrc('p-rib-tee', 480) or imgSrc('uploads/p/…', 480). */
+export const imgSrc = (name, w) => `${base(name)}-${w}.webp`;
 export const shot = (name, sizes, widths = [480, 960]) =>
-  `srcset="${widths.map((w) => `assets/img/${name}-${w}.webp ${w}w`).join(', ')}"
-   src="assets/img/${name}-${widths[0]}.webp" sizes="${sizes}"`;
+  `srcset="${widths.map((w) => `${base(name)}-${w}.webp ${w}w`).join(', ')}"
+   src="${base(name)}-${widths[0]}.webp" sizes="${sizes}"`;
 
 export const bigShot = (name, sizes) => shot(name, sizes, [720, 1080]);
 
@@ -18,19 +23,21 @@ export const bigShot = (name, sizes) => shot(name, sizes, [720, 1080]);
    interactive elements are invalid markup and unreachable by keyboard. */
 export function productCard(p, { sizes = '(max-width:620px) 44vw, 230px' } = {}) {
   const wished = isWished(p.id);
-  const col = colById[p.col];
+  const col = colById[p.col] || NO_COL;
+  const out = soldOut(p);
+  const badge = out ? L('تموم شد', 'Sold out', 'Tükendi') : p.badge;
   return `
-  <div class="card" style="--dot:${col.accent};--accent:${col.accent}">
+  <div class="card ${out ? 'is-out' : ''}" style="--dot:${col.accent};--accent:${col.accent}">
     <button class="card-open" data-act="product" data-id="${p.id}" type="button">
       <span class="shot">
         <img ${shot(p.img, sizes)} alt="${esc(p.name)}" loading="lazy" decoding="async"
              width="480" height="600">
-        ${p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}
+        ${badge ? `<span class="card-badge">${esc(badge)}</span>` : ''}
       </span>
       <span class="card-body">
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-meta">
-          <span class="card-dot" title="${esc(col.name)}"></span>
+          ${col.id ? `<span class="card-dot" title="${esc(col.name)}"></span>` : ''}
           <span class="card-price">${toman(p.price)}</span>
         </span>
       </span>

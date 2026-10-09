@@ -6,18 +6,19 @@
      markup, styles, modules, manifest -> network first, cache as fallback
      images, fonts                     -> cache first, refreshed in background
      the campaign clip                 -> straight to the network (Range)
+     /api/ and the back office /admin/ -> never touched: always the network
 
    Network-first is a lie without cache:'reload'. A plain fetch() inside a
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v4';
+const V = 'tiffany-fa-v5';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
   'js/app.js', 'js/colour.js', 'js/config.js', 'js/data.js', 'js/hero.js', 'js/i18n.js',
   'js/icons.js', 'js/install.js', 'js/looks.js', 'js/router.js', 'js/store.js',
-  'js/ui.js', 'js/util.js',
+  'js/ui.js', 'js/util.js', 'js/live.js',
   'js/views/home.js', 'js/views/shop.js', 'js/views/collection.js',
   'js/views/product.js', 'js/views/bag.js', 'js/views/orders.js',
   'js/views/saved.js', 'js/views/profile.js', 'js/views/info.js',
@@ -87,6 +88,10 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(request.url);
   if (url.origin !== location.origin) return;
+  /* Live data and the back office are never cached here: a price or an order
+     status must always be today's. (The shop keeps its own last-good
+     catalogue for offline starts, see js/live.js.) */
+  if (url.pathname.includes('/api/') || url.pathname.includes('/admin/')) return;
 
   /* Video needs Range support; the network owns it entirely. */
   if (request.destination === 'video' || request.headers.has('range')) return;

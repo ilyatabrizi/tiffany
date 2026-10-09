@@ -10,7 +10,7 @@
 import { LOOKS, getProduct } from './data.js';
 import { icon } from './icons.js';
 import { esc, toman } from './util.js';
-import { bigShot } from './ui.js';
+import { bigShot, imgSrc } from './ui.js';
 import { $ } from './util.js';
 import { go } from './router.js';
 import { L } from './i18n.js';
@@ -29,7 +29,7 @@ const slide = (l) => {
       <div class="viewer-items">
         ${items.map((p) => `
           <button class="vitem" data-vitem="${p.id}" type="button">
-            <img src="assets/img/${p.img}-480.webp" alt="" loading="lazy" decoding="async"
+            <img src="${imgSrc(p.img, 480)}" alt="" loading="lazy" decoding="async"
                  width="34" height="42">
             <span><b>${esc(p.name)}</b><span>${toman(p.price)}</span></span>
           </button>`).join('')}

@@ -6,6 +6,7 @@ import { productCard, empty, openSheet, closeSheet } from '../ui.js';
 import { esc, num } from '../util.js';
 import { go } from '../router.js';
 import { L } from '../i18n.js';
+import { live } from '../live.js';
 
 const SORTS = [
   { id: 'new', name: L('جدیدترین', 'Newest', 'En yeni') },
@@ -125,6 +126,9 @@ export default {
 
     <div style="height:16px"></div>
     ${list.length ? `<div class="grid-p">${list.map((p) => productCard(p)).join('')}</div>`
+      : !live.loaded ? empty('search', L('فروشگاه بارگذاری نشد', 'The shop did not load', 'Mağaza yüklenemedi'),
+        L('اینترنت رو چک کن و دوباره امتحان کن.', 'Check your connection and try again.', 'Bağlantını kontrol edip tekrar dene.'),
+        `<button class="btn btn-line btn-s" type="button" onclick="location.reload()">${esc(L('دوباره', 'Try again', 'Tekrar dene'))}</button>`)
       : soon(f) ? empty('hanger', L(`${getCategory(f.cat).name} به‌زودی میاد`,
         `${getCategory(f.cat).name} — coming soon`, `${getCategory(f.cat).name} çok yakında`),
         L('هنوز چیزی توی این دسته نذاشتیم. یه سر به بقیه‌ی دسته‌ها بزن.',

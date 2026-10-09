@@ -1281,3 +1281,15 @@ a.bline { color: var(--ink); width: fit-content; }
   display: inline-block; margin-top: 8px; color: var(--ink);
   text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
 }
+
+/* -------------------------------------------- live catalogue: sold out */
+.size.out {
+  color: var(--faint); border-style: dashed; text-decoration: line-through;
+  text-decoration-thickness: 1px; cursor: not-allowed;
+}
+.size.out:active { transform: none; }
+.card.is-out .shot img { opacity: .55; }
+.buybar .btn[disabled] { opacity: .5; pointer-events: none; }
+
+/* the checkout's honeypot: people never see it, form-filling bots do */
+.hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); left: -9999px; }
