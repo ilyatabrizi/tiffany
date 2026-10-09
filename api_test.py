@@ -211,6 +211,48 @@ code, c = ceo('customers')
 check('customer listed once, with spend', len(c['customers']) == 1 and c['customers'][0]['orders'] == 2
       and c['customers'][0]['spent'] == d['totals']['revenue'], str(c))
 
+print('\ncookie sheet and devices')
+IOS = {'type': 'mobile', 'os': 'ios', 'brand': 'apple', 'browser': 'safari', 'app': 'web', 'lang': 'fa'}
+AND = {'type': 'mobile', 'os': 'android', 'brand': 'samsung', 'browser': 'samsung', 'app': 'app', 'lang': 'fa'}
+ua2 = {'User-Agent': 'Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-A546E) SamsungBrowser/26.0'}
+ua3 = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) Chrome/129'}
+requests.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'home', 'd': IOS}), headers=ua)
+code, r = ceo('traffic', days=7)
+check('no cookie, no device line kept', r['devices']['known'] == 0, str(r['devices']))
+x = requests.post(f'{BASE}/api/consent.php', json={'c': 'yes'}, headers={**ua, 'Origin': 'https://evil.example'})
+check('another site cannot answer for the shop', x.status_code == 403)
+x = requests.post(f'{BASE}/api/consent.php', json={'c': 'maybe'}, headers=ua)
+check('only yes or no', x.status_code == 422)
+yes = requests.Session()
+x = yes.post(f'{BASE}/api/consent.php', json={'c': 'yes', 'd': {**IOS, 'model': 'iPhone15,2', 'browser': 'netscape'}}, headers=ua)
+sc = x.headers.get('Set-Cookie', '')
+check('yes sets tf_c=1 for a year, readable by the page', x.status_code == 200 and 'tf_c=1' in sc
+      and 'Max-Age=31536000' in sc and 'path=/' in sc.lower() and 'httponly' not in sc.lower(), sc)
+yes.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'shop', 'd': IOS}), headers=ua)
+yes.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'bag', 'd': IOS}), headers=ua)
+yes2 = requests.Session()
+yes2.post(f'{BASE}/api/consent.php', json={'c': 'yes'}, headers=ua2)
+yes2.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'home', 'd': AND}), headers=ua2)
+no = requests.Session()
+x = no.post(f'{BASE}/api/consent.php', json={'c': 'no', 'd': IOS}, headers=ua3)
+check('no sets tf_c=0 for six months', 'tf_c=0' in x.headers.get('Set-Cookie', '')
+      and 'Max-Age=15724800' in x.headers.get('Set-Cookie', ''), x.headers.get('Set-Cookie', ''))
+no.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'home', 'd': {**IOS, 'type': 'desktop'}}), headers=ua3)
+forged = requests.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'home', 'd': {'type': 'mobile', 'os': 'evil<script>'}}),
+                       headers={**ua3, 'Cookie': 'tf_c=1'})
+code, r = ceo('traffic', days=7)
+dv = r['devices']
+vals = lambda dim: {x['v']: x['n'] for x in dv[dim]}
+check('two consenting visitors, each counted once a day', dv['known'] == 2, str(dv))
+check('yes and no tallied', dv['consent'] == {'yes': 2, 'no': 1}, str(dv['consent']))
+check('brands', vals('brand') == {'apple': 1, 'samsung': 1}, str(vals('brand')))
+check('systems', vals('os') == {'ios': 1, 'android': 1}, str(vals('os')))
+check('an unknown browser word is dropped, the rest of the line kept', vals('browser') == {'samsung': 1}, str(vals('browser')))
+check('installed app vs browser', vals('app') == {'web': 1, 'app': 1}, str(vals('app')))
+check('a no keeps the desktop line out', 'desktop' not in vals('type'))
+check('nothing outside the word list is stored', all(x['v'] in ('fa',) for x in dv['lang'])
+      and 'model' not in dv and all('<' not in x['v'] for d in ('type', 'os', 'brand', 'browser') for x in dv[d]))
+
 print('\nteam and roles')
 code, r = ceo('team_save', name='Sara', email='sara@tiffany.test', role='admin', password='sara-pass-123')
 check('CEO adds an admin', code == 200)

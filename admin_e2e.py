@@ -124,6 +124,8 @@ with sync_playwright() as pw:
     # --------------------------------------------------------------- shop
     print('\nthe shop sees it')
     shop_ctx = browser.new_context(**PHONE)
+    shop_ctx.add_init_script("try{localStorage.setItem('tiffany.a2hs','{\"done\":true}');"
+                             "sessionStorage.setItem('tiffany.consent.later','later')}catch(e){}")
     s = shop_ctx.new_page()
     watch(s)
     s.goto(BASE + '/#/shop?c=hoodie', wait_until='networkidle')
@@ -216,8 +218,28 @@ with sync_playwright() as pw:
     a.goto(ADMIN + '#/customers')
     a.wait_for_timeout(900)
     check('customer listed', 'مریم احمدی' in a.inner_text('#main'))
+    # a few visitors answer the shop's cookie sheet, from different phones
+    import json as _json
+    import urllib.request
+    for i, (ans, line) in enumerate([
+        ('yes', {'type': 'mobile', 'os': 'ios', 'brand': 'apple', 'browser': 'safari', 'app': 'web', 'lang': 'fa'}),
+        ('yes', {'type': 'mobile', 'os': 'ios', 'brand': 'apple', 'browser': 'instagram', 'app': 'web', 'lang': 'fa'}),
+        ('yes', {'type': 'mobile', 'os': 'ios', 'brand': 'apple', 'browser': 'safari', 'app': 'app', 'lang': 'fa'}),
+        ('yes', {'type': 'mobile', 'os': 'android', 'brand': 'samsung', 'browser': 'samsung', 'app': 'web', 'lang': 'fa'}),
+        ('yes', {'type': 'mobile', 'os': 'android', 'brand': 'xiaomi', 'browser': 'chrome', 'app': 'app', 'lang': 'en'}),
+        ('yes', {'type': 'desktop', 'os': 'windows', 'browser': 'chrome', 'app': 'web', 'lang': 'fa'}),
+        ('no', None),
+    ]):
+        req = urllib.request.Request(BASE + '/api/consent.php', method='POST',
+                                     data=_json.dumps({'c': ans, **({'d': line} if line else {})}).encode(),
+                                     headers={'Content-Type': 'application/json',
+                                              'User-Agent': f'Mozilla/5.0 (test phone {i}) Mobile Safari'})
+        urllib.request.urlopen(req).read()
     a.goto(ADMIN + '#/traffic')
     a.wait_for_timeout(1000)
+    dev = a.inner_text('#main')
+    check('device card: brands, systems, browsers', all(w in dev for w in ['دستگاه بازدیدکننده‌ها', 'سامسونگ', 'شیائومی', 'اندروید', 'داخل اینستاگرام', 'اپ روی صفحه‌ی اصلی']))
+    check('cookie acceptance shown', '۸۶٪' in dev or '86%' in dev, dev[:200])
     check('visits counted from the shop', int(re.sub(r'\D', '', a.locator('.tile .v').first.text_content().translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))) or 0) >= 1)
     check('the viewed piece is ranked', 'هودی کرم' in a.inner_text('#main'))
     shot(a, '36-admin-traffic', full=True)

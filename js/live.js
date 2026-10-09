@@ -6,6 +6,8 @@
    empty one. Nothing here is cached by the service worker — prices must
    never be stale. */
 import { setCatalogue } from './data.js';
+import { consented } from './consent.js';
+import { deviceLine, sharpenBrand } from './device.js';
 
 export const live = {
   loaded: false,       // a catalogue arrived (from the network or the last good copy)
@@ -40,13 +42,21 @@ export async function loadCatalogue() {
   return live;
 }
 
-/** One page view for the back office's «بازدید سایت». No cookies, no IDs. */
-export function beacon(route) {
+/** One page view for the back office's «بازدید سایت». No IDs; the device
+    line (js/device.js) rides along only after a yes on the cookie sheet. */
+let sharpened = null;
+export async function beacon(route) {
   const [a, b] = route.parts;
   const k = !a ? 'home' : (a === 'p' || a === 'c') && b ? `${a}:${b}` : a;
   if (!/^[a-z]{1,12}(:[a-z0-9-]{1,60})?$/.test(k)) return;
+  const msg = { k };
+  if (consented()) {
+    sharpened ??= sharpenBrand();
+    await sharpened;
+    msg.d = deviceLine();
+  }
   try {
-    const body = new Blob([JSON.stringify({ k })], { type: 'text/plain' });
+    const body = new Blob([JSON.stringify(msg)], { type: 'text/plain' });
     if (!navigator.sendBeacon?.('api/hit.php', body)) {
       fetch('api/hit.php', { method: 'POST', body, keepalive: true }).catch(() => {});
     }

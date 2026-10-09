@@ -9,7 +9,8 @@ import { state, patch, bagCount } from '../store.js';
 import {
   openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig,
 } from '../ui.js';
-import { promptInstall, standalone } from '../install.js';
+import { standalone } from '../install.js';
+import { consent } from '../consent.js';
 import { L } from '../i18n.js';
 
 const initials = (name) => {
@@ -246,6 +247,12 @@ export default {
       ${pageRow('/about', 'info', L('درباره‌ی ما', 'About us', 'Hakkımızda'))}
       ${pageRow('/contact', 'store', L('شعبه‌ها و تماس', 'Stores & contact', 'Mağazalar ve iletişim'))}
       ${pageRow('/terms', 'doc', L('قوانین و شرایط', 'Terms & policies', 'Koşullar ve politikalar'))}
+      <button class="row" data-act="consent" type="button">
+        ${icon('shield', 19)}<span class="row-label">${esc(L('کوکی‌ها و حریم خصوصی', 'Cookies and privacy', 'Çerezler ve gizlilik'))}</span>
+        <span class="row-val">${esc(({
+          yes: L('قبول', 'Accepted', 'Kabul edildi'),
+          no: L('فقط ضروری‌ها', 'Essentials only', 'Yalnızca gerekli'),
+        })[consent()] || '—')}</span>${fwd()}</button>
     </div>
 
     <div class="rows">

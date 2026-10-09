@@ -19,6 +19,8 @@ from playwright.sync_api import sync_playwright
 BASE = 'http://localhost:8131'
 SHOTS = pathlib.Path(__file__).resolve().parent / 'docs' / 'shots'
 VIEW = {'width': 390, 'height': 844}
+QUIET = ("try{localStorage.setItem('tiffany.a2hs','{\"done\":true}');"
+         "sessionStorage.setItem('tiffany.consent.later','later')}catch(e){}")
 
 ok = 0
 bad = []
@@ -68,6 +70,9 @@ def run(shots_only=False):
                                   user_agent=('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like '
                                               'Mac OS X) AppleWebKit/605.1.15 (KHTML, like '
                                               'Gecko) Version/17.0 Mobile/15E148 Safari/604.1'))
+        # The two opening sheets (cookies, home screen) have their own run in
+        # popups_e2e.py; here they would only stand in front of everything.
+        ctx.add_init_script(QUIET)
         page = ctx.new_page()
         page.on('console', lambda m: noise.append(f'console.{m.type}: {m.text}')
                 if m.type in ('error', 'warning') else None)

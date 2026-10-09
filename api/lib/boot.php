@@ -134,9 +134,25 @@ function db(): PDO
 function tf_migrate(PDO $db): void
 {
     $version = (int) $db->query('PRAGMA user_version')->fetchColumn();
-    if ($version >= 1) {
-        return;
+    if ($version < 1) {
+        tf_migrate_1($db);
     }
+    if ($version < 2) {
+        /* Device counts, only for visitors who said yes to the cookie sheet.
+           One row per day and value, never one per person: devseen keeps the
+           same day-salted hash as `seen` so a visitor counts once a day, and
+           it is thrown away after two days like `seen`. */
+        $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS devices (day TEXT NOT NULL, dim TEXT NOT NULL, val TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, dim, val));
+CREATE TABLE IF NOT EXISTS devseen (day TEXT NOT NULL, vid TEXT NOT NULL, PRIMARY KEY (day, vid));
+PRAGMA user_version = 2;
+SQL);
+    }
+}
+
+function tf_migrate_1(PDO $db): void
+{
     $db->exec(<<<'SQL'
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY,
@@ -698,4 +714,92 @@ function tf_days(int $n): array
         $out[] = date('Y-m-d', strtotime("-$i days"));
     }
     return $out;
+}
+
+/* -------------------------------------------------------------- visitors */
+/** Today's anonymous visitor id: a hash of address, browser and a salt that
+    is replaced every day, so the same person counts once a day and can never
+    be followed from one day to the next. Nothing here is ever stored as is. */
+function tf_visitor(string $ua): array
+{
+    $db = db();
+    $day = date('Y-m-d');
+    $salt = setting('salt:' . $day);
+    if ($salt === '') {
+        $db->prepare('INSERT OR IGNORE INTO settings (k, v) VALUES (?, ?)')
+            ->execute(['salt:' . $day, bin2hex(random_bytes(16))]);
+        $salt = setting('salt:' . $day);
+        $old = date('Y-m-d', strtotime('-2 days'));
+        $db->prepare("DELETE FROM settings WHERE k LIKE 'salt:%' AND k < ?")->execute(['salt:' . $old]);
+        $db->prepare('DELETE FROM seen WHERE day < ?')->execute([$old]);
+        $db->prepare('DELETE FROM devseen WHERE day < ?')->execute([$old]);
+    }
+    return [$day, substr(hash('sha256', $salt . '|' . tf_ip() . '|' . $ua), 0, 24)];
+}
+
+function tf_is_bot(string $ua): bool
+{
+    return $ua === '' || (bool) preg_match('/bot|crawl|spider|slurp|facebookexternalhit|preview|lighthouse/i', $ua);
+}
+
+/* --------------------------------------------------------------- devices */
+/* What the cookie sheet asks for, and the only values that are ever kept.
+   The shop works these out in the browser (js/device.js); anything not on
+   this list is dropped, so the table can only ever hold these words. */
+const TF_DEV = [
+    'type'    => ['mobile', 'tablet', 'desktop'],
+    'os'      => ['ios', 'android', 'windows', 'macos', 'linux', 'chromeos', 'other'],
+    'brand'   => ['apple', 'samsung', 'xiaomi', 'huawei', 'honor', 'google', 'oppo', 'realme',
+                  'vivo', 'oneplus', 'nokia', 'motorola', 'lg', 'tecno', 'other'],
+    'browser' => ['chrome', 'safari', 'samsung', 'firefox', 'edge', 'opera', 'yandex',
+                  'instagram', 'facebook', 'telegram', 'other'],
+    'app'     => ['app', 'web'],
+    'lang'    => ['fa', 'en', 'tr'],
+];
+const TF_CONSENT_COOKIE = 'tf_c';
+
+/** Did this browser say yes on the cookie sheet? Read from its own cookie. */
+function tf_consented(): bool
+{
+    return ($_COOKIE[TF_CONSENT_COOKIE] ?? '') === '1';
+}
+
+/** Keep only allow-listed values; null when there is nothing usable. */
+function tf_device_clean($d): ?array
+{
+    if (!is_array($d)) {
+        return null;
+    }
+    $out = [];
+    foreach (TF_DEV as $dim => $allowed) {
+        $v = $d[$dim] ?? null;
+        if (is_string($v) && in_array($v, $allowed, true)) {
+            $out[$dim] = $v;
+        }
+    }
+    return isset($out['type'], $out['os']) ? $out : null;
+}
+
+/** Count one consenting visitor's device, at most once per visitor per day. */
+function tf_device_note(string $day, string $vid, array $dev): void
+{
+    $db = db();
+    $st = $db->prepare('INSERT OR IGNORE INTO devseen (day, vid) VALUES (?, ?)');
+    $st->execute([$day, $vid]);
+    if ($st->rowCount() === 0) {
+        return;
+    }
+    $up = $db->prepare('INSERT INTO devices (day, dim, val, n) VALUES (?, ?, ?, 1)
+                        ON CONFLICT(day, dim, val) DO UPDATE SET n = n + 1');
+    foreach ($dev as $dim => $val) {
+        $up->execute([$day, $dim, $val]);
+    }
+}
+
+/** Yes and no on the cookie sheet, as two plain daily counters. */
+function tf_consent_note(string $day, bool $yes): void
+{
+    db()->prepare('INSERT INTO devices (day, dim, val, n) VALUES (?, \'consent\', ?, 1)
+                   ON CONFLICT(day, dim, val) DO UPDATE SET n = n + 1')
+        ->execute([$day, $yes ? 'yes' : 'no']);
 }

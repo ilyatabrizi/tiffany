@@ -215,7 +215,8 @@ The shop now runs on a small PHP + SQLite backend on the same cPanel host.
 | `/api/catalog.php` | The live catalogue the shop loads at boot (ETag, never cached by the service worker). |
 | `/api/order.php` | Places a real order — only while the CEO has switched online ordering on. Prices come from the database, never the browser. |
 | `/api/track.php` | Order status for the customer's Orders tab (code + phone). |
-| `/api/hit.php` | Page-view counter: no cookies, no IPs stored (daily-salted hash). |
+| `/api/hit.php` | Page-view counter: no IPs stored (daily-salted hash). Adds the device line only for browsers carrying `tf_c=1`. |
+| `/api/consent.php` | The cookie sheet's answer: sets `tf_c` (1 = yes, a year; 0 = no, six months) and tallies yes/no. |
 | `/api/admin.php` | Everything the panel does (session + CSRF, rate-limited logins). |
 | `~/tiffany-data/` | Outside the web root: `tiffany.sqlite`, `SETUP-KEY.txt`, admin sessions, `error.log`. |
 
@@ -227,5 +228,28 @@ and also resets a forgotten CEO password. Roles: `ceo` (everything) and `admin`
 The database's first catalogue is `api/lib/seed.json` (the 17 preview pieces).
 Uploaded photos are re-encoded to 4:5 WebP at 480/960 in `uploads/p/`.
 
-**Tests:** `api_test.py` (78 API checks), `admin_e2e.py` (36 browser checks, panel ↔ shop),
-`e2e.py` (storefront) — all run against `php -S` with `TIFFANY_DATA` pointing at a fresh folder.
+**Tests:** `api_test.py` (91 API checks), `admin_e2e.py` (38 browser checks, panel ↔ shop),
+`popups_e2e.py` (56 checks: the two opening sheets on iPhone, Android, Samsung, Instagram,
+desktop, English, installed), `e2e.py` (storefront) — all run against `php -S` with
+`TIFFANY_DATA` pointing at a fresh folder.
+
+## The two opening sheets — added 2026-10-09
+
+Once the opening animation lifts, the shop asks two things, one after the other:
+
+1. **Cookies and device info** (`js/consent.js`), on every device, until answered.
+   *Accept* → each page view carries a short line of words worked out in the browser
+   (`js/device.js`): phone/tablet/computer, maker (Apple, Samsung, Xiaomi…), system,
+   browser (including Instagram/Telegram in-app), installed app or browser, site language.
+   The server keeps only words from its own list (`TF_DEV` in `api/lib/boot.php`), as
+   daily tallies — never per person, no model numbers, no screen sizes, no location.
+   *Essentials only* → nothing changes; visits are counted as before.
+   Profile → «کوکی‌ها و حریم خصوصی» changes the answer; the terms page explains it.
+2. **Add to home screen** (`js/install.js`), phones only, never once installed.
+   Chrome/Samsung/Edge on Android get the real install button when the browser offers
+   one; iPhone gets Safari's three steps with its own glyphs; Instagram/Facebook/Telegram's
+   in-app browsers get "open it in Safari/Chrome first" plus a copy-link button.
+   Snoozes four days after each showing, stops after three, or at «دیگه نشون نده».
+
+The panel's «بازدید سایت» page shows the tallies: acceptance rate, coverage, installed-app
+share, then ranked bars for device type, brand, system, browser, app/web and language.

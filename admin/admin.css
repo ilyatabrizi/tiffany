@@ -329,6 +329,13 @@ main.main { padding: 16px var(--gap) calc(var(--nav-h) + var(--sb) + 30px); max-
 .hbar-row .fill { display: block; height: 100%; border-radius: 4px 0 0 4px; background: var(--money); min-width: 3px; }
 .hbar-row .val { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
+.hbar.visits .fill { background: var(--visits); }
+.hbar-row > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dev-grid { display: grid; gap: 20px; margin-top: 18px; }
+@media (min-width: 700px) { .dev-grid { grid-template-columns: 1fr 1fr; column-gap: 28px; } }
+.dev-group h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 10px; }
+.dev-group .hbar-row { grid-template-columns: 118px 1fr auto; }
+
 /* ---------------------------------------------------------------- lists */
 .list { display: grid; gap: 8px; }
 .item {

@@ -6,7 +6,8 @@ import { $, $$, num } from './util.js';
 import { start, onRoute, go, back, parse, recallScroll } from './router.js';
 import { flipWish, closeSheet, sheetIsOpen, toast } from './ui.js';
 import { state, bagCount, isWished } from './store.js';
-import { promptInstall, standalone } from './install.js';
+import { promptInstall, standalone, shouldOfferInstall, installSheet } from './install.js';
+import { needsConsent, askConsent } from './consent.js';
 import { mountColour, applyColourPref } from './colour.js';
 import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
 import { loadCatalogue, beacon } from './live.js';
@@ -189,6 +190,7 @@ document.addEventListener('click', (e) => {
     case 'look': openLooks(Number(t.dataset.i) || 0); break;
     case 'viewer-close': closeLooks(); break;
     case 'install': promptInstall(); break;
+    case 'consent': askConsent({ settings: true }); break;
     case 'fit': closeSheet(); setTimeout(fitSheet, 220); break;
     case 'address': addressSheet(); break;
     case 'about': go('/about'); break;
@@ -232,19 +234,38 @@ function applyTheme() {
 /* The veil lifts once the fonts AND the catalogue are in (a font that never
    resolves gives up after 2.6s; the catalogue has its own 9s limit), then
    holds long enough to read Alpha's line. */
-function liftVeil(ready) {
+function liftVeil(ready, onGone) {
   const boot = $('#boot');
-  if (!boot) return;
+  if (!boot) { onGone(); return; }
   let lifted = false;
   const lift = () => (lifted ? null : (lifted = true, setTimeout(() => {
     boot.classList.add('gone');
-    setTimeout(() => boot.remove(), 560);
+    setTimeout(() => { boot.remove(); onGone(); }, 560);
   }, standalone() ? 1150 : 1000)));
   const fonts = document.fonts?.ready
     ? Promise.race([document.fonts.ready, new Promise((r) => { setTimeout(r, 2600); })])
     : Promise.resolve();
   Promise.all([fonts.catch(() => {}), ready.catch(() => {})]).then(lift);
   setTimeout(lift, 12000);    // nothing may trap the shop behind the veil
+}
+
+/* ------------------------------------------------------------ the popups */
+/* Once the veil is gone: the cookie question first (if this browser has not
+   answered it), then the home-screen sheet on phones (js/install.js decides
+   whether it is due). Never on top of something the visitor opened
+   themselves — a sheet, the stories — and never while the tab is hidden. */
+function popups() {
+  let tries = 0;
+  const when = (fn, ms) => setTimeout(function wait() {
+    if (document.hidden || sheetIsOpen() || isLooksOpen()) {
+      if (++tries < 12) setTimeout(wait, 2500);
+      return;
+    }
+    fn();
+  }, ms);
+  const install = () => { if (shouldOfferInstall()) when(() => installSheet({ auto: true }), 900); };
+  if (needsConsent()) when(() => askConsent({ then: install }), 600);
+  else install();
 }
 
 addEventListener('resize', () => {
@@ -265,7 +286,7 @@ applyColourPref();
 labelShell();
 buildTabs();
 const catalogue = loadCatalogue();
-liftVeil(catalogue);
+liftVeil(catalogue, popups);
 catalogue.finally(() => {
   onRoute((r) => render(r));
   start();

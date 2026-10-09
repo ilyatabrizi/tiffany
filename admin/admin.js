@@ -59,6 +59,20 @@ const NEXT = { new: ['confirmed', 'تأیید سفارش'], confirmed: ['shipped
 const PAY = { card: 'کارت موقع تحویل', online: 'پرداخت آنلاین' };
 const PAGES = { home: 'صفحه‌ی اصلی', shop: 'فروشگاه', bag: 'سبد خرید', orders: 'سفارش‌های مشتری',
   profile: 'پروفایل', saved: 'ذخیره‌شده‌ها', about: 'درباره‌ی ما', contact: 'شعبه‌ها و تماس', terms: 'قوانین' };
+/* The shop's cookie sheet: what each device word is called in the panel. */
+const DEV = {
+  type: { t: 'نوع دستگاه', v: { mobile: 'موبایل', tablet: 'تبلت', desktop: 'کامپیوتر' } },
+  brand: { t: 'برند گوشی', v: { apple: 'اپل (آیفون و آیپد)', samsung: 'سامسونگ', xiaomi: 'شیائومی', huawei: 'هواوی', honor: 'آنر',
+    google: 'گوگل پیکسل', oppo: 'اوپو', realme: 'ریلمی', vivo: 'ویوو', oneplus: 'وان‌پلاس', nokia: 'نوکیا',
+    motorola: 'موتورولا', lg: 'ال‌جی', tecno: 'تکنو و اینفینیکس', other: 'بقیه' } },
+  os: { t: 'سیستم‌عامل', v: { ios: 'iOS (آیفون و آیپد)', android: 'اندروید', windows: 'ویندوز', macos: 'مک', linux: 'لینوکس', chromeos: 'کروم‌اواس', other: 'بقیه' } },
+  browser: { t: 'مرورگر', v: { chrome: 'کروم', safari: 'سافاری', samsung: 'سامسونگ اینترنت', firefox: 'فایرفاکس', edge: 'اج', opera: 'اپرا',
+    yandex: 'یاندکس', instagram: 'داخل اینستاگرام', facebook: 'داخل فیسبوک', telegram: 'داخل تلگرام', other: 'بقیه' } },
+  app: { t: 'از کجا باز کردن', v: { app: 'اپ روی صفحه‌ی اصلی', web: 'مرورگر' } },
+  lang: { t: 'زبان سایت', v: { fa: 'فارسی', en: 'انگلیسی', tr: 'ترکی' } },
+};
+const PCT = new Intl.NumberFormat('fa-IR', { style: 'percent', maximumFractionDigits: 0 });
+
 const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌اندازی کرد', recover: 'رمز رو با کلید بازیابی کرد',
   password: 'رمزش رو عوض کرد', product_add: 'محصول اضافه کرد', product_edit: 'محصول رو ویرایش کرد',
   product_show: 'محصول رو نمایش داد', product_hide: 'محصول رو مخفی کرد', product_delete: 'محصول رو حذف کرد',
@@ -1235,9 +1249,43 @@ async function viewTraffic(_, q, signal) {
         ${d.pages.length ? `<table class="tbl"><tbody>${d.pages.map((r) => `<tr><td>${esc(label(r.page))}</td><td class="n">${num(r.n)}</td></tr>`).join('')}</tbody></table>`
     : '<p class="tiny">هنوز بازدیدی ثبت نشده.</p>'}</div>
     </div>
-    <p class="tiny" style="margin-top:14px">برای حریم خصوصی، هیچ کوکی و آی‌پی‌ای ذخیره نمی‌شه؛ ربات‌های گوگل و بقیه شمرده نمی‌شن.</p>`;
+    ${devicesCard(d.devices, d.visitors)}
+    <p class="tiny" style="margin-top:14px">برای حریم خصوصی، آی‌پی هیچ‌کس ذخیره نمی‌شه و ربات‌های گوگل و بقیه شمرده نمی‌شن. اطلاعات دستگاه فقط از کسایی ثبت می‌شه که توی پیغام کوکی سایت «قبول دارم» رو زدن، و فقط به‌صورت آمار کلی روزانه.</p>`;
   drawCharts();
   main.querySelectorAll('[data-days]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/traffic?d=${b.dataset.days}`; }));
+}
+
+/* Device counts from the cookie sheet. Each list is one quantity compared
+   across a handful of values, so it is a ranked horizontal bar in the one
+   visits hue — no legend, the words sit on the bars' own rows. */
+function devicesCard(dv, visitors) {
+  if (!dv) return '';
+  const known = dv.known || 0;
+  const asked = dv.consent.yes + dv.consent.no;
+  const appN = (dv.app.find((r) => r.v === 'app') || {}).n || 0;
+  const tiles = `<div class="tiles">
+      ${tile('قبول کردن کوکی', asked ? PCT.format(dv.consent.yes / asked) : '—', asked ? `${num(dv.consent.yes)} از ${num(asked)} نفری که جواب دادن` : 'هنوز کسی جواب نداده')}
+      ${tile('اطلاعات دستگاه داریم از', num(known), visitors ? `${PCT.format(Math.min(1, known / visitors))} بازدیدکننده‌ها` : 'نفر')}
+      ${tile('باز کردن از اپ نصب‌شده', known ? PCT.format(appN / known) : '—', known ? `${num(appN)} نفر از صفحه‌ی اصلی گوشی` : '')}
+    </div>`;
+  if (!known) {
+    return `<div class="card sec" style="margin-top:10px"><div class="sec-head"><h2>دستگاه بازدیدکننده‌ها</h2></div>${tiles}
+      <p class="tiny" style="margin-top:12px">هنوز اطلاعات دستگاهی ثبت نشده. از وقتی بازدیدکننده‌ها پیغام کوکی رو قبول کنن، اینجا پر می‌شه.</p></div>`;
+  }
+  const list = (dim) => {
+    const rows = dv[dim].filter((r) => r.n > 0);
+    if (!rows.length) return '';
+    const total = rows.reduce((a, r) => a + r.n, 0);
+    const mx = Math.max(...rows.map((r) => r.n));
+    return `<div class="dev-group"><h3>${esc(DEV[dim].t)}</h3><div class="hbar visits">
+      ${rows.slice(0, 8).map((r) => `<div class="hbar-row"><span>${esc(DEV[dim].v[r.v] || r.v)}</span>
+        <span class="track"><i class="fill" style="display:block;width:${Math.max(1.5, (r.n / mx) * 100)}%"></i></span>
+        <span class="val">${num(r.n)} نفر، ${PCT.format(r.n / total)}</span></div>`).join('')}</div></div>`;
+  };
+  return `<div class="card sec" style="margin-top:10px"><div class="sec-head"><h2>دستگاه بازدیدکننده‌ها</h2></div>
+    ${tiles}
+    <p class="tiny" style="margin:10px 0 0">هر بازدیدکننده روزی یه بار شمرده می‌شه؛ درصد از کل همون فهرسته.</p>
+    <div class="dev-grid">${['type', 'brand', 'os', 'browser', 'app', 'lang'].map(list).join('')}</div></div>`;
 }
 
 /* ============================================================= settings */

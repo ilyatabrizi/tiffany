@@ -1214,6 +1214,83 @@ html[dir='ltr'] .back-ico, html[dir='ltr'] .row .chev { transform: scaleX(-1); }
 }
 .steps b { font-weight: 500; }
 
+/* ---------------------------------------------- the two opening sheets */
+/* The cookie question and the home-screen sheet. Same sheet as the rest of
+   the shop; a little more air, and the browser's own glyphs drawn inline so
+   the steps match what is on the screen. */
+.pop h2 { font-size: 21px; line-height: 1.45; }
+.pop .lede { margin-bottom: 16px; }
+.pop-badge {
+  width: 46px; height: 46px; border-radius: 15px; margin: 2px 0 14px;
+  display: grid; place-items: center; background: var(--paper-2); color: var(--ink);
+}
+.pop-status {
+  display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px;
+  padding: 5px 11px; border-radius: 999px; background: var(--paper-2);
+  font-size: 12.5px; color: var(--ink-2);
+}
+.pop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pop-list li { display: flex; gap: 12px; align-items: center; }
+.pop-list li > .ico {
+  flex: 0 0 auto; width: 38px; height: 38px; padding: 9.5px; border-radius: 12px;
+  background: var(--paper-2); color: var(--ink);
+}
+.pop-list b { display: block; font-size: 14px; font-weight: 500; }
+.pop-list small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.pop-note {
+  display: flex; gap: 9px; align-items: flex-start; margin: 16px 0 0;
+  padding: 11px 13px; border-radius: 14px; background: var(--paper-2);
+  font-size: 12.5px; line-height: 1.85; color: var(--ink-2);
+}
+.pop-note .ico { flex: 0 0 auto; margin-top: 3px; color: var(--muted); }
+.pop-more { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+.pop-more summary {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 0;
+  cursor: pointer; list-style: none;
+}
+.pop-more summary::-webkit-details-marker { display: none; }
+.pop-more summary .ico { transition: transform .3s var(--ease); }
+.pop-more[open] summary .ico { transform: rotate(180deg); }
+.pop-more p { margin: 6px 0 0; line-height: 1.9; }
+.pop-more b { font-weight: 600; color: var(--ink-2); }
+.pop-acts { display: grid; gap: 9px; margin-top: 18px; }
+.pop-never {
+  display: block; margin: 12px auto 0; padding: 6px 10px;
+  background: none; border: 0; font: inherit; font-size: 12.5px; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line);
+}
+
+.inst-app { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+.inst-app img {
+  width: 56px; height: 56px; border-radius: 14px; flex: 0 0 auto;
+  box-shadow: 0 6px 18px rgba(11, 11, 12, .18), 0 0 0 1px var(--line-soft);
+}
+.inst-app b { display: block; font-family: 'Cormorant', Georgia, serif; font-size: 20px; font-weight: 500; letter-spacing: .06em; }
+.inst-app small { display: block; font-size: 12px; color: var(--muted); }
+html[dir='rtl'] .inst-app span { text-align: right; }
+.inst-perks {
+  list-style: none; margin: 0 0 18px; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.inst-perks li {
+  display: grid; justify-items: center; align-content: start; gap: 7px;
+  padding: 12px 6px 11px; border-radius: 14px; background: var(--paper-2);
+  font-size: 12px; line-height: 1.6; text-align: center; color: var(--ink-2);
+}
+.inst-perks .ico { color: var(--ink); }
+.pop-install .steps { margin-bottom: 0; }
+.pop-install .steps span { line-height: 2; }
+.pop-install .steps b { font-weight: 600; }
+.key {
+  display: inline-grid; place-items: center; width: 25px; height: 25px; margin: 0 2px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--paper);
+  vertical-align: middle; color: var(--ink);
+}
+.key .ico { width: 15px; height: 15px; }
+.steps .also { display: block; font-size: 12px; line-height: 1.6; color: var(--muted); text-align: start; }
+html[dir='rtl'] .steps .also { text-align: right; }
+.sheet:focus { outline: none; }
+
 /* ----------------------------------------------------------- size guide */
 .guide { border-top: 1px solid var(--line-soft); }
 .guide-row {

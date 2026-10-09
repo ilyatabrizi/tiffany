@@ -149,10 +149,17 @@ export function toast(msg, ico = 'check', ms = 2300) {
 }
 
 /* --------------------------------------------------------------- sheets */
-export function openSheet(html, { onMount, label = '' } = {}) {
+/* onClose runs once, however the sheet goes: a button, the veil, a drag,
+   Escape, a route change, or another sheet taking its place. */
+let sheetClosed = null;
+const runClosed = () => { const f = sheetClosed; sheetClosed = null; f?.(); };
+
+export function openSheet(html, { onMount, onClose, label = '', cls = '', calm = false } = {}) {
+  runClosed();
+  sheetClosed = onClose || null;
   const root = $('#sheetRoot');
   root.innerHTML = `<div class="sheet-veil" data-act="sheet-close"></div>
-    <div class="sheet" role="dialog" aria-modal="true"
+    <div class="sheet ${cls}" role="dialog" aria-modal="true"
          ${label ? `aria-label="${esc(label)}"` : ''}>
       <div class="sheet-grip"></div>${html}</div>`;
   document.body.classList.add('locked');
@@ -164,8 +171,12 @@ export function openSheet(html, { onMount, label = '' } = {}) {
   const sheet = root.querySelector('.sheet');
   dragToDismiss(sheet);
   onMount?.(sheet);
-  sheet.querySelector('input,textarea,select,button:not([data-act="sheet-close"])')
-    ?.focus({ preventScroll: true });
+  /* A sheet the shop opens by itself (calm) takes focus as a whole, so no
+     button sits there pre-ringed before anyone has touched anything. */
+  if (calm) { sheet.tabIndex = -1; sheet.focus({ preventScroll: true }); } else {
+    sheet.querySelector('input,textarea,select,button:not([data-act="sheet-close"])')
+      ?.focus({ preventScroll: true });
+  }
   return sheet;
 }
 
@@ -202,6 +213,7 @@ export function closeSheet() {
   if (!root || !root.classList.contains('open')) return;
   root.classList.remove('open');
   document.body.classList.remove('locked');
+  runClosed();
   setTimeout(() => { if (!root.classList.contains('open')) root.innerHTML = ''; }, 480);
 }
 export const sheetIsOpen = () => $('#sheetRoot')?.classList.contains('open');

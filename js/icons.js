@@ -53,6 +53,23 @@ const P = {
     + 'A1.4 1.4 0 0 1 7 3.6z"/><path d="M13.6 3.8v4.2h4.2M9 12.4h6M9 15.8h6"/>',
   store: '<path d="M4.4 9.4 5.8 4.6h12.4l1.4 4.8"/><path d="M4.4 9.4a2.6 2.6 0 0 0 5.1 0'
     + ' 2.6 2.6 0 0 0 5 0 2.6 2.6 0 0 0 5.1 0"/><path d="M5.6 11.6v7.8h12.8v-7.8M10 19.4v-4.6h4v4.6"/>',
+  /* the browsers' own glyphs, drawn into the install steps */
+  dots: '<circle cx="5.6" cy="12" r="1.3" fill="currentColor" stroke="none"/>'
+    + '<circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>'
+    + '<circle cx="18.4" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  kebab: '<circle cx="12" cy="5.6" r="1.3" fill="currentColor" stroke="none"/>'
+    + '<circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>'
+    + '<circle cx="12" cy="18.4" r="1.3" fill="currentColor" stroke="none"/>',
+  menu: '<path d="M4.6 7h14.8M4.6 12h14.8M4.6 17h14.8"/>',
+  addsq: '<rect x="4" y="4" width="16" height="16" rx="3.6"/><path d="M12 8.4v7.2M8.4 12h7.2"/>',
+  shield: '<path d="M12 3.6 5.4 6.2v5.2c0 4.2 2.8 7.6 6.6 9 3.8-1.4 6.6-4.8 6.6-9V6.2z"/>'
+    + '<path d="m9.2 12.2 2 2 3.8-3.9"/>',
+  device: '<rect x="6.6" y="3" width="10.8" height="18" rx="2.4"/><path d="M10.6 18h2.8"/>',
+  copy: '<rect x="8.4" y="8.4" width="11.6" height="11.6" rx="2.2"/>'
+    + '<path d="M15.6 8.4V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.6a2 2 0 0 0 2 2h2.4"/>',
+  bolt: '<path d="M13.2 3.4 5.8 13.2h5.4l-1 7.4 7.4-9.8h-5.4z"/>',
+  expand: '<path d="M4.4 9V5.8a1.4 1.4 0 0 1 1.4-1.4H9M15 4.4h3.2a1.4 1.4 0 0 1 1.4 1.4V9'
+    + 'M19.6 15v3.2a1.4 1.4 0 0 1-1.4 1.4H15M9 19.6H5.8a1.4 1.4 0 0 1-1.4-1.4V15"/>',
 };
 
 export function icon(name, size = 22, cls = '') {

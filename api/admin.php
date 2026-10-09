@@ -573,7 +573,35 @@ function traffic(int $days): array
         'visitors' => array_sum(array_column($by, 'visitors')),
         'pages' => array_slice($top, 0, 12),
         'products' => array_slice($prods, 0, 12),
+        'devices' => devices($from),
     ];
+}
+
+/** The cookie sheet's tallies since $from: per dimension, values by count,
+    plus how many visitors those counts cover and how many said yes or no. */
+function devices(string $from): array
+{
+    $st = db()->prepare('SELECT dim, val, SUM(n) n FROM devices WHERE day >= ? GROUP BY dim, val ORDER BY n DESC');
+    $st->execute([$from]);
+    $out = ['known' => 0, 'consent' => ['yes' => 0, 'no' => 0]];
+    foreach (array_keys(TF_DEV) as $dim) {
+        $out[$dim] = [];
+    }
+    foreach ($st->fetchAll() as $r) {
+        $n = (int) $r['n'];
+        if ($r['dim'] === 'consent') {
+            if (isset($out['consent'][$r['val']])) {
+                $out['consent'][$r['val']] = $n;
+            }
+            continue;
+        }
+        if (isset(TF_DEV[$r['dim']])) {
+            $out[$r['dim']][] = ['v' => $r['val'], 'n' => $n];
+        }
+    }
+    // every counted visitor has a type, so the type total is the head count
+    $out['known'] = array_sum(array_column($out['type'], 'n'));
+    return $out;
 }
 
 /** People who ordered, newest first, one row per phone number. */
