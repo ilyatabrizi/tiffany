@@ -396,16 +396,12 @@ html[data-theme='dark'] .hero::after {
   text-align: center;
 }
 .hero-mark {
-  width: min(72vw, 330px); margin: 0 auto 16px;
+  width: min(72vw, 330px); margin: 0 auto 28px;
   aspect-ratio: 2098 / 749;
   background: var(--ink);
   -webkit-mask: url('../assets/brand/wordmark-white-1200.png') center/contain no-repeat;
   mask: url('../assets/brand/wordmark-white-1200.png') center/contain no-repeat;
   animation: rise .9s var(--ease) .1s both;
-}
-.hero-lede {
-  font-size: 14.5px; color: var(--ink-2); margin: 0 auto 22px; max-width: 38ch;
-  animation: rise .9s var(--ease) .22s both;
 }
 .hero-cta { display: flex; gap: 9px; justify-content: center;
   animation: rise .9s var(--ease) .32s both; }
@@ -1123,7 +1119,7 @@ html[dir='ltr'] h1, html[dir='ltr'] h2:not(.serif), html[dir='ltr'] h3:not(.seri
 }
 html[dir='ltr'] .pdp-title { line-height: 1.15; }
 html[dir='ltr'] .viewer-cap h3 { font-weight: 400; line-height: 1.15; }
-html[dir='ltr'] .lede, html[dir='ltr'] .hero-lede { line-height: 1.6; }
+html[dir='ltr'] .lede { line-height: 1.6; }
 html[dir='ltr'] .eyebrow, html[dir='ltr'] .pdp-col, html[dir='ltr'] .stat span,
 html[dir='ltr'] .field label, html[dir='ltr'] .guide-head {
   font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;

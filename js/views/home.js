@@ -37,7 +37,6 @@ const hero = () => `
   ${langSwitch()}
   <div class="hero-body">
     <h1 class="hero-mark" aria-label="${BRAND.name} ${BRAND.sub}"></h1>
-    <p class="hero-lede">${esc(BRAND.lede)}</p>
     <div class="hero-cta">
       <button class="btn btn-ink" data-act="nav" data-to="/shop" type="button">${esc(L('خرید', 'Shop', 'Alışveriş'))}</button>
       <button class="btn btn-line" data-act="look" data-i="0" type="button">${esc(L('استوری‌ها', 'Stories', 'Hikâyeler'))}</button>
