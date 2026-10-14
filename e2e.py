@@ -172,9 +172,9 @@ def run(shots_only=False):
             "(()=>{const e=document.elementFromPoint(195,300);return e&&e.tagName})()")
             == 'VIDEO')
         check('nothing floats over the film', page.locator('.hero-sound').count() == 0)
-        check('three collections', page.locator('.ccard').count() == 3)
+        check('one collection: Autumn / Winter 2027', page.locator('.ccard').count() == 1)
         check('new-in rail filled', page.locator('.rail-p .card').count() >= 6)
-        check('six looks', page.locator('.look-tile').count() == 6)
+        check('seven looks', page.locator('.look-tile').count() == 7)
         check('five tabs', page.locator('.tab').count() == 5)
         check('home tab lit', page.locator('.tab[data-tab="home"]').get_attribute('class').find('on') >= 0)
         cta = page.locator('.hero-cta .btn').first.bounding_box()
@@ -228,7 +228,7 @@ def run(shots_only=False):
         print('\nshop')
         goto(page, '#/shop')
         total = page.locator('.grid-p .card').count()
-        check('shop lists every piece', total == 17, f'got {total}')
+        check('shop lists every piece', total == 28, f'got {total}')
         CATS = ['همه', 'بافت', 'تیشرت', 'تاپ', 'هودی و سوشرت', 'وست', 'شومیز', 'شلوار',
                 'دامن', 'کاپشن', 'ژاکت', 'اکسسوری', 'کفش']
         chips = page.evaluate("[...document.querySelectorAll('.seg .chip')].map(e=>e.textContent.trim())")
@@ -247,31 +247,31 @@ def run(shots_only=False):
               f"bar ends {bar['y'] + bar['height']:.0f}, card starts {first['y']:.0f}")
         shot(page, '05-shop')
 
+        page.locator('.seg .chip', has_text='شلوار').click()
+        page.wait_for_timeout(500)
+        trousers = page.locator('.grid-p .card').count()
+        check('trousers filter narrows', trousers == 5, f'{trousers} of {total}')
+        check('url carries the filter', 'c=trousers' in page.evaluate('location.hash'))
+        page.locator('.seg .chip', has_text='کاپشن').click()
+        page.wait_for_timeout(500)
+        jackets = page.locator('.grid-p .card').count()
+        check('jackets filter', jackets == 6, f'{jackets}')
         page.locator('.seg .chip', has_text='دامن').click()
-        page.wait_for_timeout(500)
-        skirts = page.locator('.grid-p .card').count()
-        check('skirts filter narrows', 0 < skirts < total, f'{skirts} of {total}')
-        check('url carries the filter', 'c=skirts' in page.evaluate('location.hash'))
-        page.locator('.seg .chip', has_text='تیشرت').click()
-        page.wait_for_timeout(500)
-        tees = page.locator('.grid-p .card').count()
-        check('tees filter', tees == 3, f'{tees}')
-        page.locator('.seg .chip', has_text='کفش').click()
         page.wait_for_timeout(500)
         soon_txt = page.inner_text('.empty') if page.locator('.empty').count() else ''
         check('an unstocked category says coming soon', 'به‌زودی' in soon_txt, soon_txt[:60])
-        page.locator('.seg .chip', has_text='دامن').click()
+        page.locator('.seg .chip', has_text='شلوار').click()
         page.wait_for_timeout(500)
 
         page.locator('[data-act="filters"]').click()
         page.wait_for_timeout(600)
         check('filter sheet opens', page.locator('.sheet-root.open').count() == 1)
         shot(page, '06-shop-filter')
-        page.locator('.sheet [data-fset="col"][data-val="desert"]').click()
+        page.locator('.sheet [data-fset="col"][data-val="aw27"]').click()
         page.wait_for_timeout(600)
-        check('collection filter applied', 'col=desert' in page.evaluate('location.hash'))
-        desert = page.locator('.grid-p .card').count()
-        check('desert skirts only', desert >= 1, f'{desert}')
+        check('collection filter applied', 'col=aw27' in page.evaluate('location.hash'))
+        aw = page.locator('.grid-p .card').count()
+        check('collection trousers only', aw == 5, f'{aw}')
 
         goto(page, '#/shop')
         check('filters cleared', page.locator('.grid-p .card').count() == total)
@@ -288,7 +288,7 @@ def run(shots_only=False):
               'hide' in (page.locator('#tabbar').get_attribute('class') or ''))
         buy = page.locator('.buybar [data-act="add"]').bounding_box()
         check('add button is reachable', buy['width'] > 200, str(buy))
-        check('specs collapsed and expandable', page.locator('.spec details').count() == 4)
+        check('specs: fabric, then delivery', page.locator('.spec details').count() == 2)
         shot(page, '07-product')
 
         page.locator('[data-act="guide"]').click()
@@ -383,7 +383,7 @@ def run(shots_only=False):
         page.evaluate('document.querySelector(\'[data-act="look"]\').click()')
         page.wait_for_timeout(900)
         check('viewer opens', page.locator('#viewer.open').count() == 1)
-        check('six slides', page.locator('.viewer-slide').count() == 6)
+        check('seven slides', page.locator('.viewer-slide').count() == 7)
         # scrollLeft in an RTL track is signed differently per engine; the
         # viewer probes it rather than assuming. Prove paging still lands.
         page.evaluate("""(() => {
@@ -404,12 +404,12 @@ def run(shots_only=False):
 
         # ----------------------------------------------------- collections
         print('\ncollection')
-        goto(page, '#/c/noir')
+        goto(page, '#/c/aw27')
         check('collection page renders', page.locator('.display').count() == 1)
         check('collection has a way back', page.locator('.pdp-back').is_visible())
         check('tab bar stays on a collection',
               'hide' not in (page.locator('#tabbar').get_attribute('class') or ''))
-        check('its pieces are listed', page.locator('.grid-p .card').count() == 5)
+        check('its pieces are listed', page.locator('.grid-p .card').count() == 28)
         shot(page, '15-collection')
 
         # -------------------------------------------------------- wishlist
@@ -497,7 +497,7 @@ def run(shots_only=False):
             check(f'terms carry «{frag}»', frag in body)
         shot(page, '27-terms')
 
-        goto(page, '#/p/alphabet-tee')
+        goto(page, '#/p/leather-jacket')
         page.evaluate("document.querySelectorAll('.spec details').forEach(d => d.open = true)")
         spec = page.inner_text('.spec')
         check('product page: free delivery in 3 working days', 'ارسال رایگانه' in spec and '۳ روز کاری' in spec)
@@ -531,7 +531,7 @@ def run(shots_only=False):
                    'قطعه —', 'تیراژ کمی دارد', 'ساخته شده در']
         found = []
         for r in ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/pastel', '#/p/alphabet-tee', '#/about', '#/contact', '#/terms']:
+                  '#/c/aw27', '#/p/leather-jacket', '#/about', '#/contact', '#/terms']:
             goto(page, r, 600)
             text = page.inner_text('body')
             found += [f'{r}: {t}' for t in REMOVED if t in text]
@@ -557,8 +557,8 @@ def run(shots_only=False):
         BAD = re.compile(FA + r'\s*[,;?]|[,;?]\s*' + FA)
         leftovers = []
         for r in ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/pastel', '#/c/noir', '#/c/desert', '#/p/alphabet-tee',
-                  '#/p/heart-belt', '#/p/prairie-blouse']:
+                  '#/c/aw27', '#/p/leather-jacket',
+                  '#/p/karl-lagerfeld-bag', '#/p/cotton-shirt']:
             goto(page, r, 600)
             for m in BAD.finditer(page.inner_text('#app')):
                 leftovers.append(f'{r}: {m.group(0)!r}')
@@ -586,7 +586,7 @@ def run(shots_only=False):
 
         ARABIC = re.compile(r'[\u0600-\u06FF]')
         ROUTES = ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/pastel', '#/c/desert', '#/p/alphabet-tee', '#/p/heart-belt',
+                  '#/c/aw27', '#/p/leather-jacket', '#/p/karl-lagerfeld-bag',
                   '#/about', '#/contact', '#/terms', '#/shop?c=shoes']
 
         def switch_to(code):
@@ -643,7 +643,7 @@ def run(shots_only=False):
             page.locator('.sheet [data-act="sheet-close"]').click()
             page.wait_for_timeout(400)
             if code == 'tr':
-                goto(page, '#/c/desert')
+                goto(page, '#/c/aw27')
                 ok_tr = page.evaluate("document.fonts.check('400 15px InterVar', 'ğşİ')")
                 check('tr: Turkish letters have a face', ok_tr)
                 shot(page, '24-collection-tr')

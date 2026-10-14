@@ -63,7 +63,7 @@ function filterSheet(f) {
     <div class="sizes">
       ${chip(!f.col, 'col', '', esc(L('همه', 'All', 'Tümü')))}
       ${COLLECTIONS.map((c) => chip(f.col === c.id, 'col', c.id,
-        `<i class="chip-sw" style="--dot:${c.accent}"></i><span dir="ltr">${esc(c.name)}</span>`)).join('')}
+        `<i class="chip-sw" style="--dot:${c.accent}"></i><span class="latin" dir="ltr">${esc(c.name)}</span>`)).join('')}
     </div>
 
     <p class="eyebrow" style="margin:22px 0 10px">${esc(L('سایز', 'Size', 'Beden'))}</p>

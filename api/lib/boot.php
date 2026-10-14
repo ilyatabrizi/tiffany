@@ -25,8 +25,9 @@ const TF_ROLES    = ['ceo', 'admin'];
 const TF_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const TF_CATS     = ['knit', 'tee', 'top', 'hoodie', 'vest', 'shirt', 'trousers', 'skirts',
                      'jacket', 'cardigan', 'accessories', 'shoes'];
-const TF_COLS     = ['', 'pastel', 'noir', 'desert'];
-const TF_SIZES    = ['XS', 'S', 'M', 'L', 'XL', 'OS'];
+const TF_COLS     = ['', 'aw27'];
+/* Letter sizes, then trouser waist (34–42) and shoe sizes (37–40), then one size. */
+const TF_SIZES    = ['XS', 'S', 'M', 'L', 'XL', '34', '36', '37', '38', '39', '40', '42', 'OS'];
 const TF_FITS     = ['small', 'true', 'relaxed'];
 const TF_BADGES   = ['', 'new', 'campaign', 'bestseller', 'restock', 'last'];
 const TF_LANGS    = ['fa', 'en', 'tr'];
@@ -128,7 +129,66 @@ function db(): PDO
     $pdo->exec('PRAGMA busy_timeout = 8000');
     $pdo->exec('PRAGMA foreign_keys = ON');
     tf_migrate($pdo);
+    tf_import_catalog($pdo);
     return $pdo;
+}
+
+/* A whole catalogue, dropped into tiffany-data/catalog-import.json (outside
+   the web root, so only someone with cPanel can put it there), replaces every
+   product once. Its hash is remembered: the same file never imports twice, a
+   changed one imports again. Every piece is validated before anything is
+   touched; one bad piece and nothing changes (the reason goes to error.log). */
+function tf_import_catalog(PDO $db): void
+{
+    $file = tf_data_dir() . '/catalog-import.json';
+    if (!is_file($file)) {
+        return;
+    }
+    $raw = (string) file_get_contents($file);
+    $sha = hash('sha256', $raw);
+    $done = $db->query("SELECT v FROM settings WHERE k = 'import_sha'")->fetchColumn();
+    if ($done === $sha) {
+        return;
+    }
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $again = $db->query("SELECT v FROM settings WHERE k = 'import_sha'")->fetchColumn();
+        if ($again === $sha) {
+            $db->exec('COMMIT');
+            return;
+        }
+        $list = json_decode($raw, true);
+        $clean = [];
+        foreach (is_array($list) ? $list : [] as $i => $p) {
+            try {
+                $clean[] = tf_product_clean((array) $p, (string) ($p['id'] ?? ''));
+            } catch (TfInvalid $e) {
+                throw new RuntimeException("catalog-import piece #$i: {$e->field}: {$e->getMessage()}");
+            }
+        }
+        if (!$clean) {
+            throw new RuntimeException('catalog-import: no pieces');
+        }
+        $db->exec('DELETE FROM products');
+        $ins = $db->prepare('INSERT INTO products (id, data, cat, price, visible, sort, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $now = time();
+        foreach ($clean as $i => $c) {
+            $ins->execute([$c['id'], json_encode($c, JSON_UNESCAPED_UNICODE), $c['cat'], $c['price'],
+                !empty($c['visible']) ? 1 : 0, $i, $now, $now]);
+        }
+        $db->prepare("INSERT INTO settings (k, v) VALUES ('import_sha', ?)
+                      ON CONFLICT(k) DO UPDATE SET v = excluded.v")->execute([$sha]);
+        $db->prepare('INSERT INTO log (at, who, action, detail) VALUES (?, ?, ?, ?)')
+            ->execute([$now, 'سیستم', 'catalog_import', count($clean) . ' محصول']);
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        // remember the failure so a broken file is not retried on every request
+        $db->prepare("INSERT INTO settings (k, v) VALUES ('import_sha', ?)
+                      ON CONFLICT(k) DO UPDATE SET v = excluded.v")->execute([$sha]);
+        tf_log_error($e);
+    }
 }
 
 function tf_migrate(PDO $db): void

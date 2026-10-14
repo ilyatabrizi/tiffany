@@ -73,19 +73,19 @@ const editorial = () => `
 <section class="sec">
   <article class="ed">
     <span class="shot">
-      <img ${shot('ed-noir', '(max-width:520px) 92vw, 470px')}
-           alt="${esc(L('کمپین Lace Noir', 'Lace Noir, campaign', 'Lace Noir kampanyası'))}"
+      <img ${shot('aw27-ed', '(max-width:520px) 92vw, 470px')}
+           alt="${esc(L('کالکشن Autumn / Winter 2027', 'Autumn / Winter 2027 collection', 'Autumn / Winter 2027 koleksiyonu'))}"
            loading="lazy" decoding="async" width="480" height="300">
     </span>
     <div class="ed-body">
-      <p class="eyebrow">${esc(L('خط اصلی برند', 'The house line', 'Markanın ana serisi'))}</p>
-      <h3 class="serif" dir="ltr">Lace Noir</h3>
+      <p class="eyebrow">${esc(L('کالکشن جدید', 'New collection', 'Yeni koleksiyon'))}</p>
+      <h3 class="serif" dir="ltr">Autumn / Winter 2027</h3>
       <p class="lede">${esc(L(
-        'مشکی، سفید، و دانتلی که با جفتشون کل‌کل می‌کنه. هر سال دوباره می‌دوزیمش، چون فروشش هیچ‌وقت تموم نمی‌شه.',
-        'Black, white, and the lace that argues with both. Remade every year because it never stops selling.',
-        'Siyah, beyaz ve ikisiyle de atışan dantel. Satışı hiç bitmediği için her yıl yeniden dikiliyor.'))}</p>
+        'هفت ست برای پاییز و زمستون: کاپشن و بارونی چرم، بافت‌های پشمی، شومیزهای نخی و جین.',
+        'Seven looks for autumn and winter: leather jackets and trench coats, wool knits, cotton shirts and denim.',
+        'Sonbahar ve kış için yedi kombin: deri montlar ve trençkotlar, yün trikolar, pamuklu gömlekler ve kot.'))}</p>
       <div style="height:16px"></div>
-      <button class="btn btn-line btn-s" data-act="collection" data-id="noir"
+      <button class="btn btn-line btn-s" data-act="collection" data-id="aw27"
               type="button">${esc(L('دیدن کالکشن', 'See the collection', 'Koleksiyonu gör'))}</button>
     </div>
   </article>

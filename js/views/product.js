@@ -131,7 +131,19 @@ export default {
 
     const col = colById[p.col] || NO_COL;
     const rec = recommendSize(p);
-    const also = PRODUCTS.filter((x) => (col.id ? x.col === p.col : x.cat === p.cat) && x.id !== p.id).slice(0, 6);
+    /* Letter sizes have a body chart; trouser waists and shoe sizes do not. */
+    const lettered = p.sizes.some((s) => SIZES.some((z) => z.id === s));
+    /* Wear it with: what it was shot with first, then the rest of its collection. */
+    const mates = [...new Set(LOOKS.filter((l) => l.items.includes(p.id)).flatMap((l) => l.items))]
+      .map(getProduct).filter((x) => x && x.id !== p.id);
+    const rest = PRODUCTS.filter((x) => (col.id ? x.col === p.col : x.cat === p.cat)
+      && x.id !== p.id && !mates.includes(x));
+    const also = [...mates, ...rest].slice(0, 6);
+    const spec = [
+      [L('جزئیات', 'Details', 'Detaylar'), p.detail],
+      [L('جنس', 'Fabric', 'Kumaş'), p.fabric],
+      [L('نگهداری', 'Care', 'Bakım'), p.care],
+    ].filter(([, body]) => body);
     const wished = isWished(p.id);
     const out = soldOut(p);
 
@@ -151,7 +163,7 @@ export default {
 
       <header class="pdp-head">
         ${col.id ? `<button class="pdp-col" data-act="collection" data-id="${col.id}" type="button">
-          <i class="chip-sw" style="--dot:${col.accent}"></i><span dir="ltr">${esc(col.name)}</span></button>` : ''}
+          <i class="chip-sw" style="--dot:${col.accent}"></i><span class="latin" dir="ltr">${esc(col.name)}</span></button>` : ''}
         <h1 class="pdp-title serif">${esc(p.name)}</h1>
         <div class="pdp-price">${toman(p.price)}</div>
         <p class="pdp-note">${esc(p.note)}</p>
@@ -170,14 +182,14 @@ export default {
 
       <div class="opt">
         <div class="opt-head"><span class="eyebrow">${esc(L('سایز', 'Size', 'Beden'))}</span>
-          <button class="link-more" data-act="guide" type="button">
-            ${icon('ruler', 14)}${esc(L('راهنمای سایز', 'Size guide', 'Beden rehberi'))}</button></div>
+          ${lettered ? `<button class="link-more" data-act="guide" type="button">
+            ${icon('ruler', 14)}${esc(L('راهنمای سایز', 'Size guide', 'Beden rehberi'))}</button>` : ''}</div>
         <div class="sizes" id="pdpSizes">
           ${p.sizes.map((s) => sizeBtn(p, s, `${pick.size === s ? 'on' : ''} ${rec?.size === s ? 'rec' : ''}`)).join('')}
         </div>
       </div>
 
-      ${rec ? `<div class="fitbox">${icon('ruler', 19)}
+      ${!lettered ? '' : rec ? `<div class="fitbox">${icon('ruler', 19)}
         <div><b>${L(
           `احتمالاً سایزت <span dir="ltr">${esc(rec.size)}</span> باشه`,
           `You are probably a ${esc(rec.size)}`,
@@ -194,12 +206,8 @@ export default {
         </div></div>`}
 
       <div class="spec">
-        <details open><summary>${esc(L('جزئیات', 'Details', 'Detaylar'))}${icon('chevD', 17)}</summary>
-          <div class="body">${esc(p.detail)}</div></details>
-        <details><summary>${esc(L('جنس', 'Fabric', 'Kumaş'))}${icon('chevD', 17)}</summary>
-          <div class="body">${esc(p.fabric)}</div></details>
-        <details><summary>${esc(L('نگهداری', 'Care', 'Bakım'))}${icon('chevD', 17)}</summary>
-          <div class="body">${esc(p.care)}</div></details>
+        ${spec.map(([head, body], i) => `<details ${i === 0 ? 'open' : ''}><summary>${esc(head)}${icon('chevD', 17)}</summary>
+          <div class="body">${esc(body)}</div></details>`).join('')}
         <details><summary>${esc(L('ارسال و مرجوعی', 'Delivery and returns', 'Teslimat ve iade'))}${icon('chevD', 17)}</summary>
           <div class="body">${esc(L(
             'ارسال رایگانه و نهایتاً ۳ روز کاری طول می‌کشه. تا ۷ روز بعد از تحویل، اگه نپوشیده باشی و برچسبش سالم باشه، عوض یا مرجوعش می‌کنیم.',

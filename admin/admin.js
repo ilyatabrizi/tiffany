@@ -48,8 +48,9 @@ const CATS = [['knit', 'بافت'], ['tee', 'تیشرت'], ['top', 'تاپ'], ['
   ['vest', 'وست'], ['shirt', 'شومیز'], ['trousers', 'شلوار'], ['skirts', 'دامن'], ['jacket', 'کاپشن'],
   ['cardigan', 'ژاکت'], ['accessories', 'اکسسوری'], ['shoes', 'کفش']];
 const CAT = Object.fromEntries(CATS);
-const COLS = [['', 'بدون کالکشن'], ['pastel', 'Pastel Play'], ['noir', 'Lace Noir'], ['desert', 'Desert Hours']];
-const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+const COLS = [['', 'بدون کالکشن'], ['aw27', 'Autumn / Winter 2027']];
+/* letter sizes, then trouser waist and shoe sizes (same list as TF_SIZES) */
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', '34', '36', '37', '38', '39', '40', '42'];
 const FITS = [['true', 'اندازه‌ی معمول'], ['small', 'کوچیک‌تر از معمول'], ['relaxed', 'گشاد']];
 const BADGES = [['', 'بدون برچسب'], ['new', 'جدید'], ['campaign', 'کمپین'], ['bestseller', 'پرفروش'],
   ['restock', 'دوباره موجود'], ['last', 'آخرین‌ها']];
@@ -78,6 +79,7 @@ const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌ا
   product_show: 'محصول رو نمایش داد', product_hide: 'محصول رو مخفی کرد', product_delete: 'محصول رو حذف کرد',
   order_status: 'وضعیت سفارش رو عوض کرد', order_note: 'یادداشت سفارش نوشت',
   store_open: 'فروش آنلاین رو روشن کرد', store_close: 'فروش آنلاین رو خاموش کرد',
+  catalog_import: 'کاتالوگ جدید رو یک‌جا وارد کرد',
   team_add: 'عضو تیم اضافه کرد', team_edit: 'عضو تیم رو ویرایش کرد', team_delete: 'عضو تیم رو حذف کرد' };
 const ROLE = { ceo: 'مدیرعامل', admin: 'ادمین' };
 
@@ -1226,7 +1228,7 @@ async function viewTraffic(_, q, signal) {
   if (signal.aborted) return;
   const label = (k) => {
     const [kind, id] = k.split(':');
-    if (kind === 'c') return `کالکشن ${({ pastel: 'Pastel Play', noir: 'Lace Noir', desert: 'Desert Hours' })[id] || id}`;
+    if (kind === 'c') return `کالکشن ${({ aw27: 'Autumn / Winter 2027' })[id] || id}`;
     return PAGES[kind] || k;
   };
   main.innerHTML = `

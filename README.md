@@ -253,3 +253,22 @@ Once the opening animation lifts, the shop asks two things, one after the other:
 
 The panel's «بازدید سایت» page shows the tallies: acceptance rate, coverage, installed-app
 share, then ranked bars for device type, brand, system, browser, app/web and language.
+
+## Real catalogue: Autumn / Winter 2027 — added 2026-10-14
+
+The 17 preview pieces, the three made-up collections and their stories are gone.
+The shop now carries the studio's first real collection: 28 pieces cut from seven
+look photos, one collection (`aw27`) and the seven looks as stories.
+
+- `catalog/aw27/catalog.py` builds everything from the screenshots in `catalog/aw27/src/`:
+  a 4:5 crop per piece (`assets/img/aw-<id>-480/960.webp`), the 9:16 stories, the
+  collection cover and the home editorial, plus `catalog-import.json`.
+- **One-time import:** drop a `catalog-import.json` into `tiffany-data/` (outside the
+  web root). On the next request `api/lib/boot.php` validates every piece and, only if
+  all pass, replaces the whole catalogue. The file's hash is remembered, so it never
+  imports twice; a bad piece changes nothing and is named in `error.log`.
+- Sizes now include trouser waists (34–42) and shoe sizes (37–40) next to XS–XL and
+  one size. The size guide and the fit box only show for letter-sized pieces, and the
+  size pick snaps to sizes the piece is actually made in.
+- Every price is a placeholder (1,000,000 Toman) until the studio sets real prices in
+  the panel.

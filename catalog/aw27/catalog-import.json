@@ -1,0 +1,1635 @@
+[
+ {
+  "id": "leather-jacket",
+  "name": {
+   "fa": "کاپشن چرم",
+   "en": "Leather jacket",
+   "tr": "Deri mont"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-leather-jacket"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم روغنی",
+   "en": "Oiled leather",
+   "tr": "Yağlı deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 0
+ },
+ {
+  "id": "striped-knit",
+  "name": {
+   "fa": "بافت راه‌راه",
+   "en": "Striped knit",
+   "tr": "Çizgili triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-striped-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9C7B0",
+    "fa": "سفید و شکلاتی",
+    "en": "White and chocolate",
+    "tr": "Beyaz ve çikolata"
+   },
+   {
+    "hex": "#3A3128",
+    "fa": "مشکی و شتری",
+    "en": "Black and camel",
+    "tr": "Siyah ve deve tüyü"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 1
+ },
+ {
+  "id": "cotton-cap",
+  "name": {
+   "fa": "کپ کتان",
+   "en": "Cotton cap",
+   "tr": "Pamuklu şapka"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-cotton-cap",
+   "assets/img/aw-cotton-cap-2",
+   "assets/img/aw-cotton-cap-3"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C2185B",
+    "fa": "سرخابی",
+    "en": "Magenta",
+    "tr": "Fuşya"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#EDE6D6",
+    "fa": "استخوانی",
+    "en": "Bone",
+    "tr": "Kemik"
+   },
+   {
+    "hex": "#3E7A5E",
+    "fa": "سبز یشمی",
+    "en": "Jade green",
+    "tr": "Yeşim yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "کتان",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 2
+ },
+ {
+  "id": "chocolate-jeans",
+  "name": {
+   "fa": "شلوار جین شکلاتی",
+   "en": "Chocolate jeans",
+   "tr": "Çikolata rengi kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-chocolate-jeans"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4B3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 3
+ },
+ {
+  "id": "silk-scarf",
+  "name": {
+   "fa": "فولار ساتن ابریشمی",
+   "en": "Silk satin scarf",
+   "tr": "İpek saten fular"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-silk-scarf"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5A3A29",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "ساتن ابریشمی",
+   "en": "Silk satin",
+   "tr": "İpek saten"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 4
+ },
+ {
+  "id": "leather-trench",
+  "name": {
+   "fa": "بارونی چرم",
+   "en": "Leather trench coat",
+   "tr": "Deri trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-leather-trench"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم روغنی",
+   "en": "Oiled leather",
+   "tr": "Yağlı deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 5
+ },
+ {
+  "id": "white-collar-knit",
+  "name": {
+   "fa": "بافت یقه‌سفید",
+   "en": "White-collar knit",
+   "tr": "Beyaz yakalı triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-white-collar-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "تریکو",
+   "en": "Knit jersey (tricot)",
+   "tr": "Triko"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 6
+ },
+ {
+  "id": "avishu-set",
+  "name": {
+   "fa": "ست هودی و شلوار اویشو",
+   "en": "Avishu hoodie and trousers set",
+   "tr": "Avishu kapüşonlu ve pantolon takımı"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-avishu-set"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5A3A29",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#E8DCC4",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu fabric",
+   "tr": "Avishu kumaş"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 7
+ },
+ {
+  "id": "karl-lagerfeld-bag",
+  "name": {
+   "fa": "کیف KARL LAGERFELD",
+   "en": "KARL LAGERFELD bag",
+   "tr": "KARL LAGERFELD çanta"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-karl-lagerfeld-bag",
+   "assets/img/aw-karl-lagerfeld-bag-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "برند KARL LAGERFELD، آلمان.",
+   "en": "KARL LAGERFELD, Germany.",
+   "tr": "KARL LAGERFELD, Almanya."
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده",
+   "en": "Processed leather",
+   "tr": "İşlenmiş deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 8
+ },
+ {
+  "id": "cotton-turtleneck",
+  "name": {
+   "fa": "یقه‌اسکی نخی",
+   "en": "Cotton turtleneck",
+   "tr": "Pamuklu balıkçı yaka"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-cotton-turtleneck"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A2545",
+    "fa": "بادمجانی",
+    "en": "Aubergine",
+    "tr": "Patlıcan moru"
+   },
+   {
+    "hex": "#5A3A29",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 9
+ },
+ {
+  "id": "denim-jacket",
+  "name": {
+   "fa": "کت جین",
+   "en": "Denim jacket",
+   "tr": "Kot ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-denim-jacket"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1C2230",
+    "fa": "جین تیره",
+    "en": "Dark denim",
+    "tr": "Koyu kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 10
+ },
+ {
+  "id": "dark-jeans",
+  "name": {
+   "fa": "شلوار جین تیره",
+   "en": "Dark jeans",
+   "tr": "Koyu kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-dark-jeans"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#161B26",
+    "fa": "جین تیره",
+    "en": "Dark denim",
+    "tr": "Koyu kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 11
+ },
+ {
+  "id": "high-neck-knit",
+  "name": {
+   "fa": "بافت یقه‌بلند",
+   "en": "High-neck knit",
+   "tr": "Dik yaka triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-high-neck-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E8DCC4",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   },
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#5B8DB8",
+    "fa": "آبی",
+    "en": "Blue",
+    "tr": "Mavi"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 12
+ },
+ {
+  "id": "gabardine-trench",
+  "name": {
+   "fa": "بارانی گاباردین",
+   "en": "Gabardine trench coat",
+   "tr": "Gabardin trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-gabardine-trench"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "گاباردین پنبه",
+   "en": "Cotton gabardine",
+   "tr": "Pamuklu gabardin"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 13
+ },
+ {
+  "id": "ribbed-knit",
+  "name": {
+   "fa": "بافت کبریتی",
+   "en": "Ribbed knit",
+   "tr": "Fitilli triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-ribbed-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#5E6B3E",
+    "fa": "سبز لجنی",
+    "en": "Olive green",
+    "tr": "Haki yeşil"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 14
+ },
+ {
+  "id": "cotton-shirt",
+  "name": {
+   "fa": "شومیز نخی",
+   "en": "Cotton shirt",
+   "tr": "Pamuklu gömlek"
+  },
+  "cat": "shirt",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-cotton-shirt",
+   "assets/img/aw-cotton-shirt-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#EDE6D6",
+    "fa": "استخوانی",
+    "en": "Bone",
+    "tr": "Kemik"
+   },
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 15
+ },
+ {
+  "id": "bandana",
+  "name": {
+   "fa": "باندانا",
+   "en": "Bandana",
+   "tr": "Bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-bandana",
+   "assets/img/aw-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#8E8E93",
+    "fa": "تک‌رنگ",
+    "en": "One colour",
+    "tr": "Tek renk"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 16
+ },
+ {
+  "id": "waterproof-sneakers",
+  "name": {
+   "fa": "کانورس ضدآب",
+   "en": "Waterproof high-top sneakers",
+   "tr": "Su geçirmez bilekli spor ayakkabı"
+  },
+  "cat": "shoes",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-waterproof-sneakers",
+   "assets/img/aw-waterproof-sneakers-2"
+  ],
+  "sizes": [
+   "37",
+   "38",
+   "39",
+   "40"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده، نزدیک‌ترین نوع به چرم طبیعی، با رویه‌ی ضدآب",
+   "en": "Processed leather, the closest to natural leather, with a waterproof upper",
+   "tr": "Doğal deriye en yakın işlenmiş deri, su geçirmez yüzey"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 17
+ },
+ {
+  "id": "logo-cap",
+  "name": {
+   "fa": "کپ لوگودار",
+   "en": "Logo cap",
+   "tr": "Logolu şapka"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-logo-cap"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 18
+ },
+ {
+  "id": "jacquard-knit",
+  "name": {
+   "fa": "بافت طرح‌دار",
+   "en": "Patterned knit",
+   "tr": "Desenli triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-jacquard-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9B3C2",
+    "fa": "صورتی و طوسی",
+    "en": "Pink and grey",
+    "tr": "Pembe ve gri"
+   },
+   {
+    "hex": "#CDB79E",
+    "fa": "کرم و قهوه‌ای",
+    "en": "Cream and brown",
+    "tr": "Krem ve kahverengi"
+   },
+   {
+    "hex": "#3D5A80",
+    "fa": "آبی و سرمه‌ای",
+    "en": "Blue and navy",
+    "tr": "Mavi ve lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم خالص",
+   "en": "Pure wool",
+   "tr": "Saf yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 19
+ },
+ {
+  "id": "avishu-vest",
+  "name": {
+   "fa": "وست اویشو",
+   "en": "Avishu vest",
+   "tr": "Avishu yelek"
+  },
+  "cat": "vest",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-avishu-vest"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A4A4D",
+    "fa": "خاکستری تیره",
+    "en": "Dark grey",
+    "tr": "Koyu gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu fabric",
+   "tr": "Avishu kumaş"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 20
+ },
+ {
+  "id": "avishu-trousers",
+  "name": {
+   "fa": "شلوار اویشو",
+   "en": "Avishu trousers",
+   "tr": "Avishu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-avishu-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#3F3F42",
+    "fa": "خاکستری تیره",
+    "en": "Dark grey",
+    "tr": "Koyu gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu fabric",
+   "tr": "Avishu kumaş"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 21
+ },
+ {
+  "id": "wide-stripe-knit",
+  "name": {
+   "fa": "بافت راه‌پهن",
+   "en": "Wide-stripe knit",
+   "tr": "Geniş çizgili triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-wide-stripe-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9B3C2",
+    "fa": "صورتی و طوسی",
+    "en": "Pink and grey",
+    "tr": "Pembe ve gri"
+   },
+   {
+    "hex": "#A3445C",
+    "fa": "زرشکی و صورتی",
+    "en": "Burgundy and pink",
+    "tr": "Bordo ve pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 22
+ },
+ {
+  "id": "bomber-jacket",
+  "name": {
+   "fa": "بامبر",
+   "en": "Bomber jacket",
+   "tr": "Bomber ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-bomber-jacket"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 23
+ },
+ {
+  "id": "fleece-trousers",
+  "name": {
+   "fa": "شلوار تو کرک",
+   "en": "Fleece-lined trousers",
+   "tr": "İçi polarlı pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-fleece-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "تو کرک",
+   "en": "Fleece-lined",
+   "tr": "İçi polarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 24
+ },
+ {
+  "id": "waterproof-leather-jacket",
+  "name": {
+   "fa": "کت چرم ضدآب",
+   "en": "Waterproof leather jacket",
+   "tr": "Su geçirmez deri ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-waterproof-leather-jacket"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3527",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده با رویه‌ی ضدآب",
+   "en": "Processed leather, waterproof upper",
+   "tr": "Su geçirmez yüzlü işlenmiş deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 25
+ },
+ {
+  "id": "two-tone-knit",
+  "name": {
+   "fa": "بافت دورنگ",
+   "en": "Two-tone knit",
+   "tr": "İki renkli triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-two-tone-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5D6B7A",
+    "fa": "آبی و قهوه‌ای",
+    "en": "Blue and brown",
+    "tr": "Mavi ve kahverengi"
+   },
+   {
+    "hex": "#C9506A",
+    "fa": "قرمز و صورتی",
+    "en": "Red and pink",
+    "tr": "Kırmızı ve pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 26
+ },
+ {
+  "id": "light-jeans",
+  "name": {
+   "fa": "شلوار جین روشن",
+   "en": "Light jeans",
+   "tr": "Açık kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 1000000,
+  "images": [
+   "assets/img/aw-light-jeans"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#BFD3E6",
+    "fa": "جین روشن",
+    "en": "Light denim",
+    "tr": "Açık kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 27
+ }
+]

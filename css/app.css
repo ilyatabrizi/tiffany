@@ -1200,6 +1200,9 @@ html[dir='ltr'] .back-ico, html[dir='ltr'] .row .chev { transform: scaleX(-1); }
   .boot-sig { animation: none; opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* A Latin name (a collection) keeps Latin digits inside Persian text. */
+.latin { font-family: 'InterVar', -apple-system, system-ui, sans-serif; }
+
 /* ------------------------------------------------------- install steps */
 .steps { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 13px; }
 .steps li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; }

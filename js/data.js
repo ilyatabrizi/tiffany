@@ -8,7 +8,7 @@
    kept in api/lib/seed.json.
 
    Persian is written the way people talk (خودمونی), not the way a form reads.
-   The three collection names stay in Latin on purpose — they are names.
+   Collection names stay in Latin on purpose — they are names.
 
    A colour's identity is its hex and a size's is its code — the bag stores
    those, never a translated label, so a bag filled in Persian still reads
@@ -19,62 +19,22 @@ const T = L;
 /** A colour: hex is the key, the three names are labels. */
 const C = (hex, fa, en, tr) => ({ hex, name: L(fa, en, tr), all: [fa, en, tr] });
 
+/* The studio's first real collection (photos and pieces sent 2026-10-14).
+   The three made-up preview collections are gone with the preview pieces. */
 export const COLLECTIONS = [
   {
-    id: 'pastel',
-    name: 'Pastel Play',
-    season: T('بهار و تابستون', 'Spring / Summer', 'İlkbahar / Yaz'),
-    accent: '#EF8FAB',
-    accent2: '#78B4E0',
-    img: 'col-pastel',
-    lede: T('آبی‌های شیرین و صورتی‌های شیشه‌ای، اون‌قدر گشاد که باهاش بشه دوید.',
-      'Sugar blues and blown-glass pinks, cut loose enough to run in.',
-      'Şeker maviler ve cam pembeler; içinde koşabileceğin kadar bol kesim.'),
-    body: T('کمپینی که فصل رو باهاش شروع کردیم: ارگانزا روی نخ، دانتل جای درز، و رنگ‌هایی '
-      + 'که انگار از یه قنادی اومدن. همه چیزش رو دوختیم که با کتونی بپوشی.',
-    'The campaign that started the season: organza over cotton, lace let '
-      + 'in where a seam would normally be, and a palette borrowed from a '
-      + 'confectioner. Everything here is made to be worn with trainers.',
-    'Sezonu başlatan kampanya: pamuk üstüne organze, dikiş yerine dantel ve '
-      + 'sanki bir şekerciden ödünç alınmış renkler. Buradaki her parça spor '
-      + 'ayakkabıyla giyilsin diye dikildi.'),
-  },
-  {
-    id: 'noir',
-    name: 'Lace Noir',
-    season: T('همیشگی', 'Core / All year', 'Her mevsim'),
-    accent: '#E03127',
-    accent2: '#8E8E93',
-    img: 'col-noir',
-    lede: T('مشکی، سفید، و دانتلی که با جفتشون کل‌کل می‌کنه.',
-      'Black, white, and the lace that argues with both.',
-      'Siyah, beyaz ve ikisiyle de atışan dantel.'),
-    body: T('خط اصلی برند؛ قطعه‌هایی که هر سال دوباره می‌دوزیمشون، چون فروششون هیچ‌وقت '
-      + 'تموم نمی‌شه. تریکوی تنگ، دانتل گشاد، و هیچ چیزِ وسطی که لازم باشه توضیحش بدیم.',
-    'The house line — the pieces the studio remakes every year because '
-      + 'they never stop selling. Jersey cut close, lace cut wide, and nothing '
-      + 'in between that needs explaining.',
-    'Markanın ana serisi: satışı hiç bitmediği için her yıl yeniden dikilen '
-      + 'parçalar. Vücudu saran triko, bol kesim dantel ve arada açıklama '
-      + 'gerektiren hiçbir şey.'),
-  },
-  {
-    id: 'desert',
-    name: 'Desert Hours',
+    id: 'aw27',
+    name: 'Autumn / Winter 2027',
     season: T('پاییز و زمستون', 'Autumn / Winter', 'Sonbahar / Kış'),
-    accent: '#B2603A',
-    accent2: '#C9A87C',
-    img: 'col-desert',
-    lede: T('خاک، نقره، و یه آستین بلند برای راه برگشت.',
-      'Dust, silver and a long sleeve for the drive home.',
-      'Toz, gümüş ve eve dönüş yolu için uzun bir kol.'),
-    body: T('ابریشم مچاله، سکه‌های دست‌دوز و لبه‌ای که واقعاً پهنه. برای نور آخر روز و '
-      + 'جاده‌های طولانی، و اون‌قدر سنگین که یه زمستون کامل فرمش رو نگه داره.',
-    'Crushed silk, hand-set conchos and a brim wide enough to mean it. '
-      + 'Made for late light and long roads, and heavy enough to hold a shape '
-      + 'through a whole winter.',
-    'Buruşuk ipek, elle çakılmış konçolar ve gerçekten geniş bir kenar. Günün '
-      + 'son ışığı ve uzun yollar için; bütün bir kış formunu koruyacak kadar ağır.'),
+    accent: '#7A4A2E',
+    accent2: '#C9B49A',
+    img: 'aw27-col',
+    lede: T('کالکشن جدید پاییز و زمستون تیفانی.',
+      'TIFFANY\'s new autumn and winter collection.',
+      'TIFFANY\'nin yeni sonbahar ve kış koleksiyonu.'),
+    body: T('کاپشن و بارونی چرم، بافت‌های پشمی، شومیزهای نخی، شلوارهای جین و اویشو، و کپ و کانورس و کیف برای کامل کردن هر ست.',
+      'Leather jackets and trench coats, wool knits, cotton shirts, denim and Avishu trousers, plus caps, sneakers and a bag to finish each look.',
+      'Deri montlar ve trençkotlar, yün trikolar, pamuklu gömlekler, kot ve Avishu pantolonlar; her kombini tamamlamak için şapka, spor ayakkabı ve çanta.'),
   },
 ];
 
@@ -160,37 +120,31 @@ export function setCatalogue(list) {
 /** Every size of this piece is sold out. */
 export const soldOut = (p) => Boolean(p && p.sizes.every((s) => p.soldout.includes(s)));
 
-/* استوری‌ها — the stories: full-bleed campaign frames, each one shoppable. */
+/* استوری‌ها — the stories: the studio's seven looks for the new collection,
+   each one carrying the pieces worn in it. */
+const AW = T('کالکشن جدید پاییز و زمستون.', 'The new autumn and winter collection.', 'Yeni sonbahar ve kış koleksiyonu.');
 export const LOOKS = [
-  { id: 'l1', img: 'look-1', col: 'pastel',
-    title: T('سه تا ما، دو تا ماشین', 'Three of us, two cars', 'Üçümüz, iki araba'),
-    caption: T('کالکشن Pastel Play، فریم اول.', 'Pastel Play, opening frame.', 'Pastel Play, açılış karesi.'),
-    items: ['organza-skirt', 'alphabet-tee', 'heart-belt'] },
-  { id: 'l2', img: 'look-2', col: 'pastel',
-    title: T('الفبا', 'Alphabet', 'Alfabe'),
-    caption: T('گیپور روی تریکوی ضخیم.', 'Lace panel over heavy cotton.', 'Kalın pamuk üstüne dantel panel.'),
-    items: ['alphabet-tee', 'pleat-trouser', 'polka-skirt'] },
-  { id: 'l3', img: 'look-3', col: 'pastel',
-    title: T('گره روی شونه', 'Tied at the shoulder', 'Omuzda düğüm'),
-    caption: T('رویی چین‌خورده، به تنها مدل درستش.',
-      'The crinkle overshirt, worn the only correct way.',
-      'Kırışık gömlek ceket, tek doğru şekliyle.'),
-    items: ['crinkle-shirt', 'rib-tee'] },
-  { id: 'l4', img: 'look-4', col: 'noir',
-    title: T('دانتل روی مشکی', 'Lace over black', 'Siyah üstüne dantel'),
-    caption: T('کالکشن Lace Noir، لباس همیشگی برند.', 'Lace Noir, the house uniform.',
-      'Lace Noir, markanın üniforması.'),
-    items: ['lace-bandeau', 'linen-trouser', 'pearl-cap'] },
-  { id: 'l5', img: 'look-5', col: 'noir',
-    title: T('گیلاس‌ها', 'Cherries', 'Kirazlar'),
-    caption: T('توری روی تی‌شرت سفید، نقره روی کمر.', 'Mesh over a white tee, silver at the waist.',
-      'Beyaz tişört üstüne file, belde gümüş.'),
-    items: ['mesh-cami', 'tinted-shades'] },
-  { id: 'l6', img: 'look-6', col: 'desert',
-    title: T('نور بلند', 'Long light', 'Uzun ışık'),
-    caption: T('کالکشن Desert Hours، آخرای روز عکاسی شده.', 'Desert Hours, shot at the end of the day.',
-      'Desert Hours, günün sonunda çekildi.'),
-    items: ['prairie-blouse', 'concho-belt', 'brim-hat'] },
+  { id: 'aw1', img: 'aw27-look-1', col: 'aw27', caption: AW,
+    title: T('کاپشن چرم و بافت راه‌راه', 'Leather jacket, striped knit', 'Deri mont, çizgili triko'),
+    items: ['leather-jacket', 'striped-knit', 'chocolate-jeans', 'cotton-cap', 'silk-scarf'] },
+  { id: 'aw2', img: 'aw27-look-2', col: 'aw27', caption: AW,
+    title: T('بارونی چرم و ست اویشو', 'Leather trench, Avishu set', 'Deri trençkot, Avishu takım'),
+    items: ['leather-trench', 'avishu-set', 'karl-lagerfeld-bag', 'white-collar-knit', 'cotton-turtleneck'] },
+  { id: 'aw3', img: 'aw27-look-3', col: 'aw27', caption: AW,
+    title: T('کت و شلوار جین', 'Denim on denim', 'Kot üstüne kot'),
+    items: ['denim-jacket', 'dark-jeans', 'high-neck-knit'] },
+  { id: 'aw4', img: 'aw27-look-4', col: 'aw27', caption: AW,
+    title: T('بارانی گاباردین', 'Gabardine trench', 'Gabardin trençkot'),
+    items: ['gabardine-trench', 'ribbed-knit', 'cotton-shirt', 'bandana', 'waterproof-sneakers'] },
+  { id: 'aw5', img: 'aw27-look-5', col: 'aw27', caption: AW,
+    title: T('وست و شلوار اویشو', 'Avishu vest and trousers', 'Avishu yelek ve pantolon'),
+    items: ['avishu-vest', 'avishu-trousers', 'jacquard-knit', 'cotton-shirt', 'logo-cap', 'waterproof-sneakers'] },
+  { id: 'aw6', img: 'aw27-look-6', col: 'aw27', caption: AW,
+    title: T('بامبر و شلوار تو کرک', 'Bomber and fleece-lined trousers', 'Bomber ve içi polarlı pantolon'),
+    items: ['bomber-jacket', 'fleece-trousers', 'wide-stripe-knit', 'cotton-shirt', 'karl-lagerfeld-bag', 'bandana', 'cotton-cap'] },
+  { id: 'aw7', img: 'aw27-look-7', col: 'aw27', caption: AW,
+    title: T('کت چرم و جین روشن', 'Leather jacket, light jeans', 'Deri ceket, açık kot'),
+    items: ['waterproof-leather-jacket', 'light-jeans', 'two-tone-knit', 'cotton-shirt', 'cotton-cap'] },
 ];
 
 /* ------------------------------------------------------------- lookups */

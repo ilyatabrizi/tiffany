@@ -65,10 +65,10 @@ export default {
         <div class="grid-p">${items.map((p) => productCard(p)).join('')}</div>
       </section>
 
-      <section class="sec">
+      ${others.length ? `<section class="sec">
         <div class="sec-head"><h2 class="serif">${esc(L('بقیه‌ی کالکشن‌های امسال', 'Also this year', 'Bu yılın diğer koleksiyonları'))}</h2></div>
         <div class="rail rail-c">${others.map((x) => collectionCard(x)).join('')}</div>
-      </section>
+      </section>` : ''}
 
       <div style="height:44px"></div>
     </article>`;

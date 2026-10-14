@@ -83,7 +83,9 @@ export function lookTile(l, i) {
 export function recommendSize(product) {
   const f = state.fit;
   const have = ['bust', 'waist', 'hip'].filter((k) => Number(f[k]) > 0);
-  if (!product.sizes.includes('XS') || have.length === 0) return null;
+  /* Only letter sizes have a body chart; a piece may offer just some of them. */
+  const offered = SIZES.map((s, i) => (product.sizes.includes(s.id) ? i : -1)).filter((i) => i >= 0);
+  if (!offered.length || have.length === 0) return null;
 
   let best = null;
   SIZES.forEach((s, idx) => {
@@ -99,6 +101,9 @@ export function recommendSize(product) {
   let idx = best.idx;
   if (product.fit === 'small') idx = clamp(idx + 1, 0, SIZES.length - 1);
   if (product.fit === 'relaxed' && best.score === 0) idx = clamp(idx - 0, 0, SIZES.length - 1);
+  /* The nearest size this piece is actually made in; between two, the larger. */
+  idx = offered.reduce((a, b) => (Math.abs(b - idx) < Math.abs(a - idx)
+    || (Math.abs(b - idx) === Math.abs(a - idx) && b > a) ? b : a));
 
   const why = product.fit === 'small'
     ? L('این یکی تنگ دوخته شده؛ واسه همین یه سایز بزرگ‌تر برات زدیم.',
