@@ -3,20 +3,23 @@
    A real order (placed while online ordering is on) carries the status the
    team sets in the back office; opening this tab asks /api/track.php for the
    latest, keyed by the order code AND the phone it was placed with.
-   A preview order (store switched off) still walks the stages on the clock,
-   so the demo moves on its own. */
+   An order kept from the old preview checkout (before the shop took real
+   orders) was never sent anywhere, and says so; it does not move. */
 import { getProduct } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, toman, num, fullDate, timeOf, relDay, COMMA } from '../util.js';
 import { state, getOrder, save } from '../store.js';
-import { shot, empty, openSheet, imgSrc } from '../ui.js';
+import {
+  shot, empty, openSheet, imgSrc, sheetIsOpen,
+} from '../ui.js';
+import { isLooksOpen } from '../looks.js';
 import { lineOpt, totals } from './bag.js';
 import { L } from '../i18n.js';
 
 /* minutes after placing → the stage it reaches */
 const STAGES = [
   { at: 0, name: L('ثبت شد', 'Order placed', 'Sipariş alındı'),
-    note: L('سفارشت رسید دستمون. یه پیامک برات میاد.', 'We have it. You will get an SMS.', 'Siparişin bize ulaştı. Sana SMS gelecek.') },
+    note: L('سفارشت رسید دستمون و به‌زودی بررسیش می‌کنیم.', 'We have it and will look at it shortly.', 'Siparişin bize ulaştı, kısa süre içinde bakacağız.') },
   { at: 2, name: L('داریم آماده‌ش می‌کنیم', 'Preparing', 'Hazırlanıyor'),
     note: L('از انبار جمعش کردیم و داریم بسته‌بندیش می‌کنیم.', 'Picked and being wrapped at the studio.', 'Atölyede toplandı, paketleniyor.') },
   { at: 10, name: L('دست پیک', 'With the courier', 'Kuryede'),
@@ -31,14 +34,28 @@ const STAGES = [
 const FROM_STATUS = { new: 0, confirmed: 1, shipped: 2, delivered: 4 };
 const cancelled = (o) => o.server && o.status === 'cancelled';
 const CANCELLED = () => L('لغو شد', 'Cancelled', 'İptal edildi');
+const PREVIEW = () => L('پیش‌نمایش؛ ارسال نشد', 'Preview — never sent', 'Önizleme — gönderilmedi');
 
-export function stageOf(order) {
+/** The sample on the empty page walks the stages on the clock; a real order
+    sits where the team put it; an old preview order never moves. */
+export function stageOf(order, { sample = false } = {}) {
   if (order.server) return FROM_STATUS[order.status] ?? 0;
+  if (!sample) return 0;
   const mins = (Date.now() - order.placed) / 60000;
   let i = 0;
   STAGES.forEach((s, idx) => { if (mins >= s.at) i = idx; });
   return i;
 }
+
+/** A line of an order with the piece it was: today's catalogue when the piece
+    is still there, else what the line kept when it was placed. */
+function pieceOf(l) {
+  const p = getProduct(l.id);
+  if (p) return p;
+  if (!l.name || !l.img) return null;
+  return { id: l.id, name: l.name, img: l.img, price: l.price || 0, colours: [] };
+}
+const linePrice = (l, p) => (l.price ? l.price : p.price) * l.qty;
 
 const ETA = (order) => {
   const d = new Date(order.placed + 3 * 86400000);
@@ -47,12 +64,12 @@ const ETA = (order) => {
 
 function orderCard(o) {
   const i = stageOf(o);
-  const stage = cancelled(o) ? { name: CANCELLED() } : STAGES[i];
-  const items = o.items.map((l) => getProduct(l.id)).filter(Boolean);
+  const stage = cancelled(o) ? { name: CANCELLED() } : !o.server ? { name: PREVIEW() } : STAGES[i];
+  const items = o.items.map(pieceOf).filter(Boolean);
   const placed = new Date(o.placed);
   return `
   <button class="order" data-act="order" data-code="${esc(o.code)}" type="button"
-          style="--dot:${i === STAGES.length - 1 || cancelled(o) ? 'var(--muted)' : 'var(--c-cherry)'}">
+          style="--dot:${i === STAGES.length - 1 || cancelled(o) || !o.server ? 'var(--muted)' : 'var(--c-cherry)'}">
     <span class="order-top">
       <span class="order-code" dir="ltr">${esc(o.code)}</span>
       <span class="status"><i></i>${esc(stage.name)}</span>
@@ -72,19 +89,24 @@ function orderCard(o) {
 
 function trackSheet(o, { sample = false } = {}) {
   const now = sample ? 2 : stageOf(o);
-  const items = o.items.map((l) => ({ l, p: getProduct(l.id) })).filter((x) => x.p);
+  const preview = !sample && !o.server;
+  const items = o.items.map((l) => ({ l, p: pieceOf(l) })).filter((x) => x.p);
   openSheet(`
     <h2>${sample ? esc(L('نمونه‌ی پیگیری', 'Sample tracking', 'Örnek takip')) : `<span dir="ltr">${esc(o.code)}</span>`}</h2>
     <p class="lede">${sample
       ? esc(L('وقتی یه سفارش توی راهه، این شکلی می‌بینیش.', 'This is what an order on its way looks like.',
         'Yoldaki bir sipariş böyle görünür.'))
-      : cancelled(o)
-        ? esc(L('این سفارش لغو شد. اگه سؤالی داری با شعبه‌ها تماس بگیر.',
-          'This order was cancelled. Questions? Call any of our stores.',
-          'Bu sipariş iptal edildi. Sorun varsa mağazalarımızı ara.'))
-        : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
+      : preview
+        ? esc(L('این سفارش توی پیش‌نمایش فروشگاه ثبت شده بود و برای تیفانی فرستاده نشد.',
+          'This order was made in the shop’s preview and was never sent to TIFFANY.',
+          'Bu sipariş mağazanın önizlemesinde verildi ve TIFFANY’ye hiç gönderilmedi.'))
+        : cancelled(o)
+          ? esc(L('این سفارش لغو شد. اگه سؤالی داری با شعبه‌ها تماس بگیر.',
+            'This order was cancelled. Questions? Call any of our stores.',
+            'Bu sipariş iptal edildi. Sorun varsa mağazalarımızı ara.'))
+          : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
 
-    ${cancelled(o) ? '' : `<div class="track" style="--accent:var(--c-cherry)">
+    ${cancelled(o) || preview ? '' : `<div class="track" style="--accent:var(--c-cherry)">
       ${STAGES.map((s, i) => `
         <div class="step ${i < now ? 'done' : ''} ${i === now ? 'now' : ''}">
           <b>${esc(s.name)}</b><span>${esc(s.note)}</span>
@@ -101,7 +123,7 @@ function trackSheet(o, { sample = false } = {}) {
           <div class="line-name">${esc(p.name)}</div>
           <div class="line-opt">${lineOpt(p, l)} — ${esc(L(`${num(l.qty)} تا`, `× ${num(l.qty)}`, `${num(l.qty)} adet`))}</div>
           <div class="line-foot"><span></span>
-            <span class="line-price">${toman(p.price * l.qty)}</span></div>
+            <span class="line-price">${toman(linePrice(l, p))}</span></div>
         </div>
       </div>`).join('')}
     ${totals(o.subtotal, o.shipping)}` : ''}
@@ -123,8 +145,14 @@ const SAMPLE = () => ({
   address: null,
 });
 
-/** Ask the shop where the real orders are; refresh the list if anything moved. */
+/** Ask the shop where the real orders are; refresh the list if anything moved.
+    Not twice within half a minute, however often the tab is drawn: many
+    phones share one address on Iranian networks, and the server counts per
+    address. */
+let trackedAt = 0;
 async function trackReal(signal) {
+  if (Date.now() - trackedAt < 30000) return;
+  trackedAt = Date.now();
   const byPhone = {};
   state.orders.filter((o) => o.server && o.phone && !['delivered', 'cancelled'].includes(o.status))
     .forEach((o) => { (byPhone[o.phone] ||= []).push(o.code); });
@@ -144,7 +172,7 @@ async function trackReal(signal) {
   }
   if (moved && !signal?.aborted) {
     save();
-    document.dispatchEvent(new CustomEvent('view:refresh'));
+    if (!sheetIsOpen() && !isLooksOpen()) document.dispatchEvent(new CustomEvent('view:refresh'));
   }
 }
 
@@ -188,12 +216,14 @@ export default {
       if (e.target.closest('[data-act="sample"]')) trackSheet(SAMPLE(), { sample: true });
     }, { signal });
 
-    /* Preview stages move with the clock; real ones move when the team moves
-       them. A minute tick does both. */
-    const t = setInterval(() => {
-      document.dispatchEvent(new CustomEvent('view:refresh'));
-    }, 60000);
-    signal?.addEventListener('abort', () => clearInterval(t));
+    /* Real orders move when the team moves them: opening the tab asks, and
+       so does a tick every three minutes while it stays open — never in a
+       hidden tab, and the list is only redrawn when something moved and no
+       sheet (a tracking sheet being read, the cookie question) is open. */
     trackReal(signal);
+    const t = setInterval(() => {
+      if (!document.hidden) trackReal(signal);
+    }, 180000);
+    signal?.addEventListener('abort', () => clearInterval(t));
   },
 };

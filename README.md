@@ -228,10 +228,12 @@ and also resets a forgotten CEO password. Roles: `ceo` (everything) and `admin`
 The database's first catalogue is `api/lib/seed.json` (the 17 preview pieces).
 Uploaded photos are re-encoded to 4:5 WebP at 480/960 in `uploads/p/`.
 
-**Tests:** `api_test.py` (91 API checks), `admin_e2e.py` (38 browser checks, panel ↔ shop),
+**Tests:** `api_test.py` (118 API checks), `admin_e2e.py` (38 browser checks, panel ↔ shop),
 `popups_e2e.py` (56 checks: the two opening sheets on iPhone, Android, Samsung, Instagram,
-desktop, English, installed), `e2e.py` (storefront) — all run against `php -S` with
-`TIFFANY_DATA` pointing at a fresh folder.
+desktop, English, installed), `e2e.py` (storefront), `qa_e2e.py` (31 regression checks
+from the 2026-10-16 review) — all run against `php -S` with `TIFFANY_DATA` pointing at a
+fresh folder (the storefront suites also need `catalog-import.json` in it).
+`load_test.py` is the rush and traffic test, for a LOCAL server only (see below).
 
 ## The two opening sheets — added 2026-10-09
 
@@ -272,3 +274,47 @@ look photos, one collection (`aw27`) and the seven looks as stories.
   size pick snaps to sizes the piece is actually made in.
 - Every price is a placeholder (1,000,000 Toman) until the studio sets real prices in
   the panel.
+
+## Full review: bugs, security, rush and traffic — 2026-10-16
+
+Two independent code reviews (backend security, front end), then every fix covered
+by a check that fails on the old code (`qa_e2e.py`, and the «hardening» part of
+`api_test.py`).
+
+**What changed for customers**
+- Checkout never makes up an order any more. With online ordering switched off it
+  says «خرید آنلاین به‌زودی» and points to Instagram and the stores; the bag stays.
+  Orders kept on a phone from the old preview checkout say «پیش‌نمایش؛ ارسال نشد».
+- If the catalogue could not be fetched (a shaky connection), checkout still sends the
+  order and the server decides; it used to fall back to a fake local order.
+- One order at a time: closing the sheet mid-send and checking out again cannot order twice.
+- Bags and saved lists from the old catalogue are cleaned once a fresh catalogue is in
+  (gone pieces dropped, old size/colour labels rewritten to codes, doubles merged).
+- Limits, the same in the bag and on the server: 5 of one piece/size/colour, 20 pieces
+  per order, at most 3 unconfirmed orders per phone number.
+- Measurements typed with Persian digits work; the back arrow returns to the same spot
+  in the grid and never leaves the site; sheets keep keyboard focus inside; the stories
+  close on back; an order shows the price paid, not today's price.
+- `404.html` sends people to `/` (it used to loop at nested addresses); the service
+  worker leaves `/admin` and `/api` alone with or without the trailing slash.
+
+**Server**
+- Rate limits count IPv6 per /64; orders: 60 tries and 15 placed per address an hour
+  (Iranian carriers put many phones behind one address); logins: 20 per address,
+  6 per address+email, 30 per email, so a stranger cannot lock someone out.
+- No session file for anonymous requests; expired sessions are swept.
+- New accounts start with a random session version (a deleted user's cookie can no
+  longer wake up as the next account); unknown emails cost the same time as wrong
+  passwords.
+- The product editor sends the stock it opened with; the server applies only the change,
+  so orders placed meanwhile keep their pieces. Order status moves are conditional, so
+  two people cancelling at once restock once.
+- The visit counter only stores the shop's own pages and caps one address at 1500/hour.
+- The data folder is refused if it is ever inside the web root.
+
+**Rush and traffic (`load_test.py`, local, 16 PHP workers on 2 CPUs)**
+- 300 people at once for the last 10 of a piece: exactly 10 orders, 290 «sold out»,
+  stock 0, no errors.
+- 800 orders while the team cancels orders and edits the piece: stock exact to the unit.
+- 80 visitors browsing for 20 s: ~2,000 requests/s, p95 ~100 ms, no errors.
+- 3,000 page-view pings from one address: no errors, capped at 1,500.

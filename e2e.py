@@ -17,6 +17,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 BASE = 'http://localhost:8131'
+DATA = os.environ.get('TIFFANY_DATA', '')    # the server's data folder, to switch ordering on
 SHOTS = pathlib.Path(__file__).resolve().parent / 'docs' / 'shots'
 VIEW = {'width': 390, 'height': 844}
 QUIET = ("try{localStorage.setItem('tiffany.a2hs','{\"done\":true}');"
@@ -364,6 +365,27 @@ def run(shots_only=False):
 
         # -------------------------------------------------------- checkout
         print('\ncheckout')
+        # Ordering is switched off on a fresh shop: checkout says so plainly
+        # and never makes up an order.
+        page.locator('[data-act="checkout"]').click()
+        page.wait_for_timeout(700)
+        closed = page.inner_text('.sheet')
+        check('closed shop: checkout says ordering opens soon',
+              'خرید آنلاین به‌زودی' in closed and page.locator('#coForm').count() == 0, closed[:80])
+        check('closed shop: points to Instagram',
+              page.locator('.sheet a[href*="instagram.com"]').count() == 1)
+        page.locator('.sheet [data-act="sheet-close"]').click()
+        page.wait_for_timeout(500)
+        check('closed shop: the bag is untouched', page.evaluate(
+            'JSON.parse(localStorage.getItem("tiffany.v1")).bag.length') > 0)
+        # Now the CEO switches ordering on (straight in the database here).
+        if DATA:
+            import sqlite3
+            con = sqlite3.connect(str(pathlib.Path(DATA) / 'tiffany.sqlite'))
+            con.execute("INSERT OR REPLACE INTO settings (k, v) VALUES ('store_open', '1')")
+            con.commit(); con.close()
+            page.reload(wait_until='networkidle')
+            page.wait_for_selector('#boot', state='detached', timeout=8000)
         page.locator('[data-act="checkout"]').click()
         page.wait_for_timeout(700)
         check('checkout sheet opens', page.locator('#coForm').count() == 1)

@@ -43,14 +43,29 @@ DirectoryIndex index.html
     Header set Cache-Control "no-cache, must-revalidate"
     Header set Service-Worker-Allowed "/"
   </Files>
+  # Modules import each other by name, so a page must never mix an old file
+  # from the browser's cache with a new one from a deploy: always revalidate
+  # (a 304 costs next to nothing; the service worker does the same).
   <FilesMatch "\.(css|js)$">
-    Header set Cache-Control "public, max-age=3600, must-revalidate"
+    Header set Cache-Control "no-cache"
   </FilesMatch>
   <FilesMatch "\.(webp|jpg|jpeg|png|svg|woff2|mp4)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ------------------------------------------------------------ security
+# Never framed by another site, no camera/microphone/location, HTTPS only for
+# six months once seen (the certificate renews itself through cPanel), and the
+# PHP version is nobody's business.
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=15552000"
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
 </IfModule>
 
 # ---------------------------------------------------------- compression

@@ -20,6 +20,13 @@ export const ltr = (s) => `<span dir="ltr">${esc(s)}</span>`;
 /* --------------------------------------------------------------- numbers */
 const NF = new Intl.NumberFormat(locale);
 export const num = (n) => NF.format(Math.round(n));
+
+/** A number someone TYPED: a Persian or Arabic keyboard sends ۹۰ or ٩٠, which
+    Number() cannot read. This is input, not display — display stays Intl's. */
+const FA_D = '۰۱۲۳۴۵۶۷۸۹';
+const AR_D = '٠١٢٣٤٥٦٧٨٩';
+export const typed = (s) => String(s ?? '').replace(/[۰-۹٠-٩]/g,
+  (d) => String(FA_D.includes(d) ? FA_D.indexOf(d) : AR_D.indexOf(d))).trim();
 export const toman = (n) => `${NF.format(Math.round(n))} ${L('تومان', 'Toman', 'Toman')}`;
 
 /* ----------------------------------------------------------------- dates */

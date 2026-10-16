@@ -125,6 +125,7 @@ const SAY = {
   origin: 'درخواست از جای دیگه‌ای اومده؛ صفحه رو تازه کن.',
   not_found: 'پیدا نشد؛ شاید حذف شده.',
   already_setup: 'پنل قبلاً راه‌اندازی شده؛ وارد شو.',
+  stale: 'این مورد همین الان یه جای دیگه عوض شد؛ صفحه رو تازه کن و دوباره امتحان کن.',
   network: 'به اینترنت وصل نیستی؟ دوباره امتحان کن.',
   server: 'یه مشکلی پیش اومد؛ دوباره امتحان کن.',
 };
@@ -770,8 +771,11 @@ function exportCsv(orders) {
     if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return `"${s.replace(/"/g, '""')}"`;
   };
+  /* Spaced like 0912 345 6789, so a spreadsheet reads it as text and the
+     leading zero stays. */
+  const phone = (s) => String(s || '').replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3');
   const rows = orders.map((o) => [o.code, D_TIME.format(new Date(o.created_at * 1000)), STATUS[o.status], o.name,
-    o.phone, o.city, o.address, o.postal,
+    phone(o.phone), o.city, o.address, o.postal,
     o.items.map((i) => `${i.name} (${i.size}${i.colour_name ? `، ${i.colour_name}` : ''}) ×${i.qty}`).join(' | '),
     o.total, PAY[o.pay] || o.pay].map(cell).join(','));
   const blob = new Blob(['﻿' + [head.map(cell).join(','), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -930,9 +934,14 @@ const blankProduct = () => ({
 async function viewEditor([id], q, signal) {
   const isNew = !id;
   let p;
+  let stockBase = null;
   if (isNew) p = blankProduct();
   else {
     p = (await api('product', { id })).product;
+    /* The stock this editor opened with. Saving sends it back, so the server
+       applies only the change made here and keeps whatever orders took or
+       cancellations returned in the meantime. */
+    stockBase = p.stock ? { ...p.stock } : null;
     if (signal.aborted) return;
   }
   p = structuredClone(p);
@@ -1067,7 +1076,7 @@ async function viewEditor([id], q, signal) {
     st.hidden = !p.stock;
     if (p.stock) {
       st.innerHTML = p.sizes.map((z) => `<div><label for="st-${z}">${z === 'OS' ? 'فری‌سایز' : z}</label>
-        <input class="input" id="st-${z}" data-stock="${z}" inputmode="numeric" value="${p.stock[z] ?? ''}" placeholder="۰"></div>`).join('')
+        <input class="input" id="st-${z}" data-stock="${z}" inputmode="numeric" value="${esc(p.stock[z] ?? '')}" placeholder="۰"></div>`).join('')
         || '<p class="tiny">اول سایزها رو انتخاب کن.</p>';
     }
   };
@@ -1153,7 +1162,7 @@ async function viewEditor([id], q, signal) {
     const btn = $('#save');
     btn.disabled = true;
     try {
-      const out = { ...p, id: isNew ? '' : p.id };
+      const out = { ...p, id: isNew ? '' : p.id, stock_base: isNew ? null : stockBase };
       const r = await api('product_save', { product: out });
       dirty = false;
       toast(isNew ? 'محصول اضافه شد' : 'ذخیره شد');

@@ -9,7 +9,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     tf_fail(405, 'method');
 }
 tf_same_origin();
-tf_throttle('track:' . tf_ip(), 120, 3600);
+tf_throttle('track:' . tf_ip_key(), 240, 3600);
 $in = tf_input();
 $phone = tf_phone($in['phone'] ?? '');
 $codes = array_values(array_filter(array_slice((array) ($in['codes'] ?? []), 0, 50),

@@ -16,7 +16,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     tf_fail(405, 'method');
 }
 tf_same_origin();
-tf_session();
+/* No session is opened here: tf_user() opens one only for a request that
+   carries the panel's cookie, and signing in opens its own. */
 
 $isMultipart = stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'multipart/form-data') === 0;
 $in = $isMultipart ? $_POST : tf_input();
@@ -71,7 +72,7 @@ switch ($a) {
         if (!no_users()) {
             tf_fail(409, 'already_setup');
         }
-        tf_throttle('key:' . tf_ip(), 10, 3600);
+        tf_throttle('key:' . tf_ip_key(), 10, 3600);
         if (!tf_key_matches((string) ($in['key'] ?? ''))) {
             throw new TfInvalid('key', 'کلید راه‌اندازی درست نیست.');
         }
@@ -81,8 +82,8 @@ switch ($a) {
         }
         $email = valid_email((string) ($in['email'] ?? ''));
         $pass = valid_password((string) ($in['password'] ?? ''));
-        db()->prepare('INSERT INTO users (name, email, pass, role, created_at) VALUES (?, ?, ?, \'ceo\', ?)')
-            ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), time()]);
+        db()->prepare('INSERT INTO users (name, email, pass, role, sv, created_at) VALUES (?, ?, ?, \'ceo\', ?, ?)')
+            ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), tf_new_sv(), time()]);
         tf_key_rotate();
         $u = db()->query('SELECT * FROM users ORDER BY id DESC LIMIT 1')->fetch();
         tf_sign_in($u);
@@ -92,19 +93,26 @@ switch ($a) {
     case 'login':
         $email = strtolower(tf_line($in['email'] ?? '', 120));
         $pass = (string) ($in['password'] ?? '');
-        $ipKey = 'login:ip:' . tf_ip();
-        $emKey = 'login:em:' . $email;
-        if (tf_too_many($ipKey, 20, 900) || tf_too_many($emKey, 6, 900)) {
+        /* Three counters: this address (20 tries in 15 minutes), this address
+           on this email (6), and this email from anywhere (30). The tight one
+           is per address, so a stranger guessing at someone's email cannot
+           lock the real person out from their own phone. */
+        $ipKey = 'login:ip:' . tf_ip_key();
+        $pairKey = 'login:em:' . $email . '|' . tf_ip_key();
+        $emKey = 'login:any:' . $email;
+        if (tf_too_many($ipKey, 20, 900) || tf_too_many($pairKey, 6, 900) || tf_too_many($emKey, 30, 900)) {
             tf_fail(429, 'too_many');
         }
         $st = db()->prepare('SELECT * FROM users WHERE email = ? AND active = 1');
         $st->execute([$email]);
         $u = $st->fetch();
+        $st->closeCursor();             // an open read would make the writes below fail under load
         if (!$u || !password_verify($pass, $u['pass'])) {
             if (!$u) {
-                password_verify($pass, '$2y$12$M388vkOYIwdvG5OuPSrCtOrmnPS7w52kJS9wW68fm6RWoEkbWcm9W'); // same work as a real check
+                password_verify($pass, tf_dummy_hash());   // same work as a real check
             }
             tf_note_attempt($ipKey);
+            tf_note_attempt($pairKey);
             tf_note_attempt($emKey);
             tf_fail(401, 'wrong');
         }
@@ -112,13 +120,14 @@ switch ($a) {
             db()->prepare('UPDATE users SET pass = ? WHERE id = ?')
                 ->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
         }
+        tf_clear_attempts($pairKey);
         tf_clear_attempts($emKey);
         tf_sign_in($u);
         tf_log($u['name'], 'login');
         ok(me_out($u));
 
     case 'recover':
-        tf_throttle('key:' . tf_ip(), 10, 3600);
+        tf_throttle('key:' . tf_ip_key(), 10, 3600);
         if (!tf_key_matches((string) ($in['key'] ?? ''))) {
             throw new TfInvalid('key', 'کلید درست نیست.');
         }
@@ -127,6 +136,7 @@ switch ($a) {
         $st = db()->prepare("SELECT * FROM users WHERE email = ? AND role = 'ceo' AND active = 1");
         $st->execute([$email]);
         $u = $st->fetch();
+        $st->closeCursor();
         if (!$u) {
             throw new TfInvalid('email', 'مدیرعاملی با این ایمیل نداریم.');
         }
@@ -135,6 +145,7 @@ switch ($a) {
         tf_key_rotate();
         $st->execute([$email]);
         $u = $st->fetch();
+        $st->closeCursor();
         tf_sign_in($u);
         tf_log($u['name'], 'recover', 'password reset with the setup key');
         ok(me_out($u));
@@ -172,18 +183,18 @@ switch ($a) {
             ->execute([password_hash($pass, PASSWORD_DEFAULT), $me['id']]);
         $st = db()->prepare('SELECT * FROM users WHERE id = ?');
         $st->execute([$me['id']]);
-        tf_sign_in($st->fetch());           // this device stays in, every other one is out
+        $fresh = $st->fetch();
+        $st->closeCursor();
+        tf_sign_in($fresh);                 // this device stays in, every other one is out
         tf_log($me['name'], 'password');
         ok(['csrf' => $_SESSION['csrf']]);
 
     /* ------------------------------------------------------- dashboard */
     case 'dashboard':
-        $days = in_array((int) ($in['days'] ?? 30), [7, 30, 90], true) ? (int) $in['days'] : 30;
-        ok(dashboard($days, $ceo));
+        ok(dashboard(days_of($in), $ceo));
 
     case 'traffic':
-        $days = in_array((int) ($in['days'] ?? 30), [7, 30, 90], true) ? (int) $in['days'] : 30;
-        ok(traffic($days));
+        ok(traffic(days_of($in)));
 
     /* -------------------------------------------------------- products */
     case 'products':
@@ -199,31 +210,65 @@ switch ($a) {
     case 'product_save':
         $raw = (array) ($in['product'] ?? []);
         $id = (string) ($raw['id'] ?? '');
-        $old = $id !== '' ? tf_product($id) : null;
-        if ($id !== '' && !$old) {
-            tf_fail(404, 'not_found');
+        $db = db();
+        /* Read, check and write in one locked step, so nothing can land in
+           between. The panel sends the stock it opened with (stock_base) and
+           the change is applied on top of today's shelf; a caller that sends
+           no base but an older version (updated_at) is refused instead. */
+        $db->exec('BEGIN IMMEDIATE');
+        try {
+            $old = $id !== '' ? tf_product($id) : null;
+            if ($id !== '' && !$old) {
+                $db->exec('ROLLBACK');
+                tf_fail(404, 'not_found');
+            }
+            $base = isset($raw['stock_base']) && is_array($raw['stock_base']) ? $raw['stock_base'] : null;
+            if ($old && $base === null && isset($raw['updated_at'])
+                && (int) $raw['updated_at'] !== $old['updated_at']) {
+                $db->exec('ROLLBACK');
+                tf_fail(409, 'stale');
+            }
+            $p = tf_product_clean($raw, $old ? $old['id'] : null);
+            /* Stock moves by what was changed in the editor, on top of what the
+               shelf holds now: an order placed while the editor was open keeps
+               its pieces, and a typo fix does not put them back. */
+            if ($old && $base !== null && is_array($p['stock']) && is_array($old['stock'] ?? null)) {
+                foreach ($p['stock'] as $s => $n) {
+                    if (array_key_exists($s, $old['stock']) && array_key_exists($s, $base)) {
+                        $p['stock'][$s] = max(0, min(99999, (int) $old['stock'][$s] + $n - tf_int($base[$s])));
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            $db->exec('ROLLBACK');
+            throw $e;
         }
-        $p = tf_product_clean($raw, $old ? $old['id'] : null);
         $now = time();
         if ($old) {
             tf_product_store($p);
+            $db->exec('COMMIT');
             tf_log($me['name'], 'product_edit', $p['name']['fa']);
         } else {
             db()->prepare('INSERT INTO products (id, data, cat, price, visible, sort, created_at, updated_at)
                            VALUES (?, ?, ?, ?, ?, 0, ?, ?)')
                 ->execute([$p['id'], json_encode($p, JSON_UNESCAPED_UNICODE), $p['cat'], $p['price'],
                     $p['visible'] ? 1 : 0, $now, $now]);
+            $db->exec('COMMIT');
             tf_log($me['name'], 'product_add', $p['name']['fa']);
         }
         ok(['product' => tf_product($p['id'])]);
 
     case 'product_visible':
+        $db = db();
+        $db->exec('BEGIN IMMEDIATE');
         $p = tf_product((string) ($in['id'] ?? ''));
         if (!$p) {
+            $db->exec('ROLLBACK');
             tf_fail(404, 'not_found');
         }
         $p['visible'] = !empty($in['visible']);
         tf_product_store($p);
+        $db->exec('COMMIT');
         tf_log($me['name'], $p['visible'] ? 'product_show' : 'product_hide', $p['name']['fa']);
         ok(['product' => tf_product($p['id'])]);
 
@@ -279,11 +324,17 @@ switch ($a) {
         if ($to !== $o['status']) {
             $db = db();
             $db->exec('BEGIN IMMEDIATE');
+            /* Only moves the order if it is still where this person saw it:
+               two people cancelling at once must not restock it twice. */
+            $up = $db->prepare('UPDATE orders SET status = ?, updated_at = ? WHERE code = ? AND status = ?');
+            $up->execute([$to, time(), $o['code'], $o['status']]);
+            if ($up->rowCount() !== 1) {
+                $db->exec('ROLLBACK');
+                tf_fail(409, 'stale');
+            }
             if ($to === 'cancelled') {
                 tf_restock($o['items']);
             }
-            $db->prepare('UPDATE orders SET status = ?, updated_at = ? WHERE code = ?')
-                ->execute([$to, time(), $o['code']]);
             $db->exec('COMMIT');
             tf_log($me['name'], 'order_status', $o['code'] . ' → ' . $to);
         }
@@ -340,7 +391,9 @@ switch ($a) {
         $active = !array_key_exists('active', $in) || !empty($in['active']);
         $dupe = db()->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
         $dupe->execute([$email, $id]);
-        if ($dupe->fetchColumn()) {
+        $taken = $dupe->fetchColumn();
+        $dupe->closeCursor();
+        if ($taken) {
             throw new TfInvalid('email', 'این ایمیل قبلاً ثبت شده.');
         }
         if ($id) {
@@ -358,13 +411,15 @@ switch ($a) {
             if ($id === (int) $me['id']) {
                 $st = db()->prepare('SELECT * FROM users WHERE id = ?');
                 $st->execute([$id]);
-                tf_sign_in($st->fetch());
+                $fresh = $st->fetch();
+                $st->closeCursor();
+                tf_sign_in($fresh);
             }
             tf_log($me['name'], 'team_edit', $email);
         } else {
             $pass = valid_password((string) ($in['password'] ?? ''));
-            db()->prepare('INSERT INTO users (name, email, pass, role, active, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-                ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $active ? 1 : 0, time()]);
+            db()->prepare('INSERT INTO users (name, email, pass, role, active, sv, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, $active ? 1 : 0, tf_new_sv(), time()]);
             tf_log($me['name'], 'team_add', $email . ' (' . $role . ')');
         }
         ok(['csrf' => $_SESSION['csrf']]);
@@ -378,6 +433,7 @@ switch ($a) {
         $st = db()->prepare('SELECT email FROM users WHERE id = ?');
         $st->execute([$id]);
         $email = $st->fetchColumn();
+        $st->closeCursor();
         db()->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
         tf_log($me['name'], 'team_delete', (string) $email);
         ok();
@@ -391,11 +447,19 @@ tf_fail(400, 'unknown_action');
 
 /* ====================================================================== */
 
+/** 7, 30 or 90 days; anything else (or nothing) is 30. */
+function days_of(array $in): int
+{
+    $d = (int) ($in['days'] ?? 30);
+    return in_array($d, [7, 30, 90], true) ? $d : 30;
+}
+
 function order_or_404(string $code): array
 {
     $st = db()->prepare('SELECT * FROM orders WHERE code = ?');
     $st->execute([$code]);
     $o = $st->fetch();
+    $st->closeCursor();
     if (!$o) {
         tf_fail(404, 'not_found');
     }

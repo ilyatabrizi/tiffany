@@ -12,7 +12,7 @@
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v9';
+const V = 'tiffany-fa-v10';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
@@ -61,6 +61,9 @@ async function fresh(request) {
     const res = await fetch(request.url, {
       cache: 'reload', credentials: 'same-origin',
     });
+    /* A page the host redirected (a folder without its slash) cannot be
+       handed to a navigation as it is: send the browser to where it went. */
+    if (res.redirected && request.mode === 'navigate') return Response.redirect(res.url, 301);
     if (res && res.ok && res.type === 'basic') cache.put(request, res.clone());
     return res;
   } catch {
@@ -91,7 +94,7 @@ self.addEventListener('fetch', (e) => {
   /* Live data and the back office are never cached here: a price or an order
      status must always be today's. (The shop keeps its own last-good
      catalogue for offline starts, see js/live.js.) */
-  if (url.pathname.includes('/api/') || url.pathname.includes('/admin/')) return;
+  if (/\/(api|admin)(\/|$)/.test(url.pathname)) return;
 
   /* Video needs Range support; the network owns it entirely. */
   if (request.destination === 'video' || request.headers.has('range')) return;

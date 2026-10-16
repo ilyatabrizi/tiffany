@@ -32,6 +32,10 @@ const TF_FITS     = ['small', 'true', 'relaxed'];
 const TF_BADGES   = ['', 'new', 'campaign', 'bestseller', 'restock', 'last'];
 const TF_LANGS    = ['fa', 'en', 'tr'];
 const TF_SESSION_DAYS = 30;
+/* One order: at most 5 of the same piece, size and colour, 20 pieces in all.
+   The shop's bag stops at the same numbers (js/store.js). */
+const TF_LINE_MAX = 5;
+const TF_ORDER_MAX = 20;
 
 /* --------------------------------------------------------------- output */
 function tf_json(array $data, int $code = 200): void
@@ -95,10 +99,16 @@ function tf_data_dir(): string
         return $dir;
     }
     $want = getenv('TIFFANY_DATA') ?: dirname(__DIR__, 3) . '/tiffany-data';
-    if (!is_dir($want)) {
+    /* The database, the sessions and the setup key must never be fetchable:
+       a data folder inside the web root is refused before anything is made. */
+    $web = rtrim((string) realpath(dirname(__DIR__, 2)), '/');
+    $parent = realpath(dirname($want));
+    $full = $parent !== false ? rtrim($parent, '/') . '/' . basename($want) : $want;
+    $inside = $web !== '' && ($full === $web || strpos($full . '/', $web . '/') === 0);
+    if (!$inside && !is_dir($want)) {
         @mkdir($want, 0700, true);
     }
-    if (!is_dir($want) || !is_writable($want)) {
+    if ($inside || !is_dir($want) || !is_writable($want)) {
         http_response_code(500);
         header('Content-Type: application/json');
         echo '{"ok":false,"error":"storage"}';
@@ -144,10 +154,20 @@ function tf_import_catalog(PDO $db): void
     if (!is_file($file)) {
         return;
     }
+    /* Size and modification time first: an unchanged file is not even read,
+       so leaving it in the folder costs every request nothing. */
+    $st = stat($file);
+    $stamp = $st['size'] . ':' . $st['mtime'] . ':' . $st['ino'] . ':' . $st['ctime'];
+    $seen = $db->query("SELECT v FROM settings WHERE k = 'import_stamp'")->fetchColumn();
+    if ($seen === $stamp) {
+        return;
+    }
     $raw = (string) file_get_contents($file);
     $sha = hash('sha256', $raw);
     $done = $db->query("SELECT v FROM settings WHERE k = 'import_sha'")->fetchColumn();
     if ($done === $sha) {
+        $db->prepare("INSERT INTO settings (k, v) VALUES ('import_stamp', ?)
+                      ON CONFLICT(k) DO UPDATE SET v = excluded.v")->execute([$stamp]);
         return;
     }
     $db->exec('BEGIN IMMEDIATE');
@@ -159,9 +179,17 @@ function tf_import_catalog(PDO $db): void
         }
         $list = json_decode($raw, true);
         $clean = [];
+        $ids = [];
         foreach (is_array($list) ? $list : [] as $i => $p) {
+            /* Every piece names its own id, once: an id made up here could
+               clash with one about to be deleted or with another piece. */
+            $pid = is_array($p) ? (string) ($p['id'] ?? '') : '';
+            if ($pid === '' || isset($ids[$pid])) {
+                throw new RuntimeException("catalog-import piece #$i: missing or repeated id '$pid'");
+            }
+            $ids[$pid] = true;
             try {
-                $clean[] = tf_product_clean((array) $p, (string) ($p['id'] ?? ''));
+                $clean[] = tf_product_clean((array) $p, $pid);
             } catch (TfInvalid $e) {
                 throw new RuntimeException("catalog-import piece #$i: {$e->field}: {$e->getMessage()}");
             }
@@ -177,16 +205,20 @@ function tf_import_catalog(PDO $db): void
             $ins->execute([$c['id'], json_encode($c, JSON_UNESCAPED_UNICODE), $c['cat'], $c['price'],
                 !empty($c['visible']) ? 1 : 0, $i, $now, $now]);
         }
-        $db->prepare("INSERT INTO settings (k, v) VALUES ('import_sha', ?)
-                      ON CONFLICT(k) DO UPDATE SET v = excluded.v")->execute([$sha]);
+        $mark = $db->prepare("INSERT INTO settings (k, v) VALUES (?, ?)
+                              ON CONFLICT(k) DO UPDATE SET v = excluded.v");
+        $mark->execute(['import_sha', $sha]);
+        $mark->execute(['import_stamp', $stamp]);
         $db->prepare('INSERT INTO log (at, who, action, detail) VALUES (?, ?, ?, ?)')
             ->execute([$now, 'سیستم', 'catalog_import', count($clean) . ' محصول']);
         $db->exec('COMMIT');
     } catch (Throwable $e) {
         $db->exec('ROLLBACK');
         // remember the failure so a broken file is not retried on every request
-        $db->prepare("INSERT INTO settings (k, v) VALUES ('import_sha', ?)
-                      ON CONFLICT(k) DO UPDATE SET v = excluded.v")->execute([$sha]);
+        $mark = $db->prepare("INSERT INTO settings (k, v) VALUES (?, ?)
+                              ON CONFLICT(k) DO UPDATE SET v = excluded.v");
+        $mark->execute(['import_sha', $sha]);
+        $mark->execute(['import_stamp', $stamp]);
         tf_log_error($e);
     }
 }
@@ -321,6 +353,20 @@ function tf_public_settings(): array
 function tf_ip(): string
 {
     return substr((string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'), 0, 64);
+}
+
+/** The address a rate limit counts against. One IPv6 subscriber holds a whole
+    /64 and can hop inside it freely, so IPv6 is counted per /64. */
+function tf_ip_key(): string
+{
+    $ip = tf_ip();
+    if (strpos($ip, ':') !== false) {
+        $bin = @inet_pton($ip);
+        if ($bin !== false && strlen($bin) === 16) {
+            return bin2hex(substr($bin, 0, 8)) . '::/64';
+        }
+    }
+    return $ip;
 }
 
 /** Persian and Arabic digits typed on a phone become ASCII. */
@@ -466,6 +512,10 @@ function tf_session(): void
     }
     session_save_path($dir);
     ini_set('session.gc_maxlifetime', (string) (TF_SESSION_DAYS * 86400));
+    /* This folder is our own, so the host's cleanup cron never visits it:
+       PHP sweeps expired sessions itself, on about one start in a hundred. */
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     session_name('tf_admin');
@@ -489,9 +539,16 @@ function tf_user_public(array $u): array
 /** The signed-in admin, or null. A password change bumps sv and ends every other session. */
 function tf_user(): ?array
 {
+    /* No cookie, no session: an anonymous request must not leave a session
+       file behind (thousands of them would eat the host's file quota). */
+    if (session_status() !== PHP_SESSION_ACTIVE && !isset($_COOKIE['tf_admin'])) {
+        return null;
+    }
     tf_session();
     $id = (int) ($_SESSION['uid'] ?? 0);
     if (!$id) {
+        // a stale or made-up cookie: drop the empty session it just opened
+        session_destroy();
         return null;
     }
     $st = db()->prepare('SELECT * FROM users WHERE id = ? AND active = 1');
@@ -502,6 +559,26 @@ function tf_user(): ?array
         return null;
     }
     return $u;
+}
+
+/** A new account's first session version. Random, not 1: SQLite hands a
+    deleted user's id to the next account, and an old cookie holding that id
+    and version 1 must not wake up as the new person. */
+function tf_new_sv(): int
+{
+    return random_int(1000, 2000000000);
+}
+
+/** A hash to check unknown emails against, made the way real ones are made
+    here, so a wrong email costs the same time as a wrong password. */
+function tf_dummy_hash(): string
+{
+    $h = setting('dummy_hash');
+    if ($h === '' || password_needs_rehash($h, PASSWORD_DEFAULT)) {
+        $h = password_hash(bin2hex(random_bytes(12)), PASSWORD_DEFAULT);
+        setting_set('dummy_hash', $h);
+    }
+    return $h;
 }
 
 function tf_sign_in(array $u): void
@@ -649,7 +726,7 @@ function tf_product_clean(array $in, ?string $id = null): array
     }
 
     $fit = in_array($in['fit'] ?? '', TF_FITS, true) ? $in['fit'] : 'true';
-    $badge = in_array($in['badge'] ?? '', TF_BADGES, true) ? $in['badge'] : '';
+    $badge = in_array($in['badge'] ?? '', TF_BADGES, true) ? (string) ($in['badge'] ?? '') : '';
 
     if ($id === null || $id === '') {
         $id = tf_slug((string) ($name['en'] ?: ''));

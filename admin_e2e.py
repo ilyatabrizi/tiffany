@@ -148,7 +148,8 @@ with sync_playwright() as pw:
     s.wait_for_timeout(700)
     s.click('[data-act="checkout"]')
     s.wait_for_timeout(700)
-    check('closed store: checkout is the preview', 'پیش‌نمایش' in s.inner_text('.sheet'))
+    check('closed store: checkout says ordering opens soon, no form',
+          'خرید آنلاین به‌زودی' in s.inner_text('.sheet') and s.locator('#coForm').count() == 0)
     s.click('.sheet [data-act="sheet-close"]')
     s.wait_for_timeout(400)
 
@@ -209,7 +210,9 @@ with sync_playwright() as pw:
     s.goto(BASE + '/#/shop')
     s.wait_for_timeout(600)
     s.goto(BASE + '/#/orders')          # opening the tab asks the shop for news
-    s.wait_for_timeout(1800)
+    s.reload(wait_until='networkidle')  # (a fresh visit, not the 30 s throttle)
+    s.wait_for_selector('#boot', state='detached', timeout=8000)
+    s.wait_for_timeout(1200)
     status = s.locator('.order .status').first.inner_text()
     check('the customer sees «being prepared»', 'آماده' in status, status)
 

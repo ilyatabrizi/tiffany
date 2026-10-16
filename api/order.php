@@ -19,7 +19,13 @@ if (!empty($in['website'])) {          // honeypot: people never fill this in
 if (setting('store_open', '0') !== '1') {
     tf_fail(403, 'closed');
 }
-tf_throttle('order:' . tf_ip(), 8, 3600);
+/* Many Iranian phones share one public address behind the carrier, so tries
+   are counted loosely (60 an hour) and placed orders a little tighter (15 an
+   hour per address, 3 still unconfirmed per phone number). */
+tf_throttle('order:try:' . tf_ip_key(), 60, 3600);
+if (tf_too_many('order:ok:' . tf_ip_key(), 15, 3600)) {
+    tf_fail(429, 'too_many');
+}
 
 $name = tf_line($in['name'] ?? '', 60);
 $phone = tf_phone($in['phone'] ?? '');
@@ -45,8 +51,11 @@ if ($postal !== '' && strlen($postal) !== 10) {
     throw new TfInvalid('postal', 'کد پستی ۱۰ رقمیه.');
 }
 
-/* One line per piece/size/colour, quantities merged. */
+/* One line per piece/size/colour, quantities merged: at most TF_LINE_MAX of
+   one line and TF_ORDER_MAX pieces in one order, so a single order cannot
+   empty the shelves. */
 $want = [];
+$units = 0;
 foreach (array_slice((array) ($in['items'] ?? []), 0, 40) as $it) {
     if (!is_array($it)) {
         continue;
@@ -55,15 +64,28 @@ foreach (array_slice((array) ($in['items'] ?? []), 0, 40) as $it) {
     $size = (string) ($it['size'] ?? '');
     $colour = strtoupper((string) ($it['colour'] ?? ''));
     $qty = (int) ($it['qty'] ?? 0);
-    if ($qty < 1 || $qty > 9) {
+    if ($qty < 1) {
         continue;
     }
     $key = "$id|$size|$colour";
     $want[$key] = ['id' => $id, 'size' => $size, 'colour' => $colour,
-        'qty' => min(9, ($want[$key]['qty'] ?? 0) + $qty)];
+        'qty' => min(TF_LINE_MAX, ($want[$key]['qty'] ?? 0) + $qty)];
+}
+foreach ($want as $w) {
+    $units += $w['qty'];
 }
 if (!$want) {
     throw new TfInvalid('items', 'سبدت خالیه.');
+}
+if ($units > TF_ORDER_MAX) {
+    throw new TfInvalid('items', 'توی هر سفارش حداکثر ' . TF_ORDER_MAX . ' قطعه می‌شه گرفت.');
+}
+$open = db()->prepare("SELECT COUNT(*) FROM orders WHERE phone = ? AND status = 'new'");
+$open->execute([$phone]);
+$pending = (int) $open->fetchColumn();
+$open->closeCursor();
+if ($pending >= 3) {
+    throw new TfInvalid('phone', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
 }
 
 $db = db();
@@ -114,10 +136,16 @@ try {
     $shipping = (int) tf_public_settings()['shipping'];
     $total = $subtotal + $shipping;
     $exists = $db->prepare('SELECT 1 FROM orders WHERE code = ?');
+    $tries = 0;
     do {
+        if (++$tries > 60) {
+            throw new RuntimeException('no free order code');
+        }
         $code = 'TF-' . random_int(10000, 99999);
         $exists->execute([$code]);
-    } while ($exists->fetchColumn());
+        $taken = $exists->fetchColumn();
+        $exists->closeCursor();
+    } while ($taken);
 
     $now = time();
     $db->prepare('INSERT INTO orders (code, status, name, phone, city, address, postal, pay, items,
@@ -131,6 +159,7 @@ try {
     $db->exec('ROLLBACK');
     throw $e;
 }
+tf_note_attempt('order:ok:' . tf_ip_key());
 
 tf_json(['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
     'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now]);

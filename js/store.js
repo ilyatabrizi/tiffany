@@ -42,24 +42,36 @@ export function save() {
 }
 
 /* ------------------------------------------------------------------ bag */
+/* The same limits the server holds an order to (api/order.php): five of one
+   piece in one size and colour, twenty pieces in one order. */
+export const LINE_MAX = 5;
+export const ORDER_MAX = 20;
 const lineKey = (id, size, colour) => `${id}|${size}|${colour}`;
+export const bagCount = () => state.bag.reduce((n, l) => n + l.qty, 0);
 
+/** Adds one; false when the line or the bag is already full. */
 export function addToBag(id, size, colour, qty = 1) {
+  if (bagCount() + qty > ORDER_MAX) return false;
   const key = lineKey(id, size, colour);
   const line = state.bag.find((l) => lineKey(l.id, l.size, l.colour) === key);
-  if (line) line.qty = Math.min(9, line.qty + qty);
+  if (line && line.qty + qty > LINE_MAX) return false;
+  if (line) line.qty += qty;
   else state.bag.unshift({ id, size, colour, qty });
   save();
+  return true;
 }
 export function setQty(id, size, colour, qty) {
   const key = lineKey(id, size, colour);
   const i = state.bag.findIndex((l) => lineKey(l.id, l.size, l.colour) === key);
-  if (i < 0) return;
-  if (qty <= 0) state.bag.splice(i, 1);
-  else state.bag[i].qty = Math.min(9, qty);
+  if (i < 0) return false;
+  if (qty <= 0) { state.bag.splice(i, 1); save(); return true; }
+  const others = bagCount() - state.bag[i].qty;
+  const want = Math.min(LINE_MAX, qty, ORDER_MAX - others);
+  if (want === state.bag[i].qty) return false;
+  state.bag[i].qty = want;
   save();
+  return true;
 }
-export const bagCount = () => state.bag.reduce((n, l) => n + l.qty, 0);
 export const clearBag = () => { state.bag = []; save(); };
 
 /* -------------------------------------------------------------- wishlist */

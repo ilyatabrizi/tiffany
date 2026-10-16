@@ -4,8 +4,12 @@ import {
   LOOKS, PRODUCTS, SIZES, colById, getProduct, sizeLabel, isOneSize, NO_COL, soldOut,
 } from '../data.js';
 import { icon } from '../icons.js';
-import { esc, toman, tap, COMMA } from '../util.js';
-import { addToBag, isWished } from '../store.js';
+import {
+  esc, toman, tap, num, COMMA,
+} from '../util.js';
+import {
+  addToBag, isWished, LINE_MAX, ORDER_MAX,
+} from '../store.js';
 import {
   shot, bigShot, productCard, openSheet, closeSheet, toast, recommendSize,
 } from '../ui.js';
@@ -85,7 +89,12 @@ function addSheet(p) {
 function commit(p) {
   const colour = p.colours[pick.colour] || p.colours[0];
   /* The bag keeps the hex, not the label — labels change with the language. */
-  addToBag(p.id, pick.size, colour.hex);
+  if (!addToBag(p.id, pick.size, colour.hex)) {
+    toast(L(`از هر قطعه حداکثر ${num(LINE_MAX)} تا و توی هر سفارش حداکثر ${num(ORDER_MAX)} قطعه.`,
+      `Up to ${LINE_MAX} of a piece and ${ORDER_MAX} pieces per order.`,
+      `Bir parçadan en fazla ${LINE_MAX}, siparişte en fazla ${ORDER_MAX} adet.`), 'info', 3200);
+    return;
+  }
   tap(12);
   const what = `${p.name}${COMMA}${sizeLabel(pick.size)}`;
   toast(L(`به سبد اضافه شد — ${what}`, `Added — ${what}`, `Sepete eklendi — ${what}`), 'bag');

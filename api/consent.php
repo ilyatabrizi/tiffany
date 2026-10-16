@@ -37,8 +37,8 @@ setcookie(TF_CONSENT_COOKIE, $yes ? '1' : '0', [
 ]);
 
 $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
-if (!tf_is_bot($ua) && !tf_too_many('consent:' . tf_ip(), 30, 3600)) {
-    tf_note_attempt('consent:' . tf_ip());
+if (!tf_is_bot($ua) && !tf_too_many('consent:' . tf_ip_key(), 30, 3600)) {
+    tf_note_attempt('consent:' . tf_ip_key());
     [$day, $vid] = tf_visitor($ua);
     $db = db();
     $db->exec('BEGIN IMMEDIATE');

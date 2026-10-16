@@ -335,5 +335,115 @@ code, r = ceo('product_save', product={**piece(9, ['38', '40']), 'id': ''})
 check('the panel saves numeric sizes too', code == 200 and r['product']['sizes'] == ['38', '40'], str(r)[:200])
 os.remove(imp)
 
+print('\nhardening (2026-10-16 review)')
+import sqlite3
+import concurrent.futures as cf
+SESS = os.path.join(DATA, 'sessions')
+def db(q, *a):
+    con = sqlite3.connect(os.path.join(DATA, 'tiffany.sqlite'))
+    try:
+        rows = con.execute(q, a).fetchall()
+        con.commit()
+        return rows
+    finally:
+        con.close()
+
+# Anonymous requests leave no session files behind, made-up cookies neither.
+before = len(os.listdir(SESS))
+for i in range(25):
+    requests.post(f'{BASE}/api/admin.php', json={'a': 'nope'})
+    requests.post(f'{BASE}/api/admin.php', json={'a': 'state'}, cookies={'tf_admin': f'madeup{i:026d}'})
+check('anonymous and made-up sessions leave no files', len(os.listdir(SESS)) == before,
+      f'{before} → {len(os.listdir(SESS))}')
+
+# A deleted person's old cookie must not wake up as the next account (SQLite
+# hands the deleted id to the next row).
+ceo('team_save', name='Reza', email='reza@tiffany.test', role='admin', password='reza-pass-123')
+reza = Panel()
+code, r = reza('login', email='reza@tiffany.test', password='reza-pass-123')
+check('Reza signs in', code == 200)
+rid = r['user']['id']
+ceo('team_delete', id=rid)
+ceo('team_save', name='Mina', email='mina@tiffany.test', role='ceo', password='mina-pass-123')
+mina_id = [u for u in ceo('team')[1]['team'] if u['email'] == 'mina@tiffany.test'][0]['id']
+code, r = reza('state')
+check("a deleted person's cookie stays signed out", r.get('user') is None,
+      f'new id {mina_id} (old {rid}): {r.get("user")}')
+check('…and cannot reach the team', reza('team')[0] == 401)
+
+# A burst of parallel wrong passwords: no 500s, and the lock holds after it.
+ceo('team_save', name='Burst', email='burst@tiffany.test', role='admin', password='burst-pass-123')
+def guess(i):
+    return requests.post(f'{BASE}/api/admin.php', json={'a': 'login', 'email': 'burst@tiffany.test',
+                                                       'password': f'wrong-{i}'}).status_code
+with cf.ThreadPoolExecutor(20) as ex:
+    codes = list(ex.map(guess, range(40)))
+check('40 parallel guesses: no server errors', 500 not in codes, str(sorted(set(codes))))
+check('…and the next try is locked', guess(99) == 429)
+db("DELETE FROM attempts WHERE k LIKE 'login:%'")   # (so later sections can sign in)
+
+# Stock edited in the panel moves by the edit, on top of what orders took.
+code, r = ceo('product_save', product={**new, 'name': {'fa': 'تست موجودی', 'en': 'Stock Test'},
+                                       'sizes': ['S'], 'stock': {'S': 5}, 'id': ''})
+sid = r['product']['id']
+opened = ceo('product', id=sid)[1]['product']
+r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000001',
+                  'items': [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 2}]})
+check('an order takes 2 while the editor is open', r.status_code == 200, r.text[:160])
+code, r = ceo('product_save', product={**opened, 'note': {'fa': 'غلط املایی درست شد'}, 'stock_base': opened['stock']})
+check('saving a typo fix keeps what the order took', code == 200 and r['product']['stock'] == {'S': 3}, str(r)[:160])
+opened = r['product']
+import time
+time.sleep(1.1)                   # versions are whole seconds
+code, r = ceo('product_save', product={**opened, 'stock': {'S': 8}, 'stock_base': {'S': 3}})
+check('adding 5 in the editor adds 5', r['product']['stock'] == {'S': 8}, str(r['product']['stock']))
+code, r = ceo('product_save', product={**opened, 'stock': {'S': 1}})
+check('an old copy without a base is refused, not saved', code == 409 and r['error'] == 'stale', f'{code} {r}')
+
+# Two people cancelling one order at the same moment restock it once.
+r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000002',
+                  'items': [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 1}]}).json()
+left = ceo('product', id=sid)[1]['product']['stock']['S']
+two = [Panel() for _ in range(4)]
+for t in two:
+    t('login', email='ceo@tiffany.test', password='third-long-pass-3')
+with cf.ThreadPoolExecutor(4) as ex:
+    codes = list(ex.map(lambda t: t('order_status', code=r['code'], status='cancelled')[0], two))
+after = ceo('product', id=sid)[1]['product']['stock']['S']
+check('4 cancels at once: one wins', codes.count(200) == 1, str(codes))
+check('…and the piece goes back once', after == left + 1, f'{left} → {after}')
+
+# The visit counter only counts the shop's own pages.
+for k in ['zzzz', 'p:no-such-piece', 'c:nope', 'p:' + sid, 'about']:
+    requests.post(f'{BASE}/api/hit.php', data=json.dumps({'k': k}), headers=ua)
+pages = {row[0] for row in db('SELECT page FROM pageviews')}
+check('made-up pages are not stored', not ({'zzzz', 'p:no-such-piece', 'c:nope'} & pages), str(pages))
+check('real pages are', {'p:' + sid, 'about'} <= pages, str(pages))
+
+# One order cannot empty the shelves; one phone cannot pile up orders.
+big = [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 5}] * 1 + \
+      [{'id': 'cream-hoodie', 'size': 'L', 'colour': '#EFE6D8', 'qty': 5},
+       {'id': 'alphabet-tee', 'size': 'M', 'colour': '#A9C9E8', 'qty': 5},
+       {'id': 'alphabet-tee', 'size': 'S', 'colour': '#A9C9E8', 'qty': 5},
+       {'id': 'alphabet-tee', 'size': 'L', 'colour': '#A9C9E8', 'qty': 5}]
+r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000003', 'items': big})
+check('more than 20 pieces in one order is refused', r.status_code == 422 and r.json()['field'] == 'items', r.text[:160])
+one = [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 1}]
+codes = [requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000004', 'items': one}).status_code
+         for _ in range(4)]
+check('a 4th unconfirmed order from one phone waits', codes == [200, 200, 200, 422], str(codes))
+
+# The panel's report ranges default to 30 days.
+check('dashboard without days is 30 days', ceo('dashboard')[1].get('days') == 30)
+
+# A catalogue file with a repeated or missing id changes nothing.
+before_ids = [p['id'] for p in requests.get(f'{BASE}/api/catalog.php').json()['products']]
+with open(imp, 'w') as fh:
+    json.dump([piece(7, ['S']), piece(7, ['M'])], fh)
+after_ids = [p['id'] for p in requests.get(f'{BASE}/api/catalog.php').json()['products']]
+check('an import with a repeated id changes nothing', after_ids == before_ids)
+check('…and says why', "repeated id 'imp-7'" in open(os.path.join(DATA, 'error.log')).read())
+os.remove(imp)
+
 print(f'\n{ok} passed, {bad} failed')
 sys.exit(1 if bad else 0)

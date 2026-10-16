@@ -2,7 +2,9 @@
    sheets, toasts. Views compose these and never build the same DOM twice. */
 import { SIZES, colById, getProduct, NO_COL, soldOut } from './data.js';
 import { icon } from './icons.js';
-import { $, esc, toman, clamp } from './util.js';
+import {
+  $, esc, toman, clamp, typed,
+} from './util.js';
 import { isWished, toggleWish, state } from './store.js';
 import { L } from './i18n.js';
 
@@ -82,7 +84,7 @@ export function lookTile(l, i) {
     a relaxed one gets nudged down, which is what a shop assistant would say. */
 export function recommendSize(product) {
   const f = state.fit;
-  const have = ['bust', 'waist', 'hip'].filter((k) => Number(f[k]) > 0);
+  const have = ['bust', 'waist', 'hip'].filter((k) => Number(typed(f[k])) > 0);
   /* Only letter sizes have a body chart; a piece may offer just some of them. */
   const offered = SIZES.map((s, i) => (product.sizes.includes(s.id) ? i : -1)).filter((i) => i >= 0);
   if (!offered.length || have.length === 0) return null;
@@ -92,7 +94,7 @@ export function recommendSize(product) {
     let score = 0;
     have.forEach((k) => {
       const [lo, hi] = s[k];
-      const v = Number(f[k]);
+      const v = Number(typed(f[k]));
       score += v < lo ? lo - v : v > hi ? v - hi : 0;
     });
     if (!best || score < best.score) best = { idx, score, id: s.id };
@@ -120,7 +122,7 @@ export function recommendSize(product) {
 }
 
 export const fitSaved = () =>
-  ['bust', 'waist', 'hip'].some((k) => Number(state.fit[k]) > 0);
+  ['bust', 'waist', 'hip'].some((k) => Number(typed(state.fit[k])) > 0);
 
 /* ------------------------------------------------------------- wishlist */
 export function flipWish(id) {
@@ -159,9 +161,35 @@ export function toast(msg, ico = 'check', ms = 2300) {
 let sheetClosed = null;
 const runClosed = () => { const f = sheetClosed; sheetClosed = null; f?.(); };
 
+/* Keyboard focus stays inside an open sheet (it is a modal dialog), and goes
+   back to whatever opened it when it closes. */
+let opener = null;
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([tabindex="-1"]),select,textarea,[tabindex]:not([tabindex="-1"])';
+function trapTab(e) {
+  if (e.key !== 'Tab') return;
+  const sheet = $('#sheetRoot .sheet');
+  if (!sheet) return;
+  const all = [...sheet.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+  if (!all.length) { e.preventDefault(); sheet.focus(); return; }
+  const first = all[0];
+  const last = all[all.length - 1];
+  if (!sheet.contains(document.activeElement)) { e.preventDefault(); first.focus(); return; }
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus();
+  }
+}
+document.addEventListener('keydown', trapTab);
+
 export function openSheet(html, { onMount, onClose, label = '', cls = '', calm = false } = {}) {
   runClosed();
   sheetClosed = onClose || null;
+  /* A sheet replacing another keeps the first opener. */
+  if (!sheetIsOpen()) {
+    const a = document.activeElement;
+    opener = a && a !== document.body ? a : null;
+  }
   const root = $('#sheetRoot');
   root.innerHTML = `<div class="sheet-veil" data-act="sheet-close"></div>
     <div class="sheet ${cls}" role="dialog" aria-modal="true"
@@ -178,7 +206,8 @@ export function openSheet(html, { onMount, onClose, label = '', cls = '', calm =
   onMount?.(sheet);
   /* A sheet the shop opens by itself (calm) takes focus as a whole, so no
      button sits there pre-ringed before anyone has touched anything. */
-  if (calm) { sheet.tabIndex = -1; sheet.focus({ preventScroll: true }); } else {
+  sheet.tabIndex = -1;
+  if (calm) { sheet.focus({ preventScroll: true }); } else {
     sheet.querySelector('input,textarea,select,button:not([data-act="sheet-close"])')
       ?.focus({ preventScroll: true });
   }
@@ -219,6 +248,9 @@ export function closeSheet() {
   root.classList.remove('open');
   document.body.classList.remove('locked');
   runClosed();
+  const back = opener;
+  opener = null;
+  if (back && back.isConnected) back.focus({ preventScroll: true });
   setTimeout(() => { if (!root.classList.contains('open')) root.innerHTML = ''; }, 480);
 }
 export const sheetIsOpen = () => $('#sheetRoot')?.classList.contains('open');

@@ -4,7 +4,7 @@
 import { BRAND } from '../config.js';
 import { SIZES } from '../data.js';
 import { icon } from '../icons.js';
-import { esc, num } from '../util.js';
+import { esc, num, typed } from '../util.js';
 import { state, patch, bagCount } from '../store.js';
 import {
   openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig,
@@ -74,11 +74,12 @@ export function fitSheet() {
       sheet.querySelector('#fitForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const d = new FormData(e.target);
+        /* Kept in Latin digits whatever keyboard typed them (۹۰ → 90). */
         patch('fit', {
-          bust: String(d.get('bust') || '').trim(),
-          waist: String(d.get('waist') || '').trim(),
-          hip: String(d.get('hip') || '').trim(),
-          height: String(d.get('height') || '').trim(),
+          bust: typed(d.get('bust')),
+          waist: typed(d.get('waist')),
+          hip: typed(d.get('hip')),
+          height: typed(d.get('height')),
         });
         closeSheet();
         toast(L('اندازه‌ها ذخیره شد', 'Measurements saved', 'Ölçüler kaydedildi'), 'ruler');

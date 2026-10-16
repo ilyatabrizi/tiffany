@@ -1,15 +1,17 @@
 /* The bag, and the checkout that empties it.
 
    With online ordering switched on in the back office, checkout sends the
-   order to /api/order.php (paid by card on delivery until the gateway is in);
-   switched off, it stays the preview: the order is only written on this
-   phone, so the studio can still walk the flow end to end. */
+   order to /api/order.php (paid by card on delivery until the gateway is in).
+   Switched off, checkout says so and points to Instagram and the stores; it
+   never pretends an order went through. When the shop could not ask the
+   server just now (a shaky connection), the order is still sent and the
+   server decides. */
 import { BRAND } from '../config.js';
 import { getProduct, colourLabel, sizeLabel, isOneSize } from '../data.js';
 import { icon } from '../icons.js';
-import { esc, toman, num, orderCode, tap } from '../util.js';
+import { esc, toman, num, tap } from '../util.js';
 import {
-  state, setQty, clearBag, addOrder, patch,
+  state, setQty, clearBag, addOrder, patch, LINE_MAX, ORDER_MAX,
 } from '../store.js';
 import { shot, empty, openSheet, closeSheet, toast } from '../ui.js';
 import { go } from '../router.js';
@@ -21,12 +23,18 @@ export const subtotal = () => state.bag.reduce((n, l) => {
   return n + (p ? p.price * l.qty : 0);
 }, 0);
 
+/* Pieces that are still in the shop; a line whose piece is gone counts for
+   nothing and shows as «no longer available» with a way to take it out. */
+const liveLines = () => state.bag.filter((l) => getProduct(l.id));
+const pieces = () => liveLines().reduce((n, l) => n + l.qty, 0);
+
 /* Free on every order since 2026-10-07; BRAND.shipping is the one knob. */
 const shippingFor = (sub) => (sub === 0 ? 0 : BRAND.shipping);
 
 /** «M — سفید»: the size code stays Latin, the colour reads in this language. */
 export const lineOpt = (p, l) =>
-  `${isOneSize(l.size) ? esc(sizeLabel(l.size)) : `<span dir="ltr">${esc(l.size)}</span>`} — ${esc(colourLabel(p, l.colour))}`;
+  `${isOneSize(l.size) ? esc(sizeLabel(l.size)) : `<span dir="ltr">${esc(l.size)}</span>`} — ${esc(
+    p.colours?.length ? colourLabel(p, l.colour) : (l.colourName || l.colour))}`;
 
 const totals = (sub, ship) => `
   <div class="totals">
@@ -38,7 +46,18 @@ export { totals };
 
 function lineHTML(l) {
   const p = getProduct(l.id);
-  if (!p) return '';
+  if (!p) {
+    return `
+  <div class="line line-gone" data-line="${esc(l.id)}|${esc(l.size)}|${esc(l.colour)}">
+    <span class="shot"></span>
+    <div>
+      <div class="line-name">${esc(L('این قطعه دیگه موجود نیست', 'This piece is no longer available', 'Bu parça artık mevcut değil'))}</div>
+      <div class="line-foot">
+        <button class="btn btn-line btn-s" data-qty="-99" type="button">${esc(L('برداشتن از سبد', 'Remove', 'Sepetten çıkar'))}</button>
+      </div>
+    </div>
+  </div>`;
+  }
   return `
   <div class="line" data-line="${esc(l.id)}|${esc(l.size)}|${esc(l.colour)}">
     <button class="shot" data-act="product" data-id="${p.id}" type="button">
@@ -85,24 +104,42 @@ function orderError(status, j) {
   return L('سفارش ثبت نشد؛ دوباره امتحان کن.', 'The order did not go through — please try again.', 'Sipariş alınamadı; tekrar dene.');
 }
 
+/* While online ordering is switched off: say so plainly, keep the bag, and
+   point to where an order can be placed today. */
+function closedSheet() {
+  openSheet(`
+    <h2>${esc(L('خرید آنلاین به‌زودی', 'Online ordering opens soon', 'Online sipariş yakında'))}</h2>
+    <p class="lede">${esc(L(
+    'سفارش آنلاین هنوز باز نشده. تا اون موقع می‌تونی از اینستاگرام یا شعبه‌های تیفانی سفارش بدی؛ سبدت همین‌جا می‌مونه.',
+    'Online ordering is not open yet. Until then you can order on Instagram or at a TIFFANY store — your bag stays right here.',
+    'Online sipariş henüz açılmadı. O zamana kadar Instagram’dan ya da TIFFANY mağazalarından sipariş verebilirsin; sepetin burada kalır.'))}</p>
+    <div style="height:6px"></div>
+    <a class="btn btn-ink btn-block" href="${esc(BRAND.instagramUrl)}" target="_blank" rel="noopener">${esc(L('سفارش از اینستاگرام', 'Order on Instagram', 'Instagram’dan sipariş ver'))}</a>
+    <div style="height:9px"></div>
+    <button class="btn btn-line btn-block" data-act="nav" data-to="/contact" type="button">${esc(L('شعبه‌ها و تماس', 'Stores and contact', 'Mağazalar ve iletişim'))}</button>
+    <div style="height:9px"></div>
+    <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">${esc(L('بستن', 'Close', 'Kapat'))}</button>`,
+  { label: L('خرید آنلاین به‌زودی', 'Online ordering opens soon', 'Online sipariş yakında') });
+}
+
+/* One order on its way to the server at a time, whichever sheet sent it:
+   closing the sheet mid-request and checking out again must not order twice. */
+let placing = false;
+
 /* With the store switched on (back office → Settings), the order goes to the
    shop for real: the server prices it, keeps it and the team sees it in the
-   panel. Switched off, checkout stays the preview it always was. */
+   panel. */
 function checkoutSheet() {
+  if (live.fresh && !live.storeOpen) { closedSheet(); return; }
   const sub = subtotal();
   const ship = shippingFor(sub);
   const { profile, address } = state;
-  const real = live.storeOpen;
 
   openSheet(`
     <h2>${esc(L('تکمیل خرید', 'Checkout', 'Ödeme'))}</h2>
-    <p class="lede">${esc(real
-    ? L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${'۳'} روز کاری طول می‌کشه.`,
-      `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
-      `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
-    : L('این فقط پیش‌نمایشه؛ نه پولی کم می‌شه، نه چیزی فرستاده می‌شه.',
-      'Preview only — no card is charged and nothing is sent.',
-      'Yalnızca önizleme; karttan para çekilmez, hiçbir şey gönderilmez.'))}</p>
+    <p class="lede">${esc(L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
+    `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
+    `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`))}</p>
 
     <form id="coForm" novalidate>
       <p class="eyebrow" style="margin:18px 0 10px">${esc(L('برای کی', 'Who it is for', 'Kimin için'))}</p>
@@ -129,9 +166,7 @@ function checkoutSheet() {
       <p class="eyebrow" style="margin:20px 0 10px">${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}</p>
       <div class="sizes">
         <button class="chip on" data-pay="card" type="button">${icon('card', 15)}${esc(L('کارت، موقع تحویل', 'Card, on delivery', 'Kapıda kart'))}</button>
-        ${real
-    ? `<button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>`
-    : `<button class="chip" data-pay="online" type="button">${icon('lock', 15)}${esc(L('پرداخت آنلاین', 'Pay online', 'Online öde'))}</button>`}
+        <button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>
       </div>
 
       ${totals(sub, ship)}
@@ -143,16 +178,9 @@ function checkoutSheet() {
   {
     label: L('تکمیل خرید', 'Checkout', 'Ödeme'),
     onMount(sheet) {
-      let pay = 'card';
-      sheet.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-pay]');
-        if (!b) return;
-        pay = b.dataset.pay;
-        sheet.querySelectorAll('[data-pay]').forEach((x) => x.classList.toggle('on', x === b));
-      });
-
       sheet.querySelector('#coForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (placing) return;
         const form = e.target;
         const f = new FormData(form);
         const get = (k) => String(f.get(k) || '').trim();
@@ -164,44 +192,56 @@ function checkoutSheet() {
         patch('profile', { name: get('name'), phone: get('phone') });
         patch('address', { line: get('line'), city: get('city'), postal: get('postal') });
 
-        let placed;
-        if (real) {
-          const btn = form.querySelector('[type="submit"]');
-          btn.disabled = true;
-          try {
-            const r = await fetch('api/order.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                items: state.bag.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
-                name: get('name'), phone: get('phone'), city: get('city'),
-                address: get('line'), postal: get('postal'), website: get('website'),
-              }),
-            });
-            const j = await r.json().catch(() => ({}));
-            if (!r.ok || !j.ok) {
-              if (j.error === 'closed') live.storeOpen = false;
-              toast(orderError(r.status, j), 'info', 4200);
-              return;
-            }
-            placed = {
-              code: j.code, placed: j.created_at * 1000, pay: 'card',
-              subtotal: j.subtotal, shipping: j.shipping, total: j.total,
-              server: true, status: j.status, phone: get('phone'),
-            };
-          } catch {
-            toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
-            return;
-          } finally { btn.disabled = false; }
-        } else {
-          placed = {
-            code: orderCode(Date.now() + get('phone')), placed: Date.now(), pay,
-            subtotal: sub, shipping: ship, total: sub + ship,
-          };
+        if (state.bag.some((l) => !getProduct(l.id))) {
+          toast(L('اول قطعه‌هایی که دیگه موجود نیستن رو از سبد بردار.',
+            'Please remove the pieces that are no longer available first.',
+            'Önce artık mevcut olmayan parçaları sepetten çıkar.'), 'info', 3600);
+          return;
         }
+
+        let placed;
+        const btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
+        placing = true;
+        try {
+          const r = await fetch('api/order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: state.bag.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
+              name: get('name'), phone: get('phone'), city: get('city'),
+              address: get('line'), postal: get('postal'), website: get('website'),
+            }),
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || !j.ok) {
+            if (j.error === 'closed') live.storeOpen = false;
+            toast(orderError(r.status, j), 'info', 4200);
+            return;
+          }
+          placed = {
+            code: j.code, placed: j.created_at * 1000, pay: 'card',
+            subtotal: j.subtotal, shipping: j.shipping, total: j.total,
+            server: true, status: j.status, phone: get('phone'),
+          };
+        } catch {
+          toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
+          return;
+        } finally {
+          placing = false;
+          btn.disabled = false;
+        }
+        /* Each line keeps what it was sold as — name, photo, colour and the
+           price paid — so the order reads the same after the catalogue moves. */
         addOrder({
           ...placed,
-          items: state.bag.map((l) => ({ ...l })),
+          items: state.bag.map((l) => {
+            const p = getProduct(l.id);
+            return {
+              ...l, name: p?.name || '', img: p?.img || '', price: p?.price || 0,
+              colourName: p ? colourLabel(p, l.colour) : '',
+            };
+          }),
           address: { ...state.address },
           step: 0,
         });
@@ -233,16 +273,16 @@ export default {
 
     const sub = subtotal();
     const ship = shippingFor(sub);
-    const count = state.bag.reduce((n, l) => n + l.qty, 0);
+    const count = pieces();
 
     return `
     <div class="wrap">
       <div class="topgap"></div>
       ${h1}
-      <p class="lede" style="margin-bottom:6px">${L(
-        `${num(count)} قطعه، ۶۰ دقیقه برات نگهش می‌داریم.`,
-        `${num(count)} item${count === 1 ? '' : 's'} held for 60 minutes.`,
-        `${num(count)} parça, 60 dakika senin için ayrıldı.`)}</p>
+      <p class="lede" style="margin-bottom:6px">${esc(L(
+        `${num(count)} قطعه توی سبدت.`,
+        `${num(count)} item${count === 1 ? '' : 's'} in your bag.`,
+        `Sepetinde ${num(count)} parça.`))}</p>
 
       <p class="shipnote">${icon('truck', 17)}<span>${esc(L(
         'ارسال رایگانه و نهایتاً ۳ روز کاری طول می‌کشه.',
@@ -255,7 +295,7 @@ export default {
       ${totals(sub, ship)}
 
       <div style="height:14px"></div>
-      <button class="btn btn-ink btn-block" data-act="checkout" type="button">
+      <button class="btn btn-ink btn-block" data-act="checkout" type="button" ${count ? '' : 'disabled'}>
         ${esc(L('تکمیل خرید', 'Checkout', 'Ödemeye geç'))} — ${toman(sub + ship)}</button>
       <div style="height:9px"></div>
       <button class="btn btn-quiet btn-block" data-act="nav" data-to="/shop" type="button">
@@ -272,7 +312,15 @@ export default {
         const [id, size, colour] = row.dataset.line.split('|');
         const line = state.bag.find((l) => l.id === id && l.size === size && l.colour === colour);
         if (!line) return;
-        setQty(id, size, colour, line.qty + Number(q.dataset.qty));
+        const step = Number(q.dataset.qty);
+        if (!setQty(id, size, colour, line.qty + step)) {
+          if (step > 0) {
+            toast(L(`از هر قطعه حداکثر ${num(LINE_MAX)} تا و توی هر سفارش حداکثر ${num(ORDER_MAX)} قطعه.`,
+              `Up to ${LINE_MAX} of a piece and ${ORDER_MAX} pieces per order.`,
+              `Bir parçadan en fazla ${LINE_MAX}, siparişte en fazla ${ORDER_MAX} adet.`), 'info', 3200);
+          }
+          return;
+        }
         tap();
         document.dispatchEvent(new CustomEvent('bag:changed'));
         document.dispatchEvent(new CustomEvent('view:refresh'));

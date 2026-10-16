@@ -148,8 +148,10 @@ export const LOOKS = [
 ];
 
 /* ------------------------------------------------------------- lookups */
-export const byId = {};
-export const colById = Object.fromEntries(COLLECTIONS.map((c) => [c.id, c]));
+/* Prototype-free maps: an id such as «constructor» or «__proto__» typed into
+   the address bar finds nothing instead of a built-in. */
+export const byId = Object.create(null);
+export const colById = Object.assign(Object.create(null), Object.fromEntries(COLLECTIONS.map((c) => [c.id, c])));
 /** What a piece outside every collection borrows: a neutral dot, no frame. */
 export const NO_COL = { id: '', name: '', accent: '#8E8E93', accent2: '#8E8E93', img: '' };
 export const getProduct = (id) => byId[id] || null;

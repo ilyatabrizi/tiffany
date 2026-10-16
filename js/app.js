@@ -3,14 +3,19 @@ import { L, dir } from './i18n.js';
 import { BRAND } from './config.js';
 import { icon } from './icons.js';
 import { $, $$, num } from './util.js';
-import { start, onRoute, go, back, parse, recallScroll } from './router.js';
+import {
+  start, onRoute, go, back, parse, savedScroll, keepScroll as rememberAt,
+} from './router.js';
 import { flipWish, closeSheet, sheetIsOpen, toast } from './ui.js';
-import { state, bagCount, isWished } from './store.js';
+import {
+  state, bagCount, isWished, save, LINE_MAX,
+} from './store.js';
+import { getProduct, isOneSize } from './data.js';
 import { promptInstall, shouldOfferInstall, installSheet } from './install.js';
 import { needsConsent, askConsent } from './consent.js';
 import { mountColour, applyColourPref } from './colour.js';
 import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
-import { loadCatalogue, beacon } from './live.js';
+import { loadCatalogue, beacon, live } from './live.js';
 
 import home from './views/home.js';
 import shop from './views/shop.js';
@@ -55,7 +60,7 @@ const pill = $('#tabPill');
    without this every navigation would leave another live handler behind. One
    controller per render, aborted before the next. */
 let viewAbort = null;
-let current = null;
+let current = null;   // eslint-disable-line no-unused-vars -- the view on screen
 
 /* ------------------------------------------------------------------ tabs */
 function buildTabs() {
@@ -137,16 +142,25 @@ function wireTopbar(view, parts, signal) {
 }
 
 /* ---------------------------------------------------------------- render */
-function render(route, { keepScroll = false } = {}) {
+let shownHash = '';
+let shownPath = '';
+
+function render(route, { keepScroll = false, how = 'push' } = {}) {
   const key = ['p', 'c'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
   const view = VIEWS[key] || VIEWS['/'];
-  const same = current === key;
   const y = window.scrollY;
+  /* Remember where the page being left was scrolled to, so a step back
+     returns to the same spot in the grid rather than to the top. */
+  if (!keepScroll) rememberAt(shownHash, y);
+  const samePath = route.path === shownPath;
   current = key;
+  shownHash = location.hash || '#/';
+  shownPath = route.path;
 
   viewAbort?.abort();
   viewAbort = new AbortController();
   closeSheet();
+  if (isLooksOpen()) closeLooks();
 
   app.innerHTML = view.render(route.parts, route.q);
   view.mount?.(app, viewAbort.signal);
@@ -159,9 +173,12 @@ function render(route, { keepScroll = false } = {}) {
      bars stacked at the bottom of a phone is one too many. */
   tabbar.classList.toggle('hide', Boolean(view.hideTabs));
 
-  const memKey = route.path + location.search;
+  /* A refresh stays put; a step back returns to where that page was left; a
+     new filter on the same page keeps the place; anything else starts at
+     the top. */
+  const back = how === 'back' ? savedScroll(shownHash) : undefined;
   window.scrollTo({
-    top: keepScroll ? y : (same ? recallScroll(memKey) : 0),
+    top: keepScroll ? y : back !== undefined ? back : (samePath && how !== 'start' ? y : 0),
     behavior: 'auto',
   });
 
@@ -263,12 +280,44 @@ function liftVeil(ready, onGone) {
   setTimeout(lift, 12000);    // nothing may trap the shop behind the veil
 }
 
+/* ---------------------------------------------------- what the phone kept */
+/* The bag and the saved list outlive a catalogue. Once a fresh one is in,
+   lines whose piece, size or colour is gone are dropped, old-style lines
+   (a translated size or colour name instead of its code) are rewritten to
+   the codes the server expects, and doubles are merged. */
+let tidied = 0;
+function tidyStored() {
+  const merged = new Map();
+  for (const l of state.bag) {
+    const p = l && getProduct(l.id);
+    const size = p && (isOneSize(l.size) ? 'OS' : l.size);
+    const c = p && p.colours.find((x) => x.hex === l.colour || x.all.includes(l.colour));
+    if (!p || !p.sizes.includes(size) || !c) { tidied += 1; continue; }
+    const key = `${p.id}|${size}|${c.hex}`;
+    const qty = Math.min(LINE_MAX, (merged.get(key)?.qty || 0) + Math.max(1, Math.floor(Number(l.qty) || 1)));
+    merged.set(key, { id: p.id, size, colour: c.hex, qty });
+  }
+  const bag = [...merged.values()];
+  const wish = state.wish.filter((id) => getProduct(id));
+  if (JSON.stringify(bag) !== JSON.stringify(state.bag) || wish.length !== state.wish.length) {
+    state.bag = bag;
+    state.wish = wish;
+    save();
+  }
+}
+
 /* ------------------------------------------------------------ the popups */
 /* Once the veil is gone: the cookie question first (if this browser has not
    answered it), then the home-screen sheet on phones (js/install.js decides
    whether it is due). Never on top of something the visitor opened
    themselves — a sheet, the stories — and never while the tab is hidden. */
 function popups() {
+  if (tidied) {
+    toast(L('چند قطعه که دیگه موجود نیستن از سبدت برداشته شدن.',
+      'A few pieces that are no longer available were taken out of your bag.',
+      'Artık mevcut olmayan birkaç parça sepetinden çıkarıldı.'), 'info', 3600);
+    tidied = 0;
+  }
   let tries = 0;
   const when = (fn, ms) => setTimeout(function wait() {
     if (document.hidden || sheetIsOpen() || isLooksOpen()) {
@@ -302,7 +351,8 @@ buildTabs();
 const catalogue = loadCatalogue();
 liftVeil(catalogue, popups);
 catalogue.finally(() => {
-  onRoute((r) => render(r));
+  if (live.fresh) tidyStored();
+  onRoute((r, how) => render(r, { how }));
   start();
 });
 
