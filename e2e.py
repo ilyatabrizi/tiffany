@@ -127,9 +127,23 @@ def run(shots_only=False):
 
         # ------------------------------------------------------------ home
         print('\nhome')
+        # Clock the veil: when the opening finishes, and when the veil starts
+        # to lift. It should sit still, finished, for 1.5s before lifting.
+        page.add_init_script("""addEventListener('DOMContentLoaded', () => {
+            const b = document.getElementById('boot'); if (!b) return;
+            const t = window.__veil = { end: 0, gone: 0 };
+            b.getAnimations({ subtree: true }).forEach((a) => a.finished.then(() => {
+              t.end = Math.max(t.end, performance.now()); }));
+            new MutationObserver(() => { if (!t.gone && b.classList.contains('gone')) t.gone = performance.now(); })
+              .observe(b, { attributes: true });
+        });""")
         page.goto(BASE, wait_until='networkidle')
-        page.wait_for_timeout(2300)          # the boot veil lifts
+        page.wait_for_selector('#boot', state='detached', timeout=8000)   # the boot veil lifts
         check('boot veil lifted', page.locator('#boot').count() == 0)
+        v = page.evaluate('window.__veil') or {}
+        held = (v.get('gone') or 0) - (v.get('end') or 0)
+        check('boot: the finished opening holds 1–2s before the veil lifts',
+              v.get('end') and 1400 <= held <= 2000, f'{held:.0f}ms (opening ended {v.get("end", 0):.0f}ms)')
         check('page is Persian and right-to-left', page.evaluate(
             "document.documentElement.lang + '/' + document.documentElement.dir") == 'fa/rtl')
         check('IRANYekanX is the body face', page.evaluate(

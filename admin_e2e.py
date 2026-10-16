@@ -129,7 +129,7 @@ with sync_playwright() as pw:
     s = shop_ctx.new_page()
     watch(s)
     s.goto(BASE + '/#/shop?c=hoodie', wait_until='networkidle')
-    s.wait_for_timeout(2400)
+    s.wait_for_selector('#boot', state='detached', timeout=8000)
     names = s.locator('.grid-p .card-name').all_inner_texts()
     check('the new piece is in its category', names == ['هودی کرم'], str(names))
     src = s.locator('.grid-p .card img').first.get_attribute('src') or ''
@@ -162,7 +162,7 @@ with sync_playwright() as pw:
     shot(a, '32-admin-settings', full=True)
 
     s.goto(BASE + '/', wait_until='networkidle')
-    s.wait_for_timeout(2200)
+    s.wait_for_selector('#boot', state='detached', timeout=8000)
     s.goto(BASE + '/#/bag')
     s.wait_for_timeout(800)
     s.click('[data-act="checkout"]')
@@ -276,7 +276,7 @@ with sync_playwright() as pw:
     b.uncheck('[data-vis="cream-hoodie"]', force=True)
     b.wait_for_timeout(900)
     s.goto(BASE + '/', wait_until='networkidle')
-    s.wait_for_timeout(2200)
+    s.wait_for_selector('#boot', state='detached', timeout=8000)
     s.goto(BASE + '/#/shop?c=hoodie')
     s.wait_for_timeout(800)
     check('a hidden piece leaves the shop', s.locator('.grid-p .card').count() == 0)

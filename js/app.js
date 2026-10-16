@@ -6,7 +6,7 @@ import { $, $$, num } from './util.js';
 import { start, onRoute, go, back, parse, recallScroll } from './router.js';
 import { flipWish, closeSheet, sheetIsOpen, toast } from './ui.js';
 import { state, bagCount, isWished } from './store.js';
-import { promptInstall, standalone, shouldOfferInstall, installSheet } from './install.js';
+import { promptInstall, shouldOfferInstall, installSheet } from './install.js';
 import { needsConsent, askConsent } from './consent.js';
 import { mountColour, applyColourPref } from './colour.js';
 import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
@@ -231,21 +231,35 @@ function applyTheme() {
 }
 
 /* -------------------------------------------------------------- the boot */
-/* The veil lifts once the fonts AND the catalogue are in (a font that never
-   resolves gives up after 2.6s; the catalogue has its own 9s limit), then
-   holds long enough to read Alpha's line. */
+/* The veil lifts once three things are true: the fonts are in (a font that
+   never resolves gives up after 2.6s), the catalogue is in (its own 9s
+   limit), and the opening has finished playing and then held, finished,
+   for HOLD ms, so the wordmark and Alpha's line sit still a moment before
+   the shop appears. The hold counts from the end of the animation, not from
+   the load, so a slow catalogue does not stack a second wait on top. */
+const HOLD = 1500;
+const OPENING_MS = 1150;      // the wipe ends at 1.12s, Alpha's line at 1.15s
 function liftVeil(ready, onGone) {
   const boot = $('#boot');
   if (!boot) { onGone(); return; }
   let lifted = false;
-  const lift = () => (lifted ? null : (lifted = true, setTimeout(() => {
+  const lift = () => {
+    if (lifted) return;
+    lifted = true;
     boot.classList.add('gone');
     setTimeout(() => { boot.remove(); onGone(); }, 560);
-  }, standalone() ? 1150 : 1000)));
+  };
   const fonts = document.fonts?.ready
     ? Promise.race([document.fonts.ready, new Promise((r) => { setTimeout(r, 2600); })])
     : Promise.resolve();
-  Promise.all([fonts.catch(() => {}), ready.catch(() => {})]).then(lift);
+  /* The animations' own finish line; already-finished ones resolve at once.
+     Without getAnimations, the opening's length from page start stands in. */
+  const anims = boot.getAnimations ? boot.getAnimations({ subtree: true }) : null;
+  const played = anims
+    ? Promise.all(anims.map((a) => a.finished.catch(() => {})))
+    : new Promise((r) => { setTimeout(r, Math.max(0, OPENING_MS - performance.now())); });
+  const held = played.then(() => new Promise((r) => { setTimeout(r, HOLD); }));
+  Promise.all([fonts.catch(() => {}), ready.catch(() => {}), held]).then(lift);
   setTimeout(lift, 12000);    // nothing may trap the shop behind the veil
 }
 
