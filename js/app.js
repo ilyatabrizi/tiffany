@@ -8,7 +8,7 @@ import {
 } from './router.js';
 import { flipWish, closeSheet, sheetIsOpen, toast } from './ui.js';
 import {
-  state, bagCount, isWished, save, LINE_MAX,
+  state, bagCount, isWished, save, LINE_MAX, ORDER_MAX,
 } from './store.js';
 import { getProduct, isOneSize } from './data.js';
 import { promptInstall, shouldOfferInstall, installSheet } from './install.js';
@@ -297,7 +297,14 @@ function tidyStored() {
     const qty = Math.min(LINE_MAX, (merged.get(key)?.qty || 0) + Math.max(1, Math.floor(Number(l.qty) || 1)));
     merged.set(key, { id: p.id, size, colour: c.hex, qty });
   }
-  const bag = [...merged.values()];
+  /* An old bag could hold more than one order may: keep the first twenty. */
+  const bag = [];
+  let total = 0;
+  for (const l of merged.values()) {
+    const qty = Math.min(l.qty, ORDER_MAX - total);
+    if (qty < l.qty) tidied += 1;
+    if (qty > 0) { bag.push({ ...l, qty }); total += qty; }
+  }
   const wish = state.wish.filter((id) => getProduct(id));
   if (JSON.stringify(bag) !== JSON.stringify(state.bag) || wish.length !== state.wish.length) {
     state.bag = bag;

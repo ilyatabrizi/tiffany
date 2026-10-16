@@ -427,11 +427,20 @@ big = [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 5}] * 1 + \
        {'id': 'alphabet-tee', 'size': 'S', 'colour': '#A9C9E8', 'qty': 5},
        {'id': 'alphabet-tee', 'size': 'L', 'colour': '#A9C9E8', 'qty': 5}]
 r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000003', 'items': big})
-check('more than 20 pieces in one order is refused', r.status_code == 422 and r.json()['field'] == 'items', r.text[:160])
+check('more than 20 pieces in one order is refused', r.status_code == 422 and r.json()['field'] == 'count', r.text[:160])
+r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000005',
+                  'items': [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 6}]})
+check('6 of one line is refused, not quietly cut to 5', r.status_code == 422 and r.json()['field'] == 'count', r.text[:160])
+ok_order = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000006',
+                         'items': [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 2}]}).json()
+check('a placed order answers with its priced lines', ok_order.get('items') == [
+    {'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 2, 'price': 2450000}], str(ok_order.get('items')))
 one = [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 1}]
 codes = [requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000004', 'items': one}).status_code
          for _ in range(4)]
 check('a 4th unconfirmed order from one phone waits', codes == [200, 200, 200, 422], str(codes))
+r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09350000004', 'items': one})
+check('…and says so (not «wrong number»)', r.json().get('field') == 'pending', r.text[:120])
 
 # The panel's report ranges default to 30 days.
 check('dashboard without days is 30 days', ceo('dashboard')[1].get('days') == 30)

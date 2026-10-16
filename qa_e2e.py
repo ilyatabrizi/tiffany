@@ -120,6 +120,22 @@ with sync_playwright() as pw:
     check('the bag counts what it shows', '۲ قطعه' in page.inner_text('#app'))
     ctx.close()
 
+    big = [{'id': i, 'size': 'S', 'colour': c, 'qty': 9} for i, c in [
+        ('leather-jacket', '#111111'), ('chocolate-jeans', '#4B3226'), ('leather-trench', '#111111'),
+        ('denim-jacket', '#1C2230'), ('gabardine-trench', '#1F2A44'), ('bomber-jacket', '#6B4430')]]
+    ctx, page = fresh(browser, saved={'bag': big, 'wish': [], 'orders': []})
+    st = state(page)
+    check('an old bag of 54 is trimmed to one order (20), 5 a line at most',
+          sum(l['qty'] for l in st['bag']) == 20 and max(l['qty'] for l in st['bag']) == 5,
+          str([l['qty'] for l in st['bag']]))
+    page.goto(BASE + '/#/bag')
+    page.wait_for_timeout(600)
+    page.locator('.line').first.locator('[data-qty="-1"]').click()
+    page.wait_for_timeout(400)
+    check('− on a full bag takes one off (never zero or below)',
+          state(page)['bag'][0]['qty'] == 4, str([l['qty'] for l in state(page)['bag']]))
+    ctx.close()
+
     # -------------------------------------------- closed shop, no fake orders
     print('\ncheckout while ordering is off')
     ctx, page = fresh(browser)

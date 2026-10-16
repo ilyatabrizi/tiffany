@@ -241,6 +241,11 @@ CREATE TABLE IF NOT EXISTS devseen (day TEXT NOT NULL, vid TEXT NOT NULL, PRIMAR
 PRAGMA user_version = 2;
 SQL);
     }
+    if ($version < 3) {
+        /* The old-attempt sweep runs inside page-view writes; without this it
+           reads the whole table. */
+        $db->exec('CREATE INDEX IF NOT EXISTS attempts_at ON attempts(at); PRAGMA user_version = 3;');
+    }
 }
 
 function tf_migrate_1(PDO $db): void
@@ -360,6 +365,9 @@ function tf_ip(): string
 function tf_ip_key(): string
 {
     $ip = tf_ip();
+    if (stripos($ip, '::ffff:') === 0 && strpos($ip, '.') !== false) {
+        return substr($ip, 7);          // an IPv4 visitor written the IPv6 way
+    }
     if (strpos($ip, ':') !== false) {
         $bin = @inet_pton($ip);
         if ($bin !== false && strlen($bin) === 16) {

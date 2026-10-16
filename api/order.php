@@ -69,7 +69,10 @@ foreach (array_slice((array) ($in['items'] ?? []), 0, 40) as $it) {
     }
     $key = "$id|$size|$colour";
     $want[$key] = ['id' => $id, 'size' => $size, 'colour' => $colour,
-        'qty' => min(TF_LINE_MAX, ($want[$key]['qty'] ?? 0) + $qty)];
+        'qty' => ($want[$key]['qty'] ?? 0) + $qty];
+    if ($want[$key]['qty'] > TF_LINE_MAX) {
+        throw new TfInvalid('count', 'از هر قطعه حداکثر ' . TF_LINE_MAX . ' تا می‌شه گرفت.');
+    }
 }
 foreach ($want as $w) {
     $units += $w['qty'];
@@ -78,14 +81,14 @@ if (!$want) {
     throw new TfInvalid('items', 'سبدت خالیه.');
 }
 if ($units > TF_ORDER_MAX) {
-    throw new TfInvalid('items', 'توی هر سفارش حداکثر ' . TF_ORDER_MAX . ' قطعه می‌شه گرفت.');
+    throw new TfInvalid('count', 'توی هر سفارش حداکثر ' . TF_ORDER_MAX . ' قطعه می‌شه گرفت.');
 }
 $open = db()->prepare("SELECT COUNT(*) FROM orders WHERE phone = ? AND status = 'new'");
 $open->execute([$phone]);
 $pending = (int) $open->fetchColumn();
 $open->closeCursor();
 if ($pending >= 3) {
-    throw new TfInvalid('phone', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
+    throw new TfInvalid('pending', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
 }
 
 $db = db();
@@ -162,4 +165,6 @@ try {
 tf_note_attempt('order:ok:' . tf_ip_key());
 
 tf_json(['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
-    'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now]);
+    'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now,
+    'items' => array_map(static fn ($i) => ['id' => $i['id'], 'size' => $i['size'], 'colour' => $i['colour'],
+        'qty' => $i['qty'], 'price' => $i['price']], $items)]);

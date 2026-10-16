@@ -95,6 +95,16 @@ function orderError(status, j) {
       'Online sipariş şu an kapalı; mağazadan ya da Instagram’dan sipariş ver.');
   }
   if (status === 429) return L('چند دقیقه دیگه دوباره امتحان کن.', 'Please try again in a few minutes.', 'Birkaç dakika sonra tekrar dene.');
+  if (status === 422 && j.field === 'pending') {
+    return L('برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.',
+      'A few orders from this number are still waiting to be confirmed — the TIFFANY team will call you shortly.',
+      'Bu numaradan birkaç sipariş onay bekliyor; TIFFANY ekibi kısa süre içinde seni arayacak.');
+  }
+  if (status === 422 && j.field === 'count') {
+    return L(`از هر قطعه حداکثر ${num(LINE_MAX)} تا و توی هر سفارش حداکثر ${num(ORDER_MAX)} قطعه.`,
+      `Up to ${LINE_MAX} of a piece and ${ORDER_MAX} pieces per order.`,
+      `Bir parçadan en fazla ${LINE_MAX}, siparişte en fazla ${ORDER_MAX} adet.`);
+  }
   if (status === 422 && ORDER_ERR[j.field]) return ORDER_ERR[j.field]();
   if (status === 422 && j.field === 'items') {
     return L(j.message || 'یکی از قطعه‌های سبدت دیگه موجود نیست.',
@@ -180,7 +190,10 @@ function checkoutSheet() {
     onMount(sheet) {
       sheet.querySelector('#coForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (placing) return;
+        if (placing) {
+          toast(L('سفارشت داره ثبت می‌شه…', 'Your order is on its way…', 'Siparişin gönderiliyor…'), 'info');
+          return;
+        }
         const form = e.target;
         const f = new FormData(form);
         const get = (k) => String(f.get(k) || '').trim();
@@ -200,15 +213,21 @@ function checkoutSheet() {
         }
 
         let placed;
+        /* What is sent is what is kept: a copy taken now, not the bag as it is
+           when the answer comes back. */
+        const lines = state.bag.map((l) => ({ ...l }));
         const btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
         placing = true;
+        const ctl = new AbortController();
+        const giveUp = setTimeout(() => ctl.abort(), 30000);
         try {
           const r = await fetch('api/order.php', {
             method: 'POST',
+            signal: ctl.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              items: state.bag.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
+              items: lines.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
               name: get('name'), phone: get('phone'), city: get('city'),
               address: get('line'), postal: get('postal'), website: get('website'),
             }),
@@ -222,23 +241,28 @@ function checkoutSheet() {
           placed = {
             code: j.code, placed: j.created_at * 1000, pay: 'card',
             subtotal: j.subtotal, shipping: j.shipping, total: j.total,
-            server: true, status: j.status, phone: get('phone'),
+            server: true, status: j.status, phone: get('phone'), lines: j.items || [],
           };
         } catch {
           toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
           return;
         } finally {
+          clearTimeout(giveUp);
           placing = false;
           btn.disabled = false;
         }
         /* Each line keeps what it was sold as — name, photo, colour and the
-           price paid — so the order reads the same after the catalogue moves. */
+           price the server charged — so the order reads the same after the
+           catalogue moves. */
+        const charged = placed.lines;
+        delete placed.lines;
         addOrder({
           ...placed,
-          items: state.bag.map((l) => {
+          items: lines.map((l) => {
             const p = getProduct(l.id);
+            const s = charged.find((x) => x.id === l.id && x.size === l.size && x.colour === l.colour);
             return {
-              ...l, name: p?.name || '', img: p?.img || '', price: p?.price || 0,
+              ...l, name: p?.name || '', img: p?.img || '', price: s?.price || p?.price || 0,
               colourName: p ? colourLabel(p, l.colour) : '',
             };
           }),

@@ -65,9 +65,12 @@ export function setQty(id, size, colour, qty) {
   const i = state.bag.findIndex((l) => lineKey(l.id, l.size, l.colour) === key);
   if (i < 0) return false;
   if (qty <= 0) { state.bag.splice(i, 1); save(); return true; }
-  const others = bagCount() - state.bag[i].qty;
-  const want = Math.min(LINE_MAX, qty, ORDER_MAX - others);
-  if (want === state.bag[i].qty) return false;
+  const cur = state.bag[i].qty;
+  const others = bagCount() - cur;
+  /* Going down is always allowed; going up stops at the line and bag limits
+     (and never below where it already is). */
+  const want = qty < cur ? Math.min(LINE_MAX, qty) : Math.min(LINE_MAX, qty, Math.max(cur, ORDER_MAX - others));
+  if (want === cur) return false;
   state.bag[i].qty = want;
   save();
   return true;
