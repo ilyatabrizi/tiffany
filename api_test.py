@@ -9,7 +9,9 @@ import io
 import json
 import os
 import re
+import sqlite3
 import sys
+import time
 
 import requests
 from PIL import Image
@@ -197,6 +199,20 @@ code, r = ceo('traffic', days=7)
 check('views counted, bots and junk ignored', r['views'] == 5, str(r['views']))
 check('one visitor, however many pages', r['visitors'] == 1, str(r['visitors']))
 check('most-viewed product first', r['products'][0]['id'] == 'cream-hoodie' and r['products'][0]['n'] == 2)
+# the database held by something else (live, 2026-10-16: "database is locked @ hit.php:30")
+hold = sqlite3.connect(os.path.join(DATA, 'tiffany.sqlite'), timeout=1, isolation_level=None)
+hold.execute('BEGIN IMMEDIATE')
+t0 = time.time()
+x = requests.post(f'{BASE}/api/hit.php', data=json.dumps({'k': 'shop'}), headers=ua)
+waited = time.time() - t0
+hold.execute('ROLLBACK')
+hold.close()
+log = open(os.path.join(DATA, 'error.log')).read() if os.path.exists(os.path.join(DATA, 'error.log')) else ''
+check('a busy database skips the view quietly (204, no error)', x.status_code == 204 and 'hit.php' not in log,
+      f'{x.status_code}, {waited:.1f}s')
+check('…without holding the visitor more than ~2 s', waited < 3.5, f'{waited:.1f}s')
+code, r = ceo('traffic', days=7)
+check('…and that view is simply not counted', r['views'] == 5, str(r['views']))
 
 print('\ndashboard')
 code, d = ceo('dashboard', days=30)

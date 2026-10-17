@@ -344,3 +344,11 @@ methods are in place and must stay: an empty `3485842.txt` at the web root, and
   sms.ir never slows checkout; a failure only lands in `error.log` (phone half hidden).
 - Tests: `api_test.py` runs the SMS checks against `tests/sms_mock.php`, a stand-in for
   sms.ir (`SMS_MOCK_LOG=… php -S 127.0.0.1:8139 tests/sms_mock.php`).
+
+### Page-view counter under a busy database — 2026-10-17
+
+The live `error.log` had one line from the 2026-10-16 traffic test: `database is locked @
+hit.php:30`. A page-view ping now waits at most 2 s for the database; if it is still busy
+the view is simply not counted (204, nothing logged), so a burst never turns into errors
+or held PHP workers. Orders keep the full 8 s wait. Checked in `api_test.py` by holding a
+write lock while a ping comes in.

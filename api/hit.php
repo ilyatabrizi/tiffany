@@ -23,30 +23,45 @@ if (tf_is_bot($ua) || !hit_page_ok($k)) {
     exit;
 }
 
-[$day, $vid] = tf_visitor($ua);
-$dev = tf_consented() ? tf_device_clean($in['d'] ?? null) : null;
+/* A page view is worth nothing next to an order: if the database is busy
+   (a burst, or the host slowing this account down), the view is simply not
+   counted — no wait, no 500, nothing in error.log. */
+try {
+    [$day, $vid] = tf_visitor($ua);
+    $dev = tf_consented() ? tf_device_clean($in['d'] ?? null) : null;
 
-$db = db();
-$db->exec('BEGIN IMMEDIATE');
-/* A flood from one address stops counting (the shop never notices). */
-if (tf_too_many('hit:' . tf_ip_key(), 1500, 3600)) {
-    $db->exec('ROLLBACK');
-    http_response_code(204);
-    exit;
+    $db = db();
+    $db->exec('PRAGMA busy_timeout = 2000');
+    $db->exec('BEGIN IMMEDIATE');
+    /* A flood from one address stops counting (the shop never notices). */
+    if (tf_too_many('hit:' . tf_ip_key(), 1500, 3600)) {
+        $db->exec('ROLLBACK');
+        http_response_code(204);
+        exit;
+    }
+    tf_note_attempt('hit:' . tf_ip_key());
+    $st = $db->prepare('INSERT OR IGNORE INTO seen (day, vid) VALUES (?, ?)');
+    $st->execute([$day, $vid]);
+    $isNew = $st->rowCount() > 0 ? 1 : 0;
+    $db->prepare('INSERT INTO daily (day, views, visitors) VALUES (?, 1, ?)
+                  ON CONFLICT(day) DO UPDATE SET views = views + 1, visitors = visitors + excluded.visitors')
+        ->execute([$day, $isNew]);
+    $db->prepare('INSERT INTO pageviews (day, page, n) VALUES (?, ?, 1)
+                  ON CONFLICT(day, page) DO UPDATE SET n = n + 1')->execute([$day, $k]);
+    if ($dev) {
+        tf_device_note($day, $vid, $dev);
+    }
+    $db->exec('COMMIT');
+} catch (PDOException $e) {
+    if (stripos($e->getMessage(), 'locked') === false && stripos($e->getMessage(), 'busy') === false) {
+        throw $e;
+    }
+    try {
+        db()->exec('ROLLBACK');
+    } catch (Throwable $ignored) {
+        // nothing was open
+    }
 }
-tf_note_attempt('hit:' . tf_ip_key());
-$st = $db->prepare('INSERT OR IGNORE INTO seen (day, vid) VALUES (?, ?)');
-$st->execute([$day, $vid]);
-$isNew = $st->rowCount() > 0 ? 1 : 0;
-$db->prepare('INSERT INTO daily (day, views, visitors) VALUES (?, 1, ?)
-              ON CONFLICT(day) DO UPDATE SET views = views + 1, visitors = visitors + excluded.visitors')
-    ->execute([$day, $isNew]);
-$db->prepare('INSERT INTO pageviews (day, page, n) VALUES (?, ?, 1)
-              ON CONFLICT(day, page) DO UPDATE SET n = n + 1')->execute([$day, $k]);
-if ($dev) {
-    tf_device_note($day, $vid, $dev);
-}
-$db->exec('COMMIT');
 http_response_code(204);
 
 /** Only the shop's own pages are counted: its tabs and pages, a product that
