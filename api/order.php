@@ -163,6 +163,9 @@ try {
     throw $e;
 }
 tf_note_attempt('order:ok:' . tf_ip_key());
+tf_after(static function () use ($code, $name, $phone, $total): void {
+    tf_sms_order_placed($code, $name, $phone, $total);
+});
 
 tf_json(['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
     'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now,

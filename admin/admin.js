@@ -80,6 +80,8 @@ const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌ا
   order_status: 'وضعیت سفارش رو عوض کرد', order_note: 'یادداشت سفارش نوشت',
   store_open: 'فروش آنلاین رو روشن کرد', store_close: 'فروش آنلاین رو خاموش کرد',
   catalog_import: 'کاتالوگ جدید رو یک‌جا وارد کرد',
+  sms_on: 'پیامک‌ها رو روشن کرد', sms_off: 'پیامک‌ها رو خاموش کرد',
+  sms_owner: 'شماره‌ی خبر سفارش جدید رو عوض کرد', sms_test: 'پیامک آزمایشی فرستاد',
   team_add: 'عضو تیم اضافه کرد', team_edit: 'عضو تیم رو ویرایش کرد', team_delete: 'عضو تیم رو حذف کرد' };
 const ROLE = { ceo: 'مدیرعامل', admin: 'ادمین' };
 
@@ -126,6 +128,7 @@ const SAY = {
   not_found: 'پیدا نشد؛ شاید حذف شده.',
   already_setup: 'پنل قبلاً راه‌اندازی شده؛ وارد شو.',
   stale: 'این مورد همین الان یه جای دیگه عوض شد؛ صفحه رو تازه کن و دوباره امتحان کن.',
+  sms: 'پیامک فرستاده نشد؛ اعتبار پنل پیامک یا شماره رو چک کن.',
   network: 'به اینترنت وصل نیستی؟ دوباره امتحان کن.',
   server: 'یه مشکلی پیش اومد؛ دوباره امتحان کن.',
 };
@@ -1300,6 +1303,62 @@ function devicesCard(dv, visitors) {
 }
 
 /* ============================================================= settings */
+/* Order SMS (sms.ir): on/off, the mobile that hears about new orders, the
+   balance, and one test message. The key itself never leaves the server. */
+function smsCard(sms) {
+  if (!sms || !sms.configured) {
+    return `<div class="card"><div class="sec-head"><h2>پیامک سفارش</h2></div>
+      <p class="tiny" style="margin:0">پیامک هنوز به سایت وصل نشده.</p></div>`;
+  }
+  return `<div class="card">
+    <div class="sec-head"><h2>پیامک سفارش</h2><span class="tiny" id="smsCredit"></span></div>
+    <label class="switch"><span><b id="smsWord">${sms.on ? 'روشنه' : 'خاموشه'}</b><br>
+      <span class="tiny">بعد از ثبت هر سفارش و هر تغییر وضعیتش، مشتری پیامک می‌گیره؛ خبر هر سفارش جدید هم به شماره‌ی زیر می‌ره.</span></span>
+      <input type="checkbox" id="smsOn" ${sms.on ? 'checked' : ''}><span class="knob"></span></label>
+    <form id="smsForm" novalidate style="margin-top:12px">
+      ${field('sms_owner', 'شماره‌ی خبر سفارش جدید', `<input class="input ltr-in" id="f-sms_owner" name="sms_owner" inputmode="tel" value="${esc(sms.owner || '')}" placeholder="09xxxxxxxxx">`, 'خالی بذاری، خبر سفارش جدید پیامک نمی‌شه.')}
+      <div class="actions" style="gap:8px">
+        <button class="btn line s" type="submit">ذخیره‌ی شماره</button>
+        <button class="btn line s" type="button" id="smsTest">پیامک آزمایشی</button>
+      </div>
+    </form>
+  </div>`;
+}
+
+function wireSms(sms, signal) {
+  if (!sms || !sms.configured) return;
+  api('sms_credit', {}, { quiet: true }).then((r) => {
+    if (signal.aborted || r.credit == null) return;
+    const el = $('#smsCredit');
+    if (el) el.textContent = `اعتبار: ${NF.format(r.credit)}`;
+  }).catch(() => {});
+  $('#smsOn').addEventListener('change', async (e) => {
+    const want = e.target.checked;
+    try {
+      const r = await api('settings_save', { sms_on: want });
+      $('#smsWord').textContent = r.sms.on ? 'روشنه' : 'خاموشه';
+      toast(r.sms.on ? 'پیامک‌ها روشن شد' : 'پیامک‌ها خاموش شد');
+    } catch { e.target.checked = !want; }
+  });
+  $('#smsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('settings_save', { sms_owner: e.target.sms_owner.value });
+      e.target.sms_owner.value = r.sms.owner || '';
+      showErrors(e.target, null);
+      toast('شماره ذخیره شد');
+    } catch (err) { showErrors(e.target, err); }
+  });
+  $('#smsTest').addEventListener('click', async (e) => {
+    if (!confirm('یه پیامک آزمایشی «سفارش جدید» به شماره‌ی ذخیره‌شده فرستاده بشه؟ از اعتبار پیامک کم می‌شه.')) return;
+    e.target.disabled = true;
+    try {
+      await api('sms_test');
+      toast('پیامک آزمایشی فرستاده شد');
+    } catch (err) { showErrors($('#smsForm'), err); } finally { e.target.disabled = false; }
+  });
+}
+
 async function viewSettings(_, q, signal) {
   setTitle('تنظیمات');
   const ceo = S.user.role === 'ceo';
@@ -1320,6 +1379,8 @@ async function viewSettings(_, q, signal) {
           <input type="checkbox" id="store" ${open ? 'checked' : ''}><span class="knob"></span></label>`
     : `<p style="margin:0">${open ? 'روشنه؛ سفارش‌های سایت این‌جا میان.' : 'خاموشه؛ فقط مدیرعامل می‌تونه روشنش کنه.'}</p>`}
       </div>
+
+      ${ceo ? smsCard(st.sms) : ''}
 
       <div class="card">
         <div class="sec-head"><h2>حساب من</h2><span class="pill ${ceo ? 'delivered' : 'new'}">${ROLE[S.user.role]}</span></div>
@@ -1356,6 +1417,7 @@ async function viewSettings(_, q, signal) {
     </div>${sig()}`;
 
   $('#bye').addEventListener('click', logout);
+  if (ceo) wireSms(st.sms, signal);
   $('#store')?.addEventListener('change', async (e) => {
     const want = e.target.checked;
     if (want && !confirm('فروش آنلاین روشن بشه؟ از این لحظه مشتری‌ها می‌تونن از سایت سفارش ثبت کنن.')) { e.target.checked = false; return; }

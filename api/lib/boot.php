@@ -45,8 +45,44 @@ function tf_json(array $data, int $code = 200): void
     header('Cache-Control: no-store');
     header('X-Content-Type-Options: nosniff');
     header('X-Robots-Tag: noindex, nofollow');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $body = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $after = $GLOBALS['tf_after'] ?? [];
+    if (!$after) {
+        echo $body;
+        exit;
+    }
+    /* Work queued with tf_after (an SMS) runs once the answer has gone out,
+       so nobody waits on another company's server. */
+    $GLOBALS['tf_after'] = [];
+    header('Content-Length: ' . strlen($body));
+    header('Connection: close');
+    echo $body;
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    if (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    } elseif (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        @ob_end_flush();
+        flush();
+    }
+    ignore_user_abort(true);
+    foreach ($after as $fn) {
+        try {
+            $fn();
+        } catch (Throwable $e) {
+            tf_log_error($e);
+        }
+    }
     exit;
+}
+
+/** Run $fn after this request's answer has been sent (see tf_json). */
+function tf_after(callable $fn): void
+{
+    $GLOBALS['tf_after'][] = $fn;
 }
 
 function tf_fail(int $code, string $error, array $extra = []): void
@@ -886,6 +922,8 @@ function tf_is_bot(string $ua): bool
 {
     return $ua === '' || (bool) preg_match('/bot|crawl|spider|slurp|facebookexternalhit|preview|lighthouse/i', $ua);
 }
+
+require_once __DIR__ . '/sms.php';
 
 /* --------------------------------------------------------------- devices */
 /* What the cookie sheet asks for, and the only values that are ever kept.

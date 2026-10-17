@@ -454,5 +454,74 @@ check('an import with a repeated id changes nothing', after_ids == before_ids)
 check('…and says why', "repeated id 'imp-7'" in open(os.path.join(DATA, 'error.log')).read())
 os.remove(imp)
 
+if os.environ.get('SMS_MOCK_LOG'):
+    print('\norder SMS (against tests/sms_mock.php)')
+    MOCK = os.environ['SMS_MOCK_LOG']
+    open(MOCK, 'w').close()
+    def sent():                       # the messages, not the balance checks
+        return [x for x in (json.loads(l) for l in open(MOCK) if l.strip()) if x['path'] == '/v1/send/verify']
+    def wait_for(n, tries=30):
+        import time
+        for _ in range(tries):
+            if len(sent()) >= n:
+                break
+            time.sleep(0.1)
+        return sent()
+    db("DELETE FROM attempts WHERE k LIKE 'order:%'")
+    db("UPDATE products SET data = json_set(data, '$.stock', json('{\"S\":100}')) WHERE id = ?", sid)
+    code, st = ceo('settings')
+    check('no SMS file, no SMS: the panel says it is not connected', st['sms']['configured'] is False, str(st.get('sms')))
+    with open(os.path.join(DATA, 'sms.json'), 'w') as fh:
+        json.dump({'api_key': 'test-key', 'customer_template': 807432, 'owner_template': 307865,
+                   'owner_mobile': '09141012567', 'endpoint': 'http://127.0.0.1:8139/v1/'}, fh)
+    code, st = ceo('settings')
+    check('with the file: connected, on, owner from the file',
+          st['sms'] == {'configured': True, 'on': True, 'owner': '09141012567'}, str(st.get('sms')))
+    check('the key never reaches the panel', 'test-key' not in json.dumps(st))
+    check('the balance comes from sms.ir', ceo('sms_credit')[1].get('credit') == 42)
+    adm = Panel()
+    adm('login', email='burst@tiffany.test', password='burst-pass-123')
+    check('an admin cannot see the SMS balance or send a test', adm('sms_credit')[0] == 403 and adm('sms_test')[0] == 403)
+    sample = [{'id': sid, 'size': 'S', 'colour': '#EFE6D8', 'qty': 1}]
+    r = requests.post(f'{BASE}/api/order.php', json={**order, 'name': 'سارا رضایی', 'phone': '۰۹۳۵ ۱۱۱ ۲۲۳۳', 'items': sample}).json()
+    log = wait_for(2)
+    cust = [x for x in log if x['body']['templateId'] == 807432]
+    own = [x for x in log if x['body']['templateId'] == 307865]
+    check('a new order texts the customer: first name and code', len(cust) == 1 and cust[0]['body']['mobile'] == '09351112233'
+          and cust[0]['body']['parameters'] == [{'name': 'NAME', 'value': 'سارا'}, {'name': 'CODE', 'value': r['code']}], str(cust))
+    check('…and the owner: code and amount', len(own) == 1 and own[0]['body']['mobile'] == '09141012567'
+          and own[0]['body']['parameters'] == [{'name': 'CODE', 'value': r['code']}, {'name': 'AMOUNT', 'value': f"{r['total']:,}"}], str(own))
+    check('…with the key in the header, on the verify endpoint', all(x['key'] == 'test-key' and x['path'] == '/v1/send/verify' for x in log))
+    ceo('order_status', code=r['code'], status='confirmed')
+    log = wait_for(3)
+    check('confirming the order texts the customer once', len(log) == 3 and log[2]['body']['templateId'] == 807432
+          and log[2]['body']['mobile'] == '09351112233', str(log[2:]))
+    code, rr = ceo('settings_save', sms_on=False)
+    check('the CEO switches SMS off (and the shop stays as it was)', rr['sms']['on'] is False and rr['settings']['store_open'] is True)
+    requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09351112244', 'items': sample})
+    import time; time.sleep(0.6)
+    check('switched off: no SMS', len(sent()) == 3, str(len(sent())))
+    ceo('settings_save', sms_on=True)
+    code, rr = ceo('settings_save', sms_owner='123')
+    check('a wrong owner number is refused', code == 422 and rr['field'] == 'sms_owner')
+    code, rr = ceo('settings_save', sms_owner='۰۹۱۲ ۰۰۰ ۱۱۱۱')
+    check('the owner number is saved normalised', rr['sms']['owner'] == '09120001111', str(rr.get('sms')))
+    code, rr = ceo('sms_test')
+    log = wait_for(4)
+    check('a test SMS goes to the owner with TF-00000', code == 200 and log[-1]['body']['mobile'] == '09120001111'
+          and log[-1]['body']['parameters'][0] == {'name': 'CODE', 'value': 'TF-00000'}, str(log[-1:]))
+    ceo('settings_save', sms_owner='')
+    requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09351112255', 'items': sample})
+    log = wait_for(5)
+    time.sleep(0.4)
+    check('owner number cleared: only the customer is texted', len(sent()) == 5 and sent()[-1]['body']['templateId'] == 807432)
+    ceo('settings_save', sms_owner='09990000000')          # the stand-in fails this one
+    r = requests.post(f'{BASE}/api/order.php', json={**order, 'phone': '09351112266', 'items': sample})
+    wait_for(7)
+    time.sleep(0.3)
+    check('a failed SMS never fails the order', r.status_code == 200, f'{r.status_code} {r.text[:200]}')
+    check('…and goes to error.log without the full number', 'sms owner to 0999…00' in open(os.path.join(DATA, 'error.log')).read())
+    os.remove(os.path.join(DATA, 'sms.json'))
+
 print(f'\n{ok} passed, {bad} failed')
 sys.exit(1 if bad else 0)

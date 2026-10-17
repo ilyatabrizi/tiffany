@@ -228,7 +228,7 @@ and also resets a forgotten CEO password. Roles: `ceo` (everything) and `admin`
 The database's first catalogue is `api/lib/seed.json` (the 17 preview pieces).
 Uploaded photos are re-encoded to 4:5 WebP at 480/960 in `uploads/p/`.
 
-**Tests:** `api_test.py` (121 API checks), `admin_e2e.py` (38 browser checks, panel ↔ shop),
+**Tests:** `api_test.py` (138 API checks), `admin_e2e.py` (38 browser checks, panel ↔ shop),
 `popups_e2e.py` (56 checks: the two opening sheets on iPhone, Android, Samsung, Instagram,
 desktop, English, installed), `e2e.py` (storefront), `qa_e2e.py` (33 regression checks
 from the 2026-10-16 review) — all run against `php -S` with `TIFFANY_DATA` pointing at a
@@ -325,3 +325,22 @@ by a check that fails on the old code (`qa_e2e.py`, and the «hardening» part o
 eNamad (code 3485842) asks for proof of control over the domain. Two of its four
 methods are in place and must stay: an empty `3485842.txt` at the web root, and
 `<meta name="enamad" content="3485842" />` in the head of `index.html`.
+
+## Order SMS (sms.ir) — added 2026-10-17
+
+`api/lib/sms.php` sends the two templates the studio got approved on sms.ir:
+
+| When | Who | Template | Variables |
+|---|---|---|---|
+| an order is placed, and every time the team moves it | the customer | 807432 «پیامک برای مشتری» | `NAME` (first name), `CODE` |
+| an order is placed | the owner's mobile | 307865 «خبر سفارش جدید برای شما» | `CODE`, `AMOUNT` (1,000,000) |
+
+- The key and template ids live in `tiffany-data/sms.json` (outside the web root, mode
+  0600, never in git): `{"api_key": "…", "customer_template": 807432, "owner_template":
+  307865, "owner_mobile": "09…"}`.
+- Panel → Settings → «پیامک سفارش» (CEO only): on/off, the mobile that hears about new
+  orders (overrides `owner_mobile`), the sms.ir balance, and one test message.
+- Sending happens after the answer has gone out (`tf_after` in `boot.php`), so a slow
+  sms.ir never slows checkout; a failure only lands in `error.log` (phone half hidden).
+- Tests: `api_test.py` runs the SMS checks against `tests/sms_mock.php`, a stand-in for
+  sms.ir (`SMS_MOCK_LOG=… php -S 127.0.0.1:8139 tests/sms_mock.php`).

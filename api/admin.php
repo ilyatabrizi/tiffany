@@ -337,6 +337,11 @@ switch ($a) {
             }
             $db->exec('COMMIT');
             tf_log($me['name'], 'order_status', $o['code'] . ' → ' . $to);
+            if ($to !== 'new') {                 // the customer hears that their order moved
+                tf_after(static function () use ($o): void {
+                    tf_sms_order_moved($o);
+                });
+            }
         }
         ok(['order' => order_or_404($o['code'])]);
 
@@ -360,14 +365,49 @@ switch ($a) {
 
     /* -------------------------------------------------------- settings */
     case 'settings':
-        ok(['settings' => tf_public_settings()]);
+        ok(['settings' => tf_public_settings()] + ($ceo ? ['sms' => sms_state()] : []));
 
     case 'settings_save':
         ceo_only($ceo);
-        $open = !empty($in['store_open']);
-        setting_set('store_open', $open ? '1' : '0');
-        tf_log($me['name'], $open ? 'store_open' : 'store_close');
-        ok(['settings' => tf_public_settings()]);
+        if (array_key_exists('store_open', $in)) {
+            $open = !empty($in['store_open']);
+            setting_set('store_open', $open ? '1' : '0');
+            tf_log($me['name'], $open ? 'store_open' : 'store_close');
+        }
+        if (array_key_exists('sms_on', $in)) {
+            $on = !empty($in['sms_on']);
+            setting_set('sms_on', $on ? '1' : '0');
+            tf_log($me['name'], $on ? 'sms_on' : 'sms_off');
+        }
+        if (array_key_exists('sms_owner', $in)) {
+            $raw = tf_line($in['sms_owner'] ?? '', 30);
+            $mob = tf_phone($raw);
+            if ($raw !== '' && $mob === '') {
+                throw new TfInvalid('sms_owner', 'شماره موبایل درست نیست.');
+            }
+            setting_set('sms_owner', $mob === '' ? '-' : $mob);
+            tf_log($me['name'], 'sms_owner', $mob);
+        }
+        ok(['settings' => tf_public_settings(), 'sms' => sms_state()]);
+
+    case 'sms_credit':                  // the SMS balance at sms.ir, on the settings page
+        ceo_only($ceo);
+        [$good, $data] = tf_sms_call('GET', 'credit');
+        ok(['credit' => $good ? (int) $data : null]);
+
+    case 'sms_test':                    // one real «new order» SMS to the owner's mobile
+        ceo_only($ceo);
+        $to = tf_sms_owner();
+        if (!tf_sms_config() || $to === '') {
+            throw new TfInvalid('sms_owner', 'اول پیامک و شماره‌ی خبر سفارش رو تنظیم کن.');
+        }
+        tf_throttle('smstest:' . $me['id'], 5, 3600);
+        $sent = tf_sms_send($to, 'owner', ['CODE' => 'TF-00000', 'AMOUNT' => '0']);
+        tf_log($me['name'], 'sms_test', $sent ? 'ok' : 'failed');
+        if (!$sent) {
+            tf_fail(502, 'sms');
+        }
+        ok(['sent' => true]);
 
     /* ------------------------------------------------------------ team */
     case 'team':
@@ -446,6 +486,12 @@ switch ($a) {
 tf_fail(400, 'unknown_action');
 
 /* ====================================================================== */
+
+/** What the settings page shows about SMS (never the key itself). */
+function sms_state(): array
+{
+    return ['configured' => tf_sms_config() !== null, 'on' => setting('sms_on', '1') === '1', 'owner' => tf_sms_owner()];
+}
 
 /** 7, 30 or 90 days; anything else (or nothing) is 30. */
 function days_of(array $in): int
