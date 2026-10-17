@@ -319,3 +319,9 @@ by a check that fails on the old code (`qa_e2e.py`, and the «hardening» part o
 - 800 orders while the team cancels orders and edits the piece: stock exact to the unit.
 - 80 visitors browsing for 20 s: ~2,000 requests/s, p95 ~100 ms, no errors.
 - 3,000 page-view pings from one address: no errors, capped at 1,500.
+
+## eNamad domain check — added 2026-10-17
+
+eNamad (code 3485842) asks for proof of control over the domain. Two of its four
+methods are in place and must stay: an empty `3485842.txt` at the web root, and
+`<meta name="enamad" content="3485842" />` in the head of `index.html`.

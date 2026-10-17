@@ -25,7 +25,8 @@ DIST = ROOT / "dist"
 
 # Everything the browser asks for, and nothing else.
 INCLUDE_FILES = ["index.html", "404.html", ".htaccess",
-                 "manifest.webmanifest", "sw.js"]
+                 "manifest.webmanifest", "sw.js",
+                 "3485842.txt"]          # eNamad domain check (empty on purpose)
 INCLUDE_DIRS = ["css", "js", "assets/fonts", "assets/brand", "assets/icons",
                 "assets/img"]
 INCLUDE_GLOBS = [("media", "hero.mp4"), ("media", "hero-poster.webp")]
