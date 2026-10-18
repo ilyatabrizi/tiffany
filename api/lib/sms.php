@@ -12,11 +12,19 @@
    owner_template:
      تیفانی / سفارش جدید با کد #CODE# به مبلغ #AMOUNT# تومان ثبت شد. / …
 
-   The panel's settings decide whether SMS goes out at all (sms_on) and which
-   mobile hears about new orders (sms_owner; owner_mobile in the file until
-   the CEO sets one). Sending never holds anyone up: it runs after the answer
-   has gone out (tf_after), and a failure only goes to error.log. Each value
-   is cut to sms.ir's 25 characters. */
+   Two more templates arrived on 2026-10-18 and are optional until sms.ir
+   approves them: the sign-up / password code (otp, #CODE#) and «your ticket
+   has an answer» (ticket, #NAME# #CODE#). Their ids come from the panel
+   (Settings → SMS, saved as sms_tpl_otp / sms_tpl_ticket) or from the file
+   (otp_template / ticket_template); the panel wins.
+
+   The panel's settings decide whether order and ticket SMS go out at all
+   (sms_on) and which mobile hears about new orders (sms_owner; owner_mobile
+   in the file until the CEO sets one). Sign-in codes ignore that switch: a
+   customer cannot sign up without one. Order and ticket SMS never hold
+   anyone up: they run after the answer has gone out (tf_after), and a
+   failure only goes to error.log. Each value is cut to sms.ir's 25
+   characters. */
 declare(strict_types=1);
 
 const TF_SMS_API = 'https://api.sms.ir/v1/';
@@ -38,6 +46,28 @@ function tf_sms_config(): ?array
 function tf_sms_on(): bool
 {
     return tf_sms_config() !== null && setting('sms_on', '1') === '1';
+}
+
+/** The sms.ir template id for one kind of message; 0 when there is none yet. */
+function tf_sms_template(string $which): int
+{
+    $c = tf_sms_config();
+    if (!$c) {
+        return 0;
+    }
+    if ($which === 'otp' || $which === 'ticket') {
+        $set = (int) setting('sms_tpl_' . $which, '0');
+        if ($set > 0) {
+            return $set;
+        }
+    }
+    return (int) ($c[$which . '_template'] ?? 0);
+}
+
+/** Can the shop text a sign-up or password code right now? */
+function tf_otp_ready(): bool
+{
+    return tf_sms_template('otp') > 0;
 }
 
 /** Who hears about new orders: the panel's number, else the file's. */
@@ -98,8 +128,7 @@ function tf_sms_call(string $method, string $path, ?array $body = null): array
 /** Send one template. $which is 'customer' or 'owner'. */
 function tf_sms_send(string $mobile, string $which, array $vars): bool
 {
-    $c = tf_sms_config();
-    $tpl = (int) ($c[$which . '_template'] ?? 0);
+    $tpl = tf_sms_template($which);
     $mobile = tf_phone($mobile);
     if (!$tpl || $mobile === '') {
         return false;
@@ -144,4 +173,20 @@ function tf_sms_order_moved(array $o): void
         return;
     }
     tf_sms_send((string) $o['phone'], 'customer', ['NAME' => tf_sms_first_name((string) $o['name']), 'CODE' => $o['code']]);
+}
+
+/** A sign-up or password code. Sent while the customer waits: they need to
+    know at once if it did not go. */
+function tf_sms_otp(string $phone, string $code): bool
+{
+    return tf_sms_send($phone, 'otp', ['CODE' => $code]);
+}
+
+/** The team answered a ticket: «#NAME# عزیز، به درخواست پشتیبانی #CODE# شما پاسخ داده شد». */
+function tf_sms_ticket_answered(string $phone, string $name, string $code): void
+{
+    if (!tf_sms_on() || tf_sms_template('ticket') <= 0) {
+        return;
+    }
+    tf_sms_send($phone, 'ticket', ['NAME' => tf_sms_first_name($name), 'CODE' => $code]);
 }

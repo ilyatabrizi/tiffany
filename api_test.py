@@ -492,7 +492,7 @@ if os.environ.get('SMS_MOCK_LOG'):
                    'owner_mobile': '09141012567', 'endpoint': 'http://127.0.0.1:8139/v1/'}, fh)
     code, st = ceo('settings')
     check('with the file: connected, on, owner from the file',
-          st['sms'] == {'configured': True, 'on': True, 'owner': '09141012567'}, str(st.get('sms')))
+          st['sms'] == {'configured': True, 'on': True, 'owner': '09141012567', 'otp': 0, 'ticket': 0}, str(st.get('sms')))
     check('the key never reaches the panel', 'test-key' not in json.dumps(st))
     check('the balance comes from sms.ir', ceo('sms_credit')[1].get('credit') == 42)
     adm = Panel()

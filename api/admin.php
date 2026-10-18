@@ -7,8 +7,8 @@
 
    Two roles:
      ceo   — everything: money and income reports, settings, the team
-     admin — products, orders and customers; never totals of money,
-             never settings or other people's accounts */
+     admin — products, orders, customers, stories and tickets; never totals
+             of money, never settings or other people's accounts */
 declare(strict_types=1);
 require __DIR__ . '/lib/boot.php';
 
@@ -19,8 +19,12 @@ tf_same_origin();
 /* No session is opened here: tf_user() opens one only for a request that
    carries the panel's cookie, and signing in opens its own. */
 
-$isMultipart = stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'multipart/form-data') === 0;
-$in = $isMultipart ? $_POST : tf_input();
+$type = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
+$isForm = strpos($type, 'multipart/form-data') === 0 || strpos($type, 'application/x-www-form-urlencoded') === 0;
+if ($isForm) {
+    tf_refuse_oversize();
+}
+$in = $isForm ? $_POST : tf_input();
 $a = (string) ($in['a'] ?? '');
 
 function ok(array $data = []): void
@@ -171,8 +175,9 @@ switch ($a) {
         tf_sign_out();
         ok();
 
-    case 'ping':                        // the badge on «سفارش‌ها», every minute or so
-        ok(['pending' => (int) db()->query("SELECT COUNT(*) FROM orders WHERE status = 'new'")->fetchColumn()]);
+    case 'ping':                        // the badges on «سفارش‌ها» and «تیکت‌ها», every minute or so
+        ok(['pending' => (int) db()->query("SELECT COUNT(*) FROM orders WHERE status = 'new'")->fetchColumn(),
+            'tickets' => (int) db()->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn()]);
 
     case 'password':
         if (!password_verify((string) ($in['current'] ?? ''), $me['pass'])) {
@@ -379,6 +384,18 @@ switch ($a) {
             setting_set('sms_on', $on ? '1' : '0');
             tf_log($me['name'], $on ? 'sms_on' : 'sms_off');
         }
+        foreach (['sms_tpl_otp' => 'otp', 'sms_tpl_ticket' => 'ticket'] as $key => $which) {
+            if (!array_key_exists($key, $in)) {
+                continue;
+            }
+            $raw = tf_line($in[$key] ?? '', 20);
+            $id = tf_int($raw);
+            if ($raw !== '' && ($id < 1 || $id > 2147483647)) {
+                throw new TfInvalid($key, 'شماره‌ی قالب فقط عدده، همون که sms.ir بعد از تأیید نشون می‌ده.');
+            }
+            setting_set($key, (string) $id);
+            tf_log($me['name'], 'sms_template', $which . ' → ' . ($id ?: '—'));
+        }
         if (array_key_exists('sms_owner', $in)) {
             $raw = tf_line($in['sms_owner'] ?? '', 30);
             $mob = tf_phone($raw);
@@ -408,6 +425,153 @@ switch ($a) {
             tf_fail(502, 'sms');
         }
         ok(['sent' => true]);
+
+    /* --------------------------------------------------------- stories */
+    case 'stories':
+        $now = time();
+        $live = db()->prepare('SELECT * FROM stories WHERE expires_at > ? ORDER BY created_at DESC, id DESC');
+        $live->execute([$now]);
+        $old = db()->prepare('SELECT * FROM stories WHERE expires_at <= ? ORDER BY created_at DESC, id DESC LIMIT 120');
+        $old->execute([$now]);
+        ok(['live' => array_map('tf_story_out', $live->fetchAll()), 'archive' => array_map('tf_story_out', $old->fetchAll()),
+            'now' => $now, 'cap' => tf_upload_cap(TF_STORY_CAP)]);
+
+    case 'story_add':                   // multipart: media (+ poster for a video), caption_*, items
+        $f = $_FILES['media'] ?? null;
+        $cap = tf_upload_cap(TF_STORY_CAP);
+        $err = is_array($f) ? (int) ($f['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
+        if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE || (is_array($f) && (int) $f['size'] > $cap)) {
+            throw new TfInvalid('media', 'فایل بزرگ‌تر از ' . tf_mb($cap) . 'ه.');
+        }
+        if ($err !== UPLOAD_ERR_OK || !is_uploaded_file((string) $f['tmp_name'])) {
+            throw new TfInvalid('media', 'فایل آپلود نشد؛ دوباره امتحان کن.');
+        }
+        $type = tf_sniff((string) $f['tmp_name'], (string) ($f['name'] ?? ''), false);
+        if (!$type || !in_array($type[0], ['image', 'video'], true) || $type[1] === 'image/gif') {
+            throw new TfInvalid('media', 'فقط عکس (JPG، PNG، WebP) یا ویدیو (MP4).');
+        }
+        $caption = story_caption($in);
+        $items = story_items($in['items'] ?? '[]');
+        $poster = '';
+        if ($type[0] === 'image') {
+            [$media, $w, $h] = tf_story_image((string) $f['tmp_name']);
+            $kind = 'image';
+        } else {
+            $media = story_video($f, $type);
+            $kind = 'video';
+            $w = max(0, min(8000, tf_int($in['w'] ?? 0)));
+            $h = max(0, min(8000, tf_int($in['h'] ?? 0)));
+            $pf = $_FILES['poster'] ?? null;
+            if (is_array($pf) && (int) ($pf['error'] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file((string) $pf['tmp_name'])) {
+                try {
+                    [$poster] = tf_story_image((string) $pf['tmp_name']);
+                } catch (TfInvalid $e) {
+                    $poster = '';                   // a video without a cover still plays
+                }
+            }
+        }
+        $now = time();
+        db()->prepare('INSERT INTO stories (kind, media, poster, w, h, caption, items, by_name, created_at, expires_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$kind, $media, $poster, $w, $h, json_encode($caption, JSON_UNESCAPED_UNICODE),
+                json_encode($items), $me['name'], $now, $now + TF_STORY_SECS]);
+        $sid = (int) db()->lastInsertId();
+        tf_log($me['name'], 'story_add', $kind === 'video' ? 'ویدیو' : 'عکس');
+        ok(['story' => tf_story_out(story_or_404($sid))]);
+
+    case 'story_edit':
+        $s = story_or_404((int) ($in['id'] ?? 0));
+        db()->prepare('UPDATE stories SET caption = ?, items = ? WHERE id = ?')
+            ->execute([json_encode(story_caption($in), JSON_UNESCAPED_UNICODE), json_encode(story_items($in['items'] ?? [])), $s['id']]);
+        tf_log($me['name'], 'story_edit', '#' . $s['id']);
+        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+
+    case 'story_repost':                // back on the site for another 24 hours, at the front
+        $s = story_or_404((int) ($in['id'] ?? 0));
+        $now = time();
+        db()->prepare('UPDATE stories SET created_at = ?, expires_at = ? WHERE id = ?')->execute([$now, $now + TF_STORY_SECS, $s['id']]);
+        tf_log($me['name'], 'story_repost', '#' . $s['id']);
+        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+
+    case 'story_end':                   // off the site now, kept in the archive
+        $s = story_or_404((int) ($in['id'] ?? 0));
+        db()->prepare('UPDATE stories SET expires_at = ? WHERE id = ? AND expires_at > ?')->execute([time(), $s['id'], time()]);
+        tf_log($me['name'], 'story_end', '#' . $s['id']);
+        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+
+    case 'story_delete':
+        $s = story_or_404((int) ($in['id'] ?? 0));
+        db()->prepare('DELETE FROM stories WHERE id = ?')->execute([$s['id']]);
+        foreach (tf_story_files($s) as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+        tf_log($me['name'], 'story_delete', '#' . $s['id']);
+        ok();
+
+    /* --------------------------------------------------------- tickets */
+    case 'tickets':
+        $status = in_array($in['status'] ?? '', TF_TICKET_STATUSES, true) ? (string) $in['status'] : '';
+        $q = tf_line($in['q'] ?? '', 60);
+        $where = ['1 = 1'];
+        $args = [];
+        if ($status !== '') {
+            $where[] = 't.status = ?';
+            $args[] = $status;
+        }
+        if ($q !== '') {
+            $d = tf_digits($q);
+            $where[] = '(t.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ? OR t.subject LIKE ?)';
+            array_push($args, "%$d%", "%$q%", "%$d%", "%$q%");
+        }
+        $counts = array_fill_keys(TF_TICKET_STATUSES, 0);
+        foreach (db()->query('SELECT status, COUNT(*) n FROM tickets GROUP BY status') as $r) {
+            $counts[$r['status']] = (int) $r['n'];
+        }
+        ok(['tickets' => tf_tickets_list(implode(' AND ', $where), $args, 's', 300), 'counts' => $counts,
+            'caps' => ['file' => tf_upload_cap(TF_FILE_CAP), 'files' => TF_FILES_PER_MSG]]);
+
+    case 'ticket':
+        $t = staff_ticket((string) ($in['code'] ?? ''));
+        tf_ticket_seen($t, 's');
+        ok(staff_thread($t) + ['caps' => ['file' => tf_upload_cap(TF_FILE_CAP), 'files' => TF_FILES_PER_MSG]]);
+
+    case 'ticket_reply':                // multipart: code, body, product, files[], voice, voice_secs
+        $t = staff_ticket((string) ($in['code'] ?? ''));
+        $files = tf_intake(tf_files_list($_FILES['files'] ?? null), $_FILES['voice'] ?? null, (int) ($in['voice_secs'] ?? 0));
+        [$body, $product] = tf_message_in($in, $files);
+        tf_ticket_post($t, 's', $me['name'], $body, $product, $files);
+        tf_log($me['name'], 'ticket_reply', $t['code']);
+        /* One «you have an answer» SMS per ticket every 15 minutes, however
+           many messages the team sends in a row. */
+        $mark = db()->prepare('UPDATE tickets SET sms_at = ? WHERE id = ? AND sms_at < ?');
+        $mark->execute([time(), $t['id'], time() - 900]);
+        if ($mark->rowCount() === 1) {
+            $st = db()->prepare('SELECT name, phone FROM customers WHERE id = ?');
+            $st->execute([$t['customer_id']]);
+            $c = $st->fetch();
+            $st->closeCursor();
+            if ($c) {
+                tf_after(static function () use ($c, $t): void {
+                    tf_sms_ticket_answered((string) $c['phone'], (string) $c['name'], (string) $t['code']);
+                });
+            }
+        }
+        ok(staff_thread(staff_ticket($t['code'])));
+
+    case 'ticket_status':               // close a ticket, or open it again
+        $t = staff_ticket((string) ($in['code'] ?? ''));
+        $to = (string) ($in['status'] ?? '');
+        if (!in_array($to, ['open', 'closed'], true)) {
+            throw new TfInvalid('status', 'وضعیت نامعتبره.');
+        }
+        if ($to === 'open') {
+            $to = $t['last_from'] === 's' ? 'answered' : 'open';
+        }
+        db()->prepare('UPDATE tickets SET status = ?, updated_at = ? WHERE id = ?')->execute([$to, time(), $t['id']]);
+        tf_log($me['name'], $to === 'closed' ? 'ticket_close' : 'ticket_open', $t['code']);
+        ok(staff_thread(staff_ticket($t['code'])));
 
     /* ------------------------------------------------------------ team */
     case 'team':
@@ -490,7 +654,99 @@ tf_fail(400, 'unknown_action');
 /** What the settings page shows about SMS (never the key itself). */
 function sms_state(): array
 {
-    return ['configured' => tf_sms_config() !== null, 'on' => setting('sms_on', '1') === '1', 'owner' => tf_sms_owner()];
+    return ['configured' => tf_sms_config() !== null, 'on' => setting('sms_on', '1') === '1', 'owner' => tf_sms_owner(),
+        'otp' => tf_sms_template('otp'), 'ticket' => tf_sms_template('ticket')];
+}
+
+/* --------------------------------------------------------------- stories */
+/** Up to six pieces a story points at, each one a product that exists. */
+function story_items($raw): array
+{
+    if (is_string($raw)) {
+        $raw = json_decode($raw, true);
+    }
+    $out = [];
+    foreach (array_slice(is_array($raw) ? $raw : [], 0, 12) as $id) {
+        $id = (string) $id;
+        if (preg_match('/^[a-z0-9][a-z0-9-]{1,60}$/', $id) && tf_product($id) && !in_array($id, $out, true)) {
+            $out[] = $id;
+        }
+    }
+    if (count($out) > 6) {
+        throw new TfInvalid('items', 'هر استوری حداکثر ۶ محصول.');
+    }
+    return $out;
+}
+
+function story_caption(array $in): array
+{
+    $c = is_array($in['caption'] ?? null) ? $in['caption']
+        : ['fa' => $in['caption_fa'] ?? '', 'en' => $in['caption_en'] ?? '', 'tr' => $in['caption_tr'] ?? ''];
+    return tf_i18n($c, 140);
+}
+
+function story_or_404(int $id): array
+{
+    $st = db()->prepare('SELECT * FROM stories WHERE id = ?');
+    $st->execute([$id]);
+    $s = $st->fetch();
+    $st->closeCursor();
+    if (!$s) {
+        tf_fail(404, 'not_found');
+    }
+    return $s;
+}
+
+/** A video for a story: MP4 (H.264) or WebM, kept as it came. HEVC is
+    refused with the way out, because most Android phones show it black. */
+function story_video(array $f, array $type): string
+{
+    if (!in_array($type[1], ['video/mp4', 'video/quicktime', 'video/webm'], true)) {
+        throw new TfInvalid('media', 'ویدیو باید MP4 باشه.');
+    }
+    if ($type[1] !== 'video/webm' && tf_video_codec((string) $f['tmp_name']) === 'hevc') {
+        throw new TfInvalid('media', 'این ویدیو با فرمت HEVC ضبط شده و روی بیشتر گوشی‌های اندروید پخش نمی‌شه. '
+            . 'توی آیفون: Settings ← Camera ← Formats ← Most Compatible، و دوباره ضبط کن؛ '
+            . 'یا ویدیو رو با اینستاگرام یا CapCut به MP4 خروجی بگیر.');
+    }
+    $dir = tf_web_root() . '/uploads/s';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    $ext = $type[1] === 'video/webm' ? 'webm' : 'mp4';
+    $rel = 'uploads/s/' . bin2hex(random_bytes(10)) . '.' . $ext;
+    if (!move_uploaded_file((string) $f['tmp_name'], tf_web_root() . '/' . $rel)) {
+        throw new RuntimeException('could not keep the story video');
+    }
+    @chmod(tf_web_root() . '/' . $rel, 0644);
+    return $rel;
+}
+
+/* --------------------------------------------------------------- tickets */
+function staff_ticket(string $code): array
+{
+    $t = tf_ticket_by_code($code);
+    if (!$t) {
+        tf_fail(404, 'not_found');
+    }
+    return $t;
+}
+
+/** A thread as the team sees it: who the customer is, how many orders they
+    placed, and who on the team wrote each answer. */
+function staff_thread(array $t): array
+{
+    $st = db()->prepare('SELECT name, phone, created_at FROM customers WHERE id = ?');
+    $st->execute([$t['customer_id']]);
+    $c = $st->fetch() ?: ['name' => '', 'phone' => '', 'created_at' => 0];
+    $st->closeCursor();
+    $n = db()->prepare('SELECT COUNT(*) FROM orders WHERE phone = ?');
+    $n->execute([$c['phone']]);
+    return ['ticket' => [
+        'code' => $t['code'], 'subject' => $t['subject'], 'status' => $t['status'],
+        'created_at' => (int) $t['created_at'], 'updated_at' => (int) $t['updated_at'],
+    ], 'customer' => ['name' => $c['name'], 'phone' => $c['phone'], 'since' => (int) $c['created_at'],
+        'orders' => (int) $n->fetchColumn()]] + tf_ticket_thread($t, true);
 }
 
 /** 7, 30 or 90 days; anything else (or nothing) is 30. */
@@ -748,47 +1004,6 @@ function customers(string $q, bool $money): array
 }
 
 /* ---------------------------------------------------------------- photos */
-/** JPEG orientation (1–8) from the EXIF block, read by hand: no extension needed. */
-function jpeg_orientation(string $b): int
-{
-    if (strncmp($b, "\xFF\xD8", 2) !== 0) {
-        return 1;
-    }
-    $len = strlen($b);
-    $i = 2;
-    while ($i + 4 < $len && $b[$i] === "\xFF") {
-        $marker = ord($b[$i + 1]);
-        if ($marker === 0xDA || $marker === 0xD9) {
-            break;
-        }
-        $seg = unpack('n', substr($b, $i + 2, 2))[1];
-        if ($marker === 0xE1 && substr($b, $i + 4, 6) === "Exif\0\0") {
-            $t = $i + 10;
-            $le = substr($b, $t, 2) === 'II';
-            $u16 = static fn (int $o) => unpack($le ? 'v' : 'n', substr($b, $o, 2))[1];
-            $u32 = static fn (int $o) => unpack($le ? 'V' : 'N', substr($b, $o, 4))[1];
-            $ifd = $t + $u32($t + 4);
-            if ($ifd + 2 > $len) {
-                return 1;
-            }
-            $n = $u16($ifd);
-            for ($k = 0; $k < $n; $k++) {
-                $e = $ifd + 2 + $k * 12;
-                if ($e + 12 > $len) {
-                    break;
-                }
-                if ($u16($e) === 0x0112) {
-                    $o = $u16($e + 8);
-                    return $o >= 1 && $o <= 8 ? $o : 1;
-                }
-            }
-            return 1;
-        }
-        $i += 2 + $seg;
-    }
-    return 1;
-}
-
 /** Store one product photo: upright, cropped to 4:5, 960 and 480 wide, WebP. */
 function save_photo($f): string
 {

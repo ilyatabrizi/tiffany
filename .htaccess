@@ -13,6 +13,7 @@ DirectoryIndex index.html
   AddType font/woff2                 .woff2
   AddType image/webp                 .webp
   AddType video/mp4                  .mp4
+  AddType video/webm                 .webm
   AddType image/svg+xml              .svg
   AddCharset UTF-8                   .html .css .js .webmanifest .json .svg
 </IfModule>
@@ -49,7 +50,7 @@ DirectoryIndex index.html
   <FilesMatch "\.(css|js)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
-  <FilesMatch "\.(webp|jpg|jpeg|png|svg|woff2|mp4)$">
+  <FilesMatch "\.(webp|jpg|jpeg|png|svg|woff2|mp4|webm)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
   Header always set X-Content-Type-Options "nosniff"
@@ -57,12 +58,13 @@ DirectoryIndex index.html
 </IfModule>
 
 # ------------------------------------------------------------ security
-# Never framed by another site, no camera/microphone/location, HTTPS only for
-# six months once seen (the certificate renews itself through cPanel), and the
-# PHP version is nobody's business.
+# Never framed by another site, no camera or location, the microphone only
+# for this site's own pages (voice notes in tickets), HTTPS only for six months
+# once seen (the certificate renews itself through cPanel), and the PHP version
+# is nobody's business.
 <IfModule mod_headers.c>
   Header always set X-Frame-Options "SAMEORIGIN"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=()"
   Header always set Strict-Transport-Security "max-age=15552000"
   Header always unset X-Powered-By
   Header unset X-Powered-By

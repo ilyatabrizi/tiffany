@@ -32,6 +32,7 @@ const TF_FITS     = ['small', 'true', 'relaxed'];
 const TF_BADGES   = ['', 'new', 'campaign', 'bestseller', 'restock', 'last'];
 const TF_LANGS    = ['fa', 'en', 'tr'];
 const TF_SESSION_DAYS = 30;
+const TF_CUSTOMER_DAYS = 90;
 /* One order: at most 5 of the same piece, size and colour, 20 pieces in all.
    The shop's bag stops at the same numbers (js/store.js). */
 const TF_LINE_MAX = 5;
@@ -282,6 +283,93 @@ SQL);
            reads the whole table. */
         $db->exec('CREATE INDEX IF NOT EXISTS attempts_at ON attempts(at); PRAGMA user_version = 3;');
     }
+    if ($version < 4) {
+        tf_migrate_4($db);
+    }
+}
+
+/** 2026-10-18: customer accounts (phone checked by an SMS code), support
+    tickets with their messages and private files, and the panel's 24-hour
+    stories. */
+function tf_migrate_4(PDO $db): void
+{
+    $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS customers (
+  id INTEGER PRIMARY KEY,
+  phone TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  pass TEXT NOT NULL,
+  sv INTEGER NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  last_login INTEGER
+);
+CREATE TABLE IF NOT EXISTS otps (
+  phone TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  tries INTEGER NOT NULL DEFAULT 0,
+  sent_at INTEGER NOT NULL,
+  PRIMARY KEY (phone, purpose)
+);
+CREATE TABLE IF NOT EXISTS tickets (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  last_from TEXT NOT NULL DEFAULT 'c',
+  seen_c INTEGER NOT NULL DEFAULT 0,
+  seen_s INTEGER NOT NULL DEFAULT 0,
+  sms_at INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tickets_customer ON tickets(customer_id, updated_at);
+CREATE INDEX IF NOT EXISTS tickets_status ON tickets(status, updated_at);
+CREATE TABLE IF NOT EXISTS ticket_msgs (
+  id INTEGER PRIMARY KEY,
+  ticket_id INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+  side TEXT NOT NULL,
+  author TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL DEFAULT '',
+  product TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ticket_msgs_t ON ticket_msgs(ticket_id, id);
+CREATE TABLE IF NOT EXISTS ticket_files (
+  id TEXT PRIMARY KEY,
+  ticket_id INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+  msg_id INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  name TEXT NOT NULL,
+  mime TEXT NOT NULL,
+  ext TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  voice INTEGER NOT NULL DEFAULT 0,
+  secs INTEGER NOT NULL DEFAULT 0,
+  w INTEGER NOT NULL DEFAULT 0,
+  h INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ticket_files_msg ON ticket_files(msg_id);
+CREATE TABLE IF NOT EXISTS stories (
+  id INTEGER PRIMARY KEY,
+  kind TEXT NOT NULL,
+  media TEXT NOT NULL,
+  poster TEXT NOT NULL DEFAULT '',
+  w INTEGER NOT NULL DEFAULT 0,
+  h INTEGER NOT NULL DEFAULT 0,
+  caption TEXT NOT NULL DEFAULT '{}',
+  items TEXT NOT NULL DEFAULT '[]',
+  by_name TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS stories_exp ON stories(expires_at);
+PRAGMA user_version = 4;
+SQL);
 }
 
 function tf_migrate_1(PDO $db): void
@@ -545,28 +633,33 @@ function tf_key_matches(string $typed): bool
 }
 
 /* ------------------------------------------------------------- sessions */
-function tf_session(): void
+/** Two kinds of session, never open in the same request: the panel's
+    (cookie tf_admin, 30 days) and a shop customer's (tf_shop, 90 days), each
+    in its own folder so their clean-up lifetimes never mix. */
+function tf_session(string $kind = 'admin'): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
-    $dir = tf_data_dir() . '/sessions';
+    $shop = $kind === 'shop';
+    $days = $shop ? TF_CUSTOMER_DAYS : TF_SESSION_DAYS;
+    $dir = tf_data_dir() . ($shop ? '/sessions-shop' : '/sessions');
     if (!is_dir($dir)) {
         @mkdir($dir, 0700, true);
     }
     session_save_path($dir);
-    ini_set('session.gc_maxlifetime', (string) (TF_SESSION_DAYS * 86400));
+    ini_set('session.gc_maxlifetime', (string) ($days * 86400));
     /* This folder is our own, so the host's cleanup cron never visits it:
        PHP sweeps expired sessions itself, on about one start in a hundred. */
     ini_set('session.gc_probability', '1');
     ini_set('session.gc_divisor', '100');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
-    session_name('tf_admin');
+    session_name($shop ? 'tf_shop' : 'tf_admin');
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || (($_SERVER['SERVER_PORT'] ?? '') === '443');
     session_set_cookie_params([
-        'lifetime' => TF_SESSION_DAYS * 86400,
+        'lifetime' => $days * 86400,
         'path' => '/api/',
         'secure' => $https,
         'httponly' => true,
@@ -635,9 +728,9 @@ function tf_sign_in(array $u): void
     db()->prepare('UPDATE users SET last_login = ? WHERE id = ?')->execute([time(), $u['id']]);
 }
 
-function tf_sign_out(): void
+function tf_sign_out(string $kind = 'admin'): void
 {
-    tf_session();
+    tf_session($kind);
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();
@@ -924,6 +1017,7 @@ function tf_is_bot(string $ua): bool
 }
 
 require_once __DIR__ . '/sms.php';
+require_once __DIR__ . '/shop.php';
 
 /* --------------------------------------------------------------- devices */
 /* What the cookie sheet asks for, and the only values that are ever kept.
