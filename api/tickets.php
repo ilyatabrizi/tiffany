@@ -39,7 +39,9 @@ if ($isForm && in_array($a, ['create', 'reply'], true)) {
     $st = db()->prepare("SELECT COALESCE(SUM(f.size), 0) FROM ticket_files f JOIN ticket_msgs m ON m.id = f.msg_id
                          JOIN tickets t ON t.id = f.ticket_id WHERE t.customer_id = ? AND m.side = 'c' AND f.created_at > ?");
     $st->execute([$cid, time() - 86400]);
-    if ((int) $st->fetchColumn() + (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > TF_CUSTOMER_DAY_BYTES) {
+    $used = (int) $st->fetchColumn();
+    $st->closeCursor();                 // an open read would make the message's write fail under load
+    if ($used + (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > TF_CUSTOMER_DAY_BYTES) {
         tf_fail(429, 'quota');
     }
 }
@@ -76,7 +78,9 @@ switch ($a) {
            hour per address, for anyone making accounts to flood the team. */
         $open = db()->prepare("SELECT COUNT(*) FROM tickets WHERE customer_id = ? AND status != 'closed'");
         $open->execute([$cid]);
-        if ((int) $open->fetchColumn() >= 5) {
+        $openNow = (int) $open->fetchColumn();
+        $open->closeCursor();
+        if ($openNow >= 5) {
             tf_bad('subject', 'open', 'پنج تا تیکت باز داری؛ تا یکی‌شون جواب بگیره یا بسته بشه، توی همون‌ها بنویس.');
         }
         if (tf_too_many('tnew:' . $cid, 10, 86400) || tf_too_many('tnew:ip:' . tf_ip_key(), 20, 3600)) {

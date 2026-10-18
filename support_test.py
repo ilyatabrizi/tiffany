@@ -472,6 +472,38 @@ code, r = adm('story_delete', id=s2['id'])
 check('deleting a story removes its files', code == 200 and not any(os.path.exists(f) for f in files))
 check('stories need the panel (signed out: 401)', Panel()('stories')[0] == 401)
 
+print('\nrush: twelve customers writing with photos at the same moment')
+from concurrent.futures import ThreadPoolExecutor
+db('DELETE FROM attempts')
+crowd = []
+for i in range(12):
+    u = Shopper()
+    u.join(f'0918{i:07d}', name=f'مشتری {i}')
+    crowd.append(u)
+db('DELETE FROM attempts')
+pic = io.BytesIO()
+Image.new('RGB', (700, 500), (10, 120, 90)).save(pic, 'JPEG')
+
+
+def write(u):
+    code, r = u.tix('create', files=[('files[]', ('a.jpg', pic.getvalue(), 'image/jpeg'))], body='اول')
+    out = [code]
+    for k in range(3):
+        out.append(u.tix('reply', code=r.get('ticket', {}).get('code', ''), body=f'پیام {k}',
+                         files=[('files[]', ('b.jpg', pic.getvalue(), 'image/jpeg'))])[0])
+    return out
+
+
+rows_before = db('SELECT COUNT(*) FROM ticket_files')[0][0]
+with ThreadPoolExecutor(12) as ex:
+    res = list(ex.map(write, crowd))
+got = db("SELECT COUNT(*) FROM ticket_msgs m JOIN tickets t ON t.id = m.ticket_id JOIN customers c ON c.id = t.customer_id WHERE c.phone LIKE '0918%'")[0][0]
+check('48 messages at once: every one answered 200, none lost', all(c == 200 for r in res for c in r) and got == 48,
+      f'{res} {got}')
+rows = db('SELECT COUNT(*) FROM ticket_files')[0][0]
+disk = sum(len(fn) for _, _, fn in os.walk(os.path.join(DATA, 'files')))
+check('…48 photos kept, and every file row has its file on disk', rows - rows_before == 48 and disk == rows, f'{rows - rows_before} {disk} {rows}')
+
 print('\nthe rest of the shop still answers')
 check('catalogue', requests.get(f'{BASE}/api/catalog.php').status_code == 200)
 check('a GET to tickets.php: 405', requests.get(f'{BASE}/api/tickets.php').status_code == 405)
