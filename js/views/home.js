@@ -1,6 +1,6 @@
 /* Home — the film, the three collections, what is new, and the stories. */
 import { BRAND } from '../config.js';
-import { COLLECTIONS, LOOKS, newIn } from '../data.js';
+import { COLLECTIONS, storyList, newIn } from '../data.js';
 import { icon } from '../icons.js';
 import { esc } from '../util.js';
 import {
@@ -65,7 +65,7 @@ const looks = () => `
   ${secHead(L('استوری‌ها', 'Stories', 'Hikâyeler'),
     moreLink('/shop', L('همه رو ببین', 'Shop all', 'Hepsini gör')))}
   <div class="looks-strip">
-    ${LOOKS.map((l, i) => lookTile(l, i)).join('')}
+    ${storyList().map((l, i) => lookTile(l, i)).join('')}
   </div>
 </section>`;
 

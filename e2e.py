@@ -156,7 +156,7 @@ def run(shots_only=False):
         # The studio asked for the tab bar in English, in every language.
         check('tabs read in English', page.evaluate(
             "[...document.querySelectorAll('.tab-label')].map(e=>e.textContent).join()")
-            == 'Home,Shop,Bag,Orders,Profile')
+            == 'Home,Shop,Bag,Orders,Tickets,Profile')
         check('Home sits at the right edge of a Persian page', page.evaluate(
             "(()=>{const t=[...document.querySelectorAll('.tab')];"
             "return t[0].getBoundingClientRect().left > t[4].getBoundingClientRect().left})()"))
@@ -190,7 +190,7 @@ def run(shots_only=False):
         check('one collection: Autumn / Winter 2027', page.locator('.ccard').count() == 1)
         check('new-in rail filled', page.locator('.rail-p .card').count() >= 6)
         check('seven looks', page.locator('.look-tile').count() == 7)
-        check('five tabs', page.locator('.tab').count() == 5)
+        check('six tabs (Tickets since 2026-10-18)', page.locator('.tab').count() == 6)
         check('home tab lit', page.locator('.tab[data-tab="home"]').get_attribute('class').find('on') >= 0)
         cta = page.locator('.hero-cta .btn').first.bounding_box()
         tabbar = page.locator('#tabbar').bounding_box()
@@ -643,7 +643,7 @@ def run(shots_only=False):
                 "getComputedStyle(document.body).fontFamily.startsWith('InterVar')"))
             check(f'{code}: tabs still English', page.evaluate(
                 "[...document.querySelectorAll('.tab-label')].map(e=>e.textContent).join()")
-                == 'Home,Shop,Bag,Orders,Profile')
+                == 'Home,Shop,Bag,Orders,Tickets,Profile')
             check(f'{code}: Home sits at the left edge', page.evaluate(
                 "(()=>{const t=[...document.querySelectorAll('.tab')];"
                 "return t[0].getBoundingClientRect().left < t[4].getBoundingClientRect().left})()"))

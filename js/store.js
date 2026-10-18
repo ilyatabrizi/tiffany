@@ -11,7 +11,7 @@ const EMPTY = {
   fit: { bust: '', waist: '', hip: '', height: '' },
   address: { line: '', city: '', postal: '' },
   prefs: { colour: 'touch', theme: 'auto' },
-  seen: { looks: false },
+  seen: { looks: false, stories: [] },   // stories: the panel's ones already watched
 };
 
 function read() {

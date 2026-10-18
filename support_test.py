@@ -224,6 +224,15 @@ db("UPDATE otps SET sent_at = sent_at - 61 WHERE phone = '09122223344'")
 code, r = c.acc('otp', purpose='signup', phone='09122223344')
 check('a sixth code in an hour for one number is refused', code == 429 and r['error'] == 'too_many', str(r))
 db("DELETE FROM attempts WHERE k LIKE 'otp%'")
+con = sqlite3.connect(os.path.join(DATA, 'tiffany.sqlite'))
+con.executemany("INSERT INTO attempts (k, at) VALUES ('otp:all', ?)", [(int(time.time()),)] * 150)
+con.commit()
+con.close()
+code, r = Shopper().acc('otp', purpose='signup', phone='09125556677')
+check('the whole shop sends at most 150 codes an hour (the SMS credit is the studio’s)', code == 429, str(r))
+check('…noted once in error.log, not once per try', Shopper().acc('otp', purpose='signup', phone='09125556678')[0] == 429
+      and open(os.path.join(DATA, 'error.log')).read().count('150 in the last hour') == 1)
+db("DELETE FROM attempts WHERE k LIKE 'otp%'")
 code, r = c.acc('otp', purpose='signup', phone='09990000000')
 check('a code SMS that fails says so (502) and leaves no code', code == 502 and r['error'] == 'sms'
       and not db("SELECT 1 FROM otps WHERE phone = '09990000000'"), str(r))
@@ -397,6 +406,13 @@ code, r = a.tix('reply', code=t1['code'], body='یه سؤال دیگه', files={
 check('a customer writing in a closed ticket opens it again', r['ticket']['status'] == 'open')
 code, r = a.tix('close', code=t1['code'])
 check('the customer can close it themselves', r['ticket']['status'] == 'closed')
+tid = db("SELECT id FROM tickets WHERE code = ?", t1['code'])[0][0]
+mid = db("SELECT MIN(id) FROM ticket_msgs WHERE ticket_id = ? AND side = 'c'", tid)[0][0]
+db("INSERT INTO ticket_files (id, ticket_id, msg_id, kind, name, mime, ext, size, created_at) VALUES ('q', ?, ?, 'file', 'q', 'application/pdf', 'pdf', ?, ?)",
+   tid, mid, 300 * 1024 * 1024, int(time.time()))
+code, r = a.tix('reply', code=t1['code'], body='یه فایل دیگه', files=[('files[]', ('x.pdf', pdf, 'application/pdf'))])
+check('one customer uploads at most 300 MB a day', code == 429 and r['error'] == 'quota', str(r))
+db("DELETE FROM ticket_files WHERE id = 'q'")
 for i in range(4):
     a.tix('create', files={}, body=f'سؤال {i}')
 code, r = a.tix('create', files={}, body='ششمی')
@@ -415,7 +431,7 @@ check('an admin posts a photo story, unknown pieces dropped', code == 200 and s1
 check('…made at 1080 and 540 wide, aspect kept', s1['w'] == 1080 and s1['h'] == 1851
       and os.path.isfile(s1['media'] + '-1080.webp') and os.path.isfile(s1['media'] + '-540.webp'), str(s1))
 check('…for exactly 24 hours', s1['expires_at'] - s1['created_at'] == 86400)
-mp4 = b'\x00\x00\x00\x18ftypisom\x00\x00\x02\x00isomiso2' + b'\x00' * 200 + b'avc1' + os.urandom(4000)
+mp4 = open('tests/story-h264.mp4', 'rb').read()          # 3 s, H.264, made with ffmpeg
 poster = io.BytesIO()
 Image.new('RGB', (720, 1280), (10, 10, 10)).save(poster, 'JPEG')
 code, r = ceo.multi('story_add', {'w': '720', 'h': '1280', 'items': '[]'},
@@ -423,7 +439,7 @@ code, r = ceo.multi('story_add', {'w': '720', 'h': '1280', 'items': '[]'},
 s2 = r.get('story', {})
 check('a video story (H.264) with its cover', code == 200 and s2['kind'] == 'video' and s2['media'].endswith('.mp4')
       and s2['poster'].startswith('uploads/s/') and s2['w'] == 720, str(r)[:300])
-hevc = b'\x00\x00\x00\x14ftypqt  \x00\x00\x00\x00qt  ' + b'\x00' * 300 + b'hvc1' + os.urandom(2000)
+hevc = open('tests/story-hevc.mp4', 'rb').read()         # the same clip as HEVC, like an iPhone's default
 code, r = ceo.multi('story_add', {}, [('media', ('IMG_1.MOV', hevc, 'video/quicktime'))])
 check('an HEVC video is refused with the iPhone setting to change', code == 422 and 'Most Compatible' in r['message'], str(r))
 gif = io.BytesIO()
@@ -460,8 +476,8 @@ print('\nthe rest of the shop still answers')
 check('catalogue', requests.get(f'{BASE}/api/catalog.php').status_code == 200)
 check('a GET to tickets.php: 405', requests.get(f'{BASE}/api/tickets.php').status_code == 405)
 log = open(os.path.join(DATA, 'error.log')).read().strip().splitlines() if os.path.exists(os.path.join(DATA, 'error.log')) else []
-check('error.log holds only the SMS that was meant to fail (number half hidden)', len(log) == 1
-      and 'sms otp to 0999…00' in log[0], '\n'.join(log[-5:]))
+check('error.log holds only the two lines this test caused: the SMS ceiling and the SMS meant to fail',
+      len(log) == 2 and '150 in the last hour' in log[0] and 'sms otp to 0999…00' in log[1], '\n'.join(log[-5:]))
 
 for f in os.listdir('uploads/s') if os.path.isdir('uploads/s') else []:
     os.remove(os.path.join('uploads/s', f))

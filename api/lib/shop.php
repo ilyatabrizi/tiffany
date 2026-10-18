@@ -166,9 +166,19 @@ function tf_otp_send(string $phone, string $purpose): void
         || tf_too_many('otp:ip:' . $ip, 20, 3600)) {
         tf_fail(429, 'too_many');
     }
+    /* Every code is paid for out of the studio's SMS credit. However many
+       addresses someone uses, the whole shop sends at most 150 an hour. */
+    if (tf_too_many('otp:all', 150, 3600)) {
+        if (!tf_too_many('otp:all-noted', 1, 3600)) {          // one line in error.log an hour, not one per try
+            tf_note_attempt('otp:all-noted');
+            tf_log_error(new RuntimeException('sms codes: 150 in the last hour, holding the rest'));
+        }
+        tf_fail(429, 'too_many');
+    }
     tf_note_attempt('otp:ph:' . $phone);
     tf_note_attempt('otp:day:' . $phone);
     tf_note_attempt('otp:ip:' . $ip);
+    tf_note_attempt('otp:all');
     $code = (string) random_int(10000, 99999);
     $db->prepare('INSERT INTO otps (phone, purpose, hash, expires_at, tries, sent_at) VALUES (?, ?, ?, ?, 0, ?)
                   ON CONFLICT(phone, purpose) DO UPDATE SET hash = excluded.hash,
@@ -727,7 +737,8 @@ function tf_stories_live(): array
 }
 
 /** Is this an H.264 video, an HEVC one (which most Android phones cannot
-    play), or something else? Read in pieces, so a big file never sits in
+    play), or something else? Each track's sample description (the 'stsd'
+    box) names its codec; read in pieces, so a big file never sits in
     memory whole. */
 function tf_video_codec(string $path): string
 {
@@ -735,21 +746,26 @@ function tf_video_codec(string $path): string
     if (!$fh) {
         return 'other';
     }
+    $found = 'other';
     $tail = '';
-    $hevc = false;
     while (!feof($fh)) {
         $chunk = $tail . (string) fread($fh, 1048576);
-        if (strpos($chunk, 'avc1') !== false || strpos($chunk, 'avc3') !== false) {
-            fclose($fh);
-            return 'h264';
+        $at = 0;
+        while (($p = strpos($chunk, 'stsd', $at)) !== false) {
+            $type = substr($chunk, $p + 16, 4);
+            if ($type === 'avc1' || $type === 'avc3') {
+                fclose($fh);
+                return 'h264';
+            }
+            if ($type === 'hvc1' || $type === 'hev1') {
+                $found = 'hevc';
+            }
+            $at = $p + 4;
         }
-        if (strpos($chunk, 'hvc1') !== false || strpos($chunk, 'hev1') !== false) {
-            $hevc = true;
-        }
-        $tail = substr($chunk, -3);
+        $tail = substr($chunk, -32);
     }
     fclose($fh);
-    return $hevc ? 'hevc' : 'other';
+    return $found;
 }
 
 /** A story photo (or a video's first frame): upright, at most 1080 × 1920,

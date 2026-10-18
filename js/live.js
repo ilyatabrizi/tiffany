@@ -5,7 +5,7 @@
    connection still opens the shop with yesterday's catalogue rather than an
    empty one. Nothing here is cached by the service worker — prices must
    never be stale. */
-import { setCatalogue } from './data.js';
+import { setCatalogue, setStories } from './data.js';
 import { consented } from './consent.js';
 import { deviceLine, sharpenBrand } from './device.js';
 
@@ -14,6 +14,7 @@ export const live = {
   fresh: false,        // …and it came from the network just now
   storeOpen: false,    // the CEO has switched online ordering on
   deliveryDays: 3,
+  skew: 0,             // the server's clock minus this phone's, in ms
 };
 
 const KEEP = 'tiffany.catalog';
@@ -28,6 +29,9 @@ export async function loadCatalogue() {
     if (r.ok) {
       data = await r.json();
       live.fresh = true;
+      /* The server's clock decides when a story runs out, not the phone's. */
+      const d = Date.parse(r.headers.get('Date') || '');
+      if (d) live.skew = d - Date.now();
       try { localStorage.setItem(KEEP, JSON.stringify(data)); } catch { /* full or private */ }
     }
   } catch { /* offline, or the host is down */ }
@@ -36,6 +40,7 @@ export async function loadCatalogue() {
   }
   if (!data || !Array.isArray(data.products)) return live;
   setCatalogue(data.products);
+  setStories(data.stories, live.skew);
   live.loaded = true;
   live.storeOpen = Boolean(data.settings?.store_open) && live.fresh;
   live.deliveryDays = Number(data.settings?.delivery_days) || 3;

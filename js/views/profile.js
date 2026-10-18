@@ -11,6 +11,7 @@ import {
 } from '../ui.js';
 import { standalone } from '../install.js';
 import { consent } from '../consent.js';
+import { account } from '../account.js';
 import { L } from '../i18n.js';
 
 const initials = (name) => {
@@ -183,8 +184,19 @@ export default {
   render() {
     const p = state.profile;
     const named = Boolean(p.name);
-    return `
-    <div class="topgap"></div>
+    const u = account.user;
+    /* Signed in, the header is the account; otherwise it is what this phone
+       remembers, with the way into an account just under it. */
+    const headerHtml = u ? `
+    <header class="phead">
+      <div class="avatar">${esc(initials(u.name))}</div>
+      <div style="flex:1;min-width:0">
+        <h1 class="serif" style="font-size:24px">${esc(u.name)}</h1>
+        <p class="tiny" style="margin:2px 0 0"><span dir="ltr">${esc(u.phone)}</span> ·
+          ${icon('check', 13)}${esc(L('تأییدشده', 'confirmed', 'doğrulandı'))}</p>
+      </div>
+      <button class="btn btn-line btn-s" data-act="account" type="button">${esc(L('حساب', 'Account', 'Hesap'))}</button>
+    </header>` : `
     <header class="phead">
       <div class="avatar">${esc(initials(p.name))}</div>
       <div style="flex:1;min-width:0">
@@ -198,6 +210,18 @@ export default {
       <button class="btn btn-line btn-s" data-act="address" type="button">
         ${esc(named ? L('ویرایش', 'Edit', 'Düzenle') : L('اضافه کن', 'Add', 'Ekle'))}</button>
     </header>
+    ${account.loaded ? `<div class="acct-card">
+      <div><b>${esc(L('حساب کاربری', 'Your account', 'Hesabın'))}</b>
+        <p class="tiny">${esc(L('با شماره موبایلت وارد شو تا بتونی تیکت بفرستی و جواب تیم رو بگیری.',
+    'Sign in with your mobile number to send tickets and get the team’s answers.',
+    'Talep göndermek ve ekibin yanıtlarını almak için cep numaranla giriş yap.'))}</p></div>
+      <div class="acct-btns">
+        <button class="btn btn-ink btn-s" data-act="signin" type="button">${esc(L('ورود', 'Sign in', 'Giriş'))}</button>
+        <button class="btn btn-line btn-s" data-act="signup" type="button">${esc(L('ثبت‌نام', 'Sign up', 'Kaydol'))}</button>
+      </div></div>` : ''}`;
+    return `
+    <div class="topgap"></div>
+    ${headerHtml}
 
     <div class="stats">
       <div class="stat"><b>${num(state.wish.length)}</b><span>${esc(L('ذخیره‌شده', 'Saved', 'Kayıtlı'))}</span></div>
@@ -213,6 +237,10 @@ export default {
       <button class="row" data-act="nav" data-to="/orders" type="button">
         ${icon('box', 19)}<span class="row-label">${esc(L('سفارش‌ها', 'Orders', 'Siparişler'))}</span>
         <span class="row-val">${num(state.orders.length)}</span>${fwd()}</button>
+
+      <button class="row" data-act="nav" data-to="/tickets" type="button">
+        ${icon('ticket', 19)}<span class="row-label">${esc(L('پشتیبانی و تیکت‌ها', 'Support tickets', 'Destek talepleri'))}</span>
+        <span class="row-val">${u && account.unread ? esc(L(`${num(account.unread)} جواب تازه`, `${account.unread} new`, `${account.unread} yeni`)) : ''}</span>${fwd()}</button>
 
       <button class="row" data-act="fit" type="button">
         ${icon('ruler', 19)}<span class="row-label">${esc(L('اندازه‌های من', 'Your fit', 'Ölçülerim'))}</span>

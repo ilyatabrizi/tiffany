@@ -4,6 +4,7 @@ import {
   LOOKS, PRODUCTS, SIZES, colById, getProduct, sizeLabel, isOneSize, NO_COL, soldOut,
 } from '../data.js';
 import { icon } from '../icons.js';
+import { BRAND } from '../config.js';
 import {
   esc, toman, tap, num, COMMA,
 } from '../util.js';
@@ -33,6 +34,16 @@ const galleryFor = (p) => {
   ];
 };
 const isOut = (p, s) => p.soldout.includes(s);
+
+/** The studio's WhatsApp chat, opened with a first line naming the piece and
+    its link, so the team knows at once what is being asked about. */
+const waAsk = (p) => {
+  const url = `${location.origin}${location.pathname}#/p/${p.id}`;
+  const text = L(`سلام، برای استعلام این محصول پیام می‌دم:\n${p.name}\n${url}`,
+    `Hello, I would like to ask about this piece:\n${p.name}\n${url}`,
+    `Merhaba, bu ürün hakkında bilgi almak istiyorum:\n${p.name}\n${url}`);
+  return `https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(text)}`;
+};
 const sizeBtn = (p, s, cls = '') => `<button class="size ${cls} ${isOut(p, s) ? 'out' : ''}"
   data-size="${s}" type="button" ${isOut(p, s) ? `disabled aria-disabled="true" title="${esc(L('تموم شد', 'Sold out', 'Tükendi'))}"` : ''}>${sizeTag(s)}</button>`;
 const firstSize = (p) => {
@@ -176,6 +187,11 @@ export default {
         <h1 class="pdp-title serif">${esc(p.name)}</h1>
         <div class="pdp-price">${toman(p.price)}</div>
         <p class="pdp-note">${esc(p.note)}</p>
+        <a class="wa-ask" href="${waAsk(p)}" target="_blank" rel="noopener">
+          <span class="wa-ico">${icon('chat', 19)}</span>
+          <span class="wa-txt"><b>${esc(L('استعلام محصول', 'Ask about this piece', 'Ürünü sor'))}</b>
+            <span>${esc(L('توی واتساپ', 'on WhatsApp', 'WhatsApp’ta'))}</span></span>
+          ${icon('chevL', 16, 'chev')}</a>
       </header>
 
       ${p.colours.length > 1 ? `

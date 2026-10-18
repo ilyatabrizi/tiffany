@@ -746,7 +746,8 @@ function staff_thread(array $t): array
         'code' => $t['code'], 'subject' => $t['subject'], 'status' => $t['status'],
         'created_at' => (int) $t['created_at'], 'updated_at' => (int) $t['updated_at'],
     ], 'customer' => ['name' => $c['name'], 'phone' => $c['phone'], 'since' => (int) $c['created_at'],
-        'orders' => (int) $n->fetchColumn()]] + tf_ticket_thread($t, true);
+        'orders' => (int) $n->fetchColumn()],
+        'notify' => tf_sms_on() && tf_sms_template('ticket') > 0] + tf_ticket_thread($t, true);
 }
 
 /** 7, 30 or 90 days; anything else (or nothing) is 30. */

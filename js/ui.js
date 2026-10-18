@@ -65,15 +65,23 @@ export function collectionCard(c, sizes = '(max-width:520px) 76vw, 320px') {
   </button>`;
 }
 
+/** A story's frame: the panel's are made at 540 and 1080 wide, the looks at 720 and 1080. */
+export const storyShot = (l, sizes) => (l.live
+  ? `srcset="${esc(l.img)}-540.webp 540w, ${esc(l.img)}-1080.webp 1080w" src="${esc(l.img)}-540.webp" sizes="${sizes}"`
+  : bigShot(l.img, sizes));
+
 export function lookTile(l, i) {
+  const fresh = l.live && !state.seen.stories?.includes(l.id);
   return `
-  <button class="look-tile" data-act="look" data-i="${i}" type="button">
+  <button class="look-tile ${l.live ? 'live' : ''} ${fresh ? 'unseen' : ''}" data-act="look" data-i="${i}" type="button"
+          aria-label="${esc(l.title || L('استوری', 'Story', 'Hikâye'))}">
     <figure style="margin:0">
       <span class="shot full-colour">
-        <img ${bigShot(l.img, '118px')} alt="${esc(l.title)}" loading="lazy"
-             decoding="async" width="720" height="1280">
+        ${l.img ? `<img ${storyShot(l, '118px')} alt="" loading="lazy"
+             decoding="async" width="720" height="1280">` : '<i class="look-blank"></i>'}
+        ${l.kind === 'video' ? `<span class="look-play">${icon('play', 14)}</span>` : ''}
       </span>
-      <figcaption>${esc(l.title)}</figcaption>
+      ${l.title ? `<figcaption>${esc(l.title)}</figcaption>` : ''}
     </figure>
   </button>`;
 }

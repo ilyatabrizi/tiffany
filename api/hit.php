@@ -68,7 +68,7 @@ http_response_code(204);
     exists, a collection that exists. Anything else would be a new row a day. */
 function hit_page_ok(string $k): bool
 {
-    if (in_array($k, ['home', 'shop', 'bag', 'orders', 'profile', 'saved', 'about', 'contact', 'terms'], true)) {
+    if (in_array($k, ['home', 'shop', 'bag', 'orders', 'tickets', 'profile', 'saved', 'about', 'contact', 'terms'], true)) {
         return true;
     }
     if (!preg_match('/^([pc]):([a-z0-9][a-z0-9-]{0,60})$/', $k, $m)) {

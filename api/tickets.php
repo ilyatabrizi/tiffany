@@ -32,6 +32,18 @@ if (!$me) {
 tf_require_csrf();
 $cid = (int) $me['id'];
 
+/* What one customer may upload in a day (files of every message together),
+   so one account cannot fill the host's disk. */
+const TF_CUSTOMER_DAY_BYTES = 300 * 1024 * 1024;
+if ($isForm && in_array($a, ['create', 'reply'], true)) {
+    $st = db()->prepare("SELECT COALESCE(SUM(f.size), 0) FROM ticket_files f JOIN ticket_msgs m ON m.id = f.msg_id
+                         JOIN tickets t ON t.id = f.ticket_id WHERE t.customer_id = ? AND m.side = 'c' AND f.created_at > ?");
+    $st->execute([$cid, time() - 86400]);
+    if ((int) $st->fetchColumn() + (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > TF_CUSTOMER_DAY_BYTES) {
+        tf_fail(429, 'quota');
+    }
+}
+
 /** One of my tickets, or a 404 (someone else's ticket does not exist for me). */
 function mine(string $code, int $cid): array
 {

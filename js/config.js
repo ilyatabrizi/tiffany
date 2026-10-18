@@ -20,6 +20,9 @@ export const BRAND = {
   deliveryDays: 3,
   since: 1399,
   email: 'Ameervanda@gmail.com',
+  /* «استعلام محصول» on every product page opens a WhatsApp chat with the
+     studio (sent 2026-10-18: 0935 211 8977). */
+  whatsapp: '989352118977',
 };
 
 /* The four shops, as the studio sent them. A branch with no landline yet

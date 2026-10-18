@@ -352,3 +352,39 @@ hit.php:30`. A page-view ping now waits at most 2 s for the database; if it is s
 the view is simply not counted (204, nothing logged), so a burst never turns into errors
 or held PHP workers. Orders keep the full 8 s wait. Checked in `api_test.py` by holding a
 write lock while a ping comes in.
+
+## Accounts, tickets, stories, WhatsApp — added 2026-10-18
+
+**Customer accounts** (`api/account.php`, `js/account.js`). The account is the mobile
+number, proven once by a five-digit SMS code; then phone + password. Sign-up and «forgot
+password» both use the code (3 minutes, five guesses, a new one after 60 s; five an hour
+and ten a day per number, twenty an hour per address, 150 an hour for the whole shop).
+Sessions are their own cookie `tf_shop` (90 days, HttpOnly, SameSite=Strict, `/api/`).
+Signing in fills the checkout name and number; the bag and the rest stay on the phone.
+
+**SMS templates.** Two new sms.ir templates are needed and optional until approved:
+the code (`#CODE#`) and «your ticket has an answer» (`#NAME#`, `#CODE#`). Their ids go in
+Panel → Settings → «پیامک سفارش» (or `otp_template` / `ticket_template` in sms.json).
+Until the code template is set, sign-up and reset show «به‌زودی» and send nothing.
+
+**Tickets** (`api/tickets.php`, `js/views/tickets.js`, the sixth tab «Tickets»). Text,
+up to six files (photos, PDF, Office, audio, video), a voice note recorded in the browser
+(`js/recorder.js`, shared with the panel) and a product from the shop. Every file is
+identified by its first bytes; photos are redrawn (EXIF and GPS dropped); everything is
+kept in `tiffany-data/files` (0600, outside the web root) and handed out only by
+`api/file.php` with a signed link that lasts 6–7 hours (Range supported). Only the team
+answers, from Panel → «تیکت‌ها»; an answer texts the customer once per 15 minutes per
+ticket. Limits: five open tickets and ten new a day per account, 300 MB of files a day.
+
+**Stories** (Panel → «استوری‌ها»). A photo (WebP 1080/540) or an MP4/WebM video with a
+cover frame made in the browser, a caption in three languages and up to six pieces. Each
+is public for 24 hours (the shop reads `stories` from `api/catalog.php`, timed by the
+server's clock), then waits in the archive to go up again. HEVC video (an iPhone's
+default) is refused with the setting that fixes it, because most Android phones show it
+black.
+
+**WhatsApp.** Every product page has «استعلام محصول — توی واتساپ», opening a chat with
+0935 211 8977 (`BRAND.whatsapp` in `js/config.js`) with the piece's name and link written.
+
+`.htaccess`: the microphone is allowed for the site's own pages (voice notes).
+Tests: `support_test.py` (109, API) and `support_e2e.py` (54, browser, fake microphone).

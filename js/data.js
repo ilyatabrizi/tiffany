@@ -147,6 +147,33 @@ export const LOOKS = [
     items: ['waterproof-leather-jacket', 'light-jeans', 'two-tone-knit', 'cotton-shirt', 'cotton-cap'] },
 ];
 
+/* The panel's own stories (api/catalog.php → stories), each one public for
+   24 hours from when it went up, newest first, ahead of the seven looks.
+   `ends` is on this phone's clock: the server's Date header corrects for a
+   phone that is set wrong (see live.js). */
+export const STORIES = [];
+export function setStories(list, skew = 0) {
+  STORIES.length = 0;
+  for (const r of list || []) {
+    if (!r || !r.id || !r.media || !['image', 'video'].includes(r.kind)) continue;
+    STORIES.push({
+      id: `s${r.id}`,
+      sid: r.id,
+      live: true,
+      kind: r.kind,
+      img: r.kind === 'image' ? r.media : r.poster,
+      video: r.kind === 'video' ? r.media : '',
+      title: pick(r.caption),
+      caption: '',
+      items: Array.isArray(r.items) ? r.items : [],
+      at: r.created_at * 1000 - skew,
+      ends: r.expires_at * 1000 - skew,
+    });
+  }
+}
+/** What the strip and the viewer show: live stories first, then the looks. */
+export const storyList = () => [...STORIES.filter((s) => s.ends > Date.now()), ...LOOKS];
+
 /* ------------------------------------------------------------- lookups */
 /* Prototype-free maps: an id such as «constructor» or «__proto__» typed into
    the address bar finds nothing instead of a built-in. */

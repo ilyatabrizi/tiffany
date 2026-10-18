@@ -7,10 +7,13 @@
      #/orders      سفارش‌ها — filter, open, move along, cancel
      #/products    محصولات — the catalogue; /new and /<id> edit one
      #/customers   مشتری‌ها — everyone who ordered; /<phone> one person
+     #/tickets     تیکت‌ها — customers' questions; /<code> one thread, answered here
+     #/stories     استوری‌ها — post a photo or video for 24 hours; the archive
      #/traffic     بازدید سایت
-     #/settings    تنظیمات — the store switch, my password, the team
+     #/settings    تنظیمات — the store switch, SMS, my password, the team
 
    Every value from the server goes through esc() before it touches HTML. */
+import { canRecord, record, clock } from '../js/recorder.js';
 
 /* ---------------------------------------------------------------- basics */
 const $ = (s, r = document) => r.querySelector(s);
@@ -58,7 +61,7 @@ const STATUS = { new: 'جدید', confirmed: 'تأیید شده', shipped: 'ار
 const STEP = { new: 1, confirmed: 2, shipped: 3, delivered: 4, cancelled: 0 };
 const NEXT = { new: ['confirmed', 'تأیید سفارش'], confirmed: ['shipped', 'ارسال شد'], shipped: ['delivered', 'تحویل شد'] };
 const PAY = { card: 'کارت موقع تحویل', online: 'پرداخت آنلاین' };
-const PAGES = { home: 'صفحه‌ی اصلی', shop: 'فروشگاه', bag: 'سبد خرید', orders: 'سفارش‌های مشتری',
+const PAGES = { home: 'صفحه‌ی اصلی', shop: 'فروشگاه', bag: 'سبد خرید', orders: 'سفارش‌های مشتری', tickets: 'پشتیبانی و تیکت‌ها',
   profile: 'پروفایل', saved: 'ذخیره‌شده‌ها', about: 'درباره‌ی ما', contact: 'شعبه‌ها و تماس', terms: 'قوانین' };
 /* The shop's cookie sheet: what each device word is called in the panel. */
 const DEV = {
@@ -82,7 +85,11 @@ const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌ا
   catalog_import: 'کاتالوگ جدید رو یک‌جا وارد کرد',
   sms_on: 'پیامک‌ها رو روشن کرد', sms_off: 'پیامک‌ها رو خاموش کرد',
   sms_owner: 'شماره‌ی خبر سفارش جدید رو عوض کرد', sms_test: 'پیامک آزمایشی فرستاد',
-  team_add: 'عضو تیم اضافه کرد', team_edit: 'عضو تیم رو ویرایش کرد', team_delete: 'عضو تیم رو حذف کرد' };
+  team_add: 'عضو تیم اضافه کرد', team_edit: 'عضو تیم رو ویرایش کرد', team_delete: 'عضو تیم رو حذف کرد',
+  story_add: 'استوری گذاشت', story_edit: 'استوری رو ویرایش کرد', story_repost: 'استوری رو دوباره منتشر کرد',
+  story_end: 'استوری رو از سایت برداشت', story_delete: 'استوری رو حذف کرد',
+  ticket_reply: 'به تیکت جواب داد', ticket_close: 'تیکت رو بست', ticket_open: 'تیکت رو دوباره باز کرد',
+  sms_template: 'شماره‌ی قالب پیامک رو عوض کرد' };
 const ROLE = { ceo: 'مدیرعامل', admin: 'ادمین' };
 
 /* ----------------------------------------------------------------- icons */
@@ -108,6 +115,14 @@ const P = {
   chevD: '<path d="M5 9l7 7 7-7"/>',
   eye: '<path d="M2.6 12S6 5.6 12 5.6 21.4 12 21.4 12 18 18.4 12 18.4 2.6 12 2.6 12z"/><circle cx="12" cy="12" r="2.8"/>',
   bag: '<path d="M5.6 8h12.8l.9 11.1a1.4 1.4 0 0 1-1.4 1.5H6.1a1.4 1.4 0 0 1-1.4-1.5z"/><path d="M8.8 10.4V7.2a3.2 3.2 0 0 1 6.4 0v3.2"/>',
+  ticket: '<path d="M4 7.4A1.4 1.4 0 0 1 5.4 6h13.2A1.4 1.4 0 0 1 20 7.4v2.4a2.2 2.2 0 0 0 0 4.4v2.4a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 16.6v-2.4a2.2 2.2 0 0 0 0-4.4z"/><path d="M14.4 6.6v1.8M14.4 11.1v1.8M14.4 15.6v1.8"/>',
+  story: '<rect x="6.4" y="3" width="11.2" height="18" rx="2.6"/><path d="M10.4 9.2v5.6l4.6-2.8z"/>',
+  mic: '<rect x="9" y="3.6" width="6" height="10.4" rx="3"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0M12 17.8v2.8"/>',
+  clip: '<path d="M19.6 11.4 12.3 18.7a4.6 4.6 0 0 1-6.5-6.5l7.7-7.7a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l6.9-6.9"/>',
+  doc: '<path d="M7 3.6h6.8l4.2 4.2v11.2a1.4 1.4 0 0 1-1.4 1.4H7a1.4 1.4 0 0 1-1.4-1.4V5A1.4 1.4 0 0 1 7 3.6z"/><path d="M13.6 3.8v4.2h4.2M9 12.4h6M9 15.8h6"/>',
+  play: '<path d="M8.4 5.6v12.8L18.6 12z" fill="currentColor"/>',
+  clock: '<circle cx="12" cy="12" r="8.4"/><path d="M12 7.2V12l3.2 2"/>',
+  repeat: '<path d="M4.6 10.4a7.6 7.6 0 0 1 13.2-3.6M19.4 13.6a7.6 7.6 0 0 1-13.2 3.6"/><path d="M18.4 3.6v3.6h-3.6M5.6 20.4v-3.6h3.6"/>',
 };
 const icon = (n, s = 22) => `<svg class="ico" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none"
   stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
@@ -129,6 +144,7 @@ const SAY = {
   already_setup: 'پنل قبلاً راه‌اندازی شده؛ وارد شو.',
   stale: 'این مورد همین الان یه جای دیگه عوض شد؛ صفحه رو تازه کن و دوباره امتحان کن.',
   sms: 'پیامک فرستاده نشد؛ اعتبار پنل پیامک یا شماره رو چک کن.',
+  too_big: 'حجم فایل‌ها بیشتر از حدیه که هاست قبول می‌کنه؛ فایل کوچیک‌تر بفرست.',
   network: 'به اینترنت وصل نیستی؟ دوباره امتحان کن.',
   server: 'یه مشکلی پیش اومد؛ دوباره امتحان کن.',
 };
@@ -315,6 +331,7 @@ function renderAuth(mode) {
       renderShell();
       location.hash = '#/';
       route();
+      ping();
       if (mode !== 'login') toast(mode === 'setup' ? 'پنل آماده‌ست. خوش اومدی!' : 'رمز جدید ذخیره شد.');
     } catch (err) {
       if (!showErrors(form, err) && err.code === 'wrong') {
@@ -336,7 +353,9 @@ function renderShell() {
       <a href="#/" data-nav="dash">${icon('home')}<span>داشبورد</span></a>
       <a href="#/orders" data-nav="orders">${icon('box')}<span>سفارش‌ها</span><b class="badge" id="navBadge" hidden></b></a>
       <a href="#/products" data-nav="products">${icon('hanger')}<span>محصولات</span></a>
+      <a href="#/tickets" data-nav="tickets">${icon('ticket')}<span>تیکت‌ها</span><b class="badge" id="navTBadge" hidden></b></a>
       <a href="#/customers" data-nav="customers">${icon('users')}<span>مشتری‌ها</span></a>
+      <a class="side-only" href="#/stories" data-nav="stories">${icon('story')}<span>استوری‌ها</span></a>
       <a class="side-only" href="#/traffic" data-nav="traffic">${icon('chart')}<span>بازدید سایت</span></a>
       <a class="side-only" href="#/settings" data-nav="settings">${icon('gear')}<span>تنظیمات</span></a>
       <div class="spacer side-only"></div>
@@ -363,6 +382,7 @@ function moreSheet() {
   openSheet(`
     <h2>${esc(S.user.name)}</h2><p class="tiny" style="margin:0 0 12px">${ROLE[S.user.role]} · <span class="ltr">${esc(S.user.email)}</span></p>
     <div class="list">
+      <a class="item" href="#/stories" data-close>${icon('story')}<div class="main-c"><div class="t">استوری‌ها</div><div class="s">عکس یا ویدیو برای ۲۴ ساعت</div></div>${icon('fwd', 18)}</a>
       <a class="item" href="#/traffic" data-close>${icon('chart')}<div class="main-c"><div class="t">بازدید سایت</div></div>${icon('fwd', 18)}</a>
       <a class="item" href="#/settings" data-close>${icon('gear')}<div class="main-c"><div class="t">تنظیمات</div><div class="s">فروش آنلاین، رمز، تیم</div></div>${icon('fwd', 18)}</a>
       <a class="item" href="../" target="_blank" rel="noopener">${icon('ext')}<div class="main-c"><div class="t">دیدن سایت</div></div></a>
@@ -389,12 +409,13 @@ function setTitle(t, back = '') {
 function setNav(key) {
   $$('.nav [data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === key));
 }
-function setBadge(n) {
-  const b = $('#navBadge');
+function setBadge(n, id = 'navBadge') {
+  const b = $(`#${id}`);
   if (!b) return;
   b.hidden = !n;
   b.textContent = num(n);
 }
+const setTBadge = (n) => setBadge(n, 'navTBadge');
 
 /* =============================================================== router */
 const ROUTES = [
@@ -405,6 +426,9 @@ const ROUTES = [
   [/^\/products\/([a-z0-9-]+)$/, viewEditor, 'products'],
   [/^\/customers$/, viewCustomers, 'customers'],
   [/^\/customers\/(09\d{9})$/, viewCustomer, 'customers'],
+  [/^\/tickets$/, viewTickets, 'tickets'],
+  [/^\/tickets\/(T-\d{5})$/, viewTicket, 'tickets'],
+  [/^\/stories$/, viewStories, 'stories'],
   [/^\/traffic$/, viewTraffic, 'traffic'],
   [/^\/settings$/, viewSettings, 'settings'],
 ];
@@ -1302,6 +1326,515 @@ function devicesCard(dv, visitors) {
     <div class="dev-grid">${['type', 'brand', 'os', 'browser', 'app', 'lang'].map(list).join('')}</div></div>`;
 }
 
+
+/* ===================================================== form uploads */
+/** A multipart action with an upload progress bar (0…1). */
+function postForm(fd, onProgress) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', API);
+    x.setRequestHeader('X-CSRF', S.csrf);
+    x.timeout = 300000;
+    x.upload.onprogress = (ev) => ev.lengthComputable && onProgress?.(ev.loaded / ev.total);
+    x.onload = () => {
+      let b = {};
+      try { b = JSON.parse(x.responseText); } catch { /* */ }
+      if (x.status === 200 && b.ok) resolve(b);
+      else reject(new ApiError(b.error || 'server', x.status, b));
+    };
+    x.onerror = () => reject(new ApiError('network', 0));
+    x.ontimeout = () => reject(new ApiError('network', 0));
+    x.send(fd);
+  });
+}
+
+const mb = (n) => `${NF1.format(n / 1048576)} مگابایت`;
+
+/** Pick up to `max` products (visible ones), with a search. */
+async function pickProducts(chosen, max, onDone) {
+  if (!S.products) S.products = (await api('products')).products;
+  const list = S.products.filter((p) => p.visible);
+  let picked = [...chosen];
+  const row = (p) => `<button type="button" class="item pick ${picked.includes(p.id) ? 'on' : ''}" data-pid="${esc(p.id)}">
+    <img class="thumb s" src="${esc(img(p.images[0]))}" alt="" loading="lazy">
+    <div class="main-c"><div class="t">${esc(p.name.fa)}</div><div class="s">${esc(toman(p.price))}</div></div>
+    <span class="tick">${picked.includes(p.id) ? '✓' : ''}</span></button>`;
+  openSheet(`<h2>${max === 1 ? 'یه محصول انتخاب کن' : `محصول‌ها (حداکثر ${num(max)})`}</h2>
+    <div class="search" style="margin:10px 0">${icon('search')}<input class="input" id="pkq" type="search" placeholder="جستجوی اسم"></div>
+    <div class="list pick-list" id="pkl">${list.map(row).join('')}</div>
+    <div style="height:10px"></div><button class="btn block" type="button" id="pkok">تمام</button>`, (sheet, close) => {
+    const box = sheet.querySelector('#pkl');
+    const paint = (q = '') => {
+      const w = q.trim().toLowerCase();
+      box.innerHTML = list.filter((p) => !w || `${p.name.fa} ${p.name.en} ${p.id}`.toLowerCase().includes(w)).map(row).join('')
+        || '<p class="tiny">چیزی پیدا نشد.</p>';
+    };
+    sheet.querySelector('#pkq').addEventListener('input', (e) => paint(e.target.value));
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-pid]');
+      if (!b) return;
+      const id = b.dataset.pid;
+      if (max === 1) { picked = [id]; close(); onDone(picked); return; }
+      if (picked.includes(id)) picked = picked.filter((x) => x !== id);
+      else if (picked.length < max) picked.push(id);
+      else toast(`حداکثر ${num(max)} محصول.`, 'err');
+      paint(sheet.querySelector('#pkq').value);
+    });
+    sheet.querySelector('#pkok').addEventListener('click', () => { close(); onDone(picked); });
+  });
+}
+
+/* ============================================================= stories */
+/* A story is a photo or a video, up for 24 hours on the shop's home page
+   (the strip and the hero's «استوری‌ها»), ahead of the seven campaign looks.
+   Pieces can be tagged on it, like the looks. After 24 hours it moves to the
+   archive here, where it can go up again for another 24. */
+const left = (ts) => {
+  const s = ts - Date.now() / 1000;
+  if (s <= 0) return 'تموم شده';
+  if (s < 3600) return `${num(Math.ceil(s / 60))} دقیقه مونده`;
+  return `${num(Math.floor(s / 3600))} ساعت مونده`;
+};
+const storyThumb = (st) => {
+  const base = st.kind === 'image' ? st.media : st.poster;
+  return base ? `<img src="../${esc(base)}-540.webp" alt="" loading="lazy">` : `<span class="st-vid">${icon('play', 22)}</span>`;
+};
+
+/** A video's own size and a cover frame, made in this browser. Null when the
+    browser cannot decode the video (the story still goes up, without a cover). */
+function videoCover(file) {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    const url = URL.createObjectURL(file);
+    let done = false;
+    const end = (r) => { if (done) return; done = true; URL.revokeObjectURL(url); resolve(r); };
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.src = url;
+    v.addEventListener('loadedmetadata', () => {
+      const t = Math.min(0.5, (v.duration || 1) / 3);
+      try { v.currentTime = t; } catch { end(null); }
+    });
+    v.addEventListener('seeked', () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = v.videoWidth;
+        c.height = v.videoHeight;
+        c.getContext('2d').drawImage(v, 0, 0);
+        c.toBlob((b) => end(b ? { blob: b, w: v.videoWidth, h: v.videoHeight, secs: v.duration } : null), 'image/jpeg', 0.86);
+      } catch { end(null); }
+    });
+    v.addEventListener('error', () => end(null));
+    setTimeout(() => end(null), 8000);
+  });
+}
+
+async function viewStories(_, q, signal) {
+  setTitle('استوری‌ها');
+  const d = await api('stories');
+  if (signal.aborted) return;
+  const card = (st, live) => `<div class="st-card" data-sid="${st.id}">
+    <div class="st-ph">${storyThumb(st)}${st.kind === 'video' ? '<span class="pill hidden-p st-k">ویدیو</span>' : ''}</div>
+    <div class="st-body">
+      <div class="t">${esc(st.caption.fa || 'بدون متن')}</div>
+      <div class="s">${live ? `${icon('clock', 14)} ${esc(left(st.expires_at))}` : esc(ago(st.expires_at))} · ${num(st.items.length)} محصول${st.by ? ` · ${esc(st.by)}` : ''}</div>
+      <div class="st-acts">
+        <button class="btn line s" type="button" data-st="edit">ویرایش</button>
+        ${live ? '<button class="btn line s" type="button" data-st="end">برداشتن از سایت</button>'
+    : `<button class="btn line s" type="button" data-st="repost">${icon('repeat', 16)}دوباره، ۲۴ ساعت</button>`}
+        <button class="btn line s danger-t" type="button" data-st="delete" aria-label="حذف">${icon('trash', 16)}</button>
+      </div></div></div>`;
+  main.innerHTML = `
+    <form class="card st-new" id="stNew" novalidate>
+      <div class="sec-head"><h2>استوری جدید</h2></div>
+      <p class="hint" style="margin-top:-4px">عکس یا ویدیوی عمودی (۹ به ۱۶). ۲۴ ساعت روی صفحه‌ی اول سایت می‌مونه، بعد خودش می‌ره توی آرشیو.
+        ویدیو MP4، تا ${esc(mb(d.cap))}. توی آیفون اگه ویدیو قبول نشد: Settings ← Camera ← Formats ← Most Compatible.</p>
+      <div class="st-pick" data-field="media">
+        <button class="add-photo st-drop" type="button" id="stPick">${icon('camera')}<span>انتخاب عکس یا ویدیو</span></button>
+        <div class="st-prev" id="stPrev" hidden></div>
+        <div class="msg"></div>
+      </div>
+      <input type="file" id="stFile" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden>
+      ${field('caption_fa', 'متن روی استوری (اختیاری)', '<input class="input" id="f-caption_fa" name="caption_fa" maxlength="140" placeholder="مثلاً: رسید جدید پاییزه">')}
+      <details class="more"><summary>متن انگلیسی و ترکی (اختیاری)${icon('chevD', 18)}</summary><div class="in">
+        <div class="row2"><div class="field"><label>انگلیسی</label><input class="input ltr-in" name="caption_en" maxlength="140"></div>
+        <div class="field"><label>ترکی</label><input class="input ltr-in" name="caption_tr" maxlength="140"></div></div></div></details>
+      <div class="field" data-field="items"><label>محصول‌های توی استوری (اختیاری، تا ۶ تا)</label>
+        <div class="st-items" id="stItems"></div>
+        <button class="btn line s" type="button" id="stAddItems">${icon('plus', 18)}انتخاب محصول</button><div class="msg"></div></div>
+      <div class="bar st-bar" id="stBar" hidden><i></i></div>
+      <button class="btn block" type="submit" id="stGo" disabled>انتشار برای ۲۴ ساعت</button>
+    </form>
+    <section class="sec"><div class="sec-head"><h2>الان توی سایت</h2><span class="tiny">${num(d.live.length)} استوری</span></div>
+      ${d.live.length ? `<div class="st-grid">${d.live.map((x) => card(x, true)).join('')}</div>`
+    : '<p class="tiny">الان استوری‌ای توی سایت نیست؛ فقط هفت لوک کمپین نشون داده می‌شن.</p>'}</section>
+    <section class="sec"><div class="sec-head"><h2>آرشیو</h2><span class="tiny">بعد از ۲۴ ساعت این‌جا میان</span></div>
+      ${d.archive.length ? `<div class="st-grid">${d.archive.map((x) => card(x, false)).join('')}</div>` : '<p class="tiny">هنوز خالیه.</p>'}</section>`;
+
+  const form = $('#stNew');
+  let file = null;
+  let cover = null;
+  let items = [];
+  const paintItems = () => {
+    const by = Object.fromEntries((S.products || []).map((p) => [p.id, p]));
+    $('#stItems').innerHTML = items.map((id) => `<span class="chip on">${esc(by[id]?.name.fa || id)}
+      <button type="button" data-rmi="${esc(id)}" aria-label="برداشتن">${icon('close', 14)}</button></span>`).join('');
+  };
+  $('#stItems').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-rmi]');
+    if (b) { items = items.filter((x) => x !== b.dataset.rmi); paintItems(); }
+  });
+  $('#stAddItems').addEventListener('click', () => pickProducts(items, 6, (ids) => { items = ids; paintItems(); }));
+  $('#stPick').addEventListener('click', () => $('#stFile').click());
+  $('#stFile').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    showErrors(form, null);
+    if (f.size > d.cap) {
+      showErrors(form, new ApiError('invalid', 422, { field: 'media', message: `فایل بزرگ‌تر از ${mb(d.cap)}ه.` }));
+      return;
+    }
+    file = f.type.startsWith('image/') ? await shrink(f) : f;
+    cover = null;
+    const prev = $('#stPrev');
+    const url = URL.createObjectURL(file);
+    prev.hidden = false;
+    prev.innerHTML = file.type.startsWith('video/')
+      ? `<video src="${url}" muted playsinline controls></video>` : `<img src="${url}" alt="">`;
+    prev.insertAdjacentHTML('beforeend', `<button class="btn quiet s" type="button" id="stAgain">عوض کردن</button>`);
+    $('#stAgain').addEventListener('click', () => $('#stFile').click());
+    $('#stPick').hidden = true;
+    if (file.type.startsWith('video/')) cover = await videoCover(file);
+    $('#stGo').disabled = false;
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!file) return;
+    const fd = new FormData(form);
+    fd.append('a', 'story_add');
+    fd.append('items', JSON.stringify(items));
+    fd.append('media', file, file.name || 'story');
+    if (cover) {
+      fd.append('poster', cover.blob, 'cover.jpg');
+      fd.append('w', String(cover.w));
+      fd.append('h', String(cover.h));
+    }
+    const btn = $('#stGo');
+    const bar = $('#stBar');
+    btn.disabled = true;
+    bar.hidden = false;
+    try {
+      await postForm(fd, (x) => { bar.querySelector('i').style.width = `${Math.round(x * 100)}%`; });
+      toast('استوری منتشر شد؛ تا ۲۴ ساعت توی سایته.');
+      route();
+    } catch (err) {
+      bar.hidden = true;
+      btn.disabled = false;
+      if (!showErrors(form, err)) toast(say(err), 'err');
+    }
+  });
+
+  main.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-st]');
+    if (!b) return;
+    const id = Number(b.closest('[data-sid]').dataset.sid);
+    const st = [...d.live, ...d.archive].find((x) => x.id === id);
+    const act = b.dataset.st;
+    try {
+      if (act === 'end') {
+        if (!confirm('این استوری از سایت برداشته بشه؟ توی آرشیو می‌مونه.')) return;
+        await api('story_end', { id });
+        toast('از سایت برداشته شد');
+      } else if (act === 'repost') {
+        await api('story_repost', { id });
+        toast('دوباره منتشر شد، برای ۲۴ ساعت');
+      } else if (act === 'delete') {
+        if (!confirm('این استوری برای همیشه حذف بشه؟ فایلش هم پاک می‌شه.')) return;
+        await api('story_delete', { id });
+        toast('حذف شد');
+      } else if (act === 'edit') {
+        storySheet(st);
+        return;
+      }
+      route();
+    } catch { /* toast shown */ }
+  }, { signal });
+}
+
+function storySheet(st) {
+  let items = [...st.items];
+  openSheet(`<h2>ویرایش استوری</h2>
+    <form id="stEd" novalidate>
+      ${field('caption_fa', 'متن روی استوری', `<input class="input" name="fa" maxlength="140" value="${esc(st.caption.fa)}">`)}
+      <div class="row2"><div class="field"><label>انگلیسی</label><input class="input ltr-in" name="en" maxlength="140" value="${esc(st.caption.en)}"></div>
+        <div class="field"><label>ترکی</label><input class="input ltr-in" name="tr" maxlength="140" value="${esc(st.caption.tr)}"></div></div>
+      <div class="field" data-field="items"><label>محصول‌ها</label><div class="st-items" id="edItems"></div>
+        <button class="btn line s" type="button" id="edPick">${icon('plus', 18)}انتخاب محصول</button><div class="msg"></div></div>
+      <button class="btn block" type="submit">ذخیره</button>
+    </form>`, async (sheet, close) => {
+    if (!S.products) S.products = (await api('products')).products;
+    const by = Object.fromEntries(S.products.map((p) => [p.id, p]));
+    const paint = () => { sheet.querySelector('#edItems').innerHTML = items.map((id) => `<span class="chip on">${esc(by[id]?.name.fa || id)}</span>`).join(''); };
+    paint();
+    sheet.querySelector('#edPick').addEventListener('click', () => {
+      const form = sheet.querySelector('#stEd');
+      const keep = { fa: form.fa.value, en: form.en.value, tr: form.tr.value };
+      pickProducts(items, 6, (ids) => { items = ids; storySheet({ ...st, items, caption: keep }); });
+    });
+    sheet.querySelector('#stEd').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      try {
+        await api('story_edit', { id: st.id, caption: { fa: f.fa.value, en: f.en.value, tr: f.tr.value }, items });
+        toast('ذخیره شد');
+        close();
+        route();
+      } catch (err) { showErrors(f, err); }
+    });
+  });
+}
+
+/* ============================================================= tickets */
+/* Customers write from the shop's Tickets tab (signed in with their mobile
+   number). Only the team answers, here. A customer's new message puts the
+   ticket back in «منتظر جواب» and on the badge; an answer from here marks it
+   «جواب داده شد» and, once the studio's SMS template is set, texts them. */
+const TSTATUS = { open: 'منتظر جواب', answered: 'جواب داده شد', closed: 'بسته' };
+const TPILL = { open: 'new', answered: 'delivered', closed: 'cancelled' };
+const KIND = { image: 'عکس', voice: 'پیام صوتی', audio: 'فایل صوتی', video: 'ویدیو', file: 'فایل' };
+const kb = (n) => (n >= 1048576 ? `${NF1.format(n / 1048576)} مگابایت` : `${num(Math.max(1, n / 1024))} کیلوبایت`);
+
+async function viewTickets(_, q, signal) {
+  setTitle('تیکت‌ها');
+  const status = q.get('status') || '';
+  const search = q.get('q') || '';
+  const d = await api('tickets', { status, q: search });
+  if (signal.aborted) return;
+  setTBadge(d.counts.open || 0);
+  const all = Object.values(d.counts).reduce((a, b) => a + b, 0);
+  main.innerHTML = `
+    <div class="toolbar"><div class="search">${icon('search')}<input class="input" id="tq" type="search"
+      placeholder="کد تیکت، اسم، موبایل یا موضوع" value="${esc(search)}" aria-label="جستجو"></div></div>
+    <div class="chips" style="margin-bottom:12px">
+      <button class="chip ${status ? '' : 'on'}" data-ts="">همه <b>${num(all)}</b></button>
+      ${Object.keys(TSTATUS).map((k) => `<button class="chip ${status === k ? 'on' : ''}" data-ts="${k}">${TSTATUS[k]} <b>${num(d.counts[k] || 0)}</b></button>`).join('')}
+    </div>
+    ${d.tickets.length ? `<div class="list">${d.tickets.map((t) => `
+      <a class="item tk-it ${t.unread ? 'unread' : ''}" href="#/tickets/${esc(t.code)}">
+        <div class="main-c"><div class="t">${t.unread ? '<i class="udot"></i>' : ''}${esc(t.subject)}</div>
+          <div class="s">${esc(t.name)} · <span class="ltr">${esc(t.phone)}</span> · ${t.last_from === 's' ? 'تیم: ' : ''}${esc(t.last || KIND[t.last_kind] || '')}</div></div>
+        <div class="end"><span class="pill ${TPILL[t.status]}">${TSTATUS[t.status]}</span>
+          <div class="s">${esc(ago(t.updated_at))} · <span class="ltr">${esc(t.code)}</span></div></div></a>`).join('')}</div>`
+    : `<div class="empty">${icon('ticket')}<h3>${search || status ? 'چیزی پیدا نشد' : 'هنوز تیکتی نیومده'}</h3>
+        <p>${search || status ? 'فیلتر یا جستجو رو عوض کن.' : 'مشتری‌ها از صفحه‌ی «Tickets» سایت، بعد از ورود با موبایلشون، تیکت می‌فرستن.'}</p></div>`}`;
+  main.querySelectorAll('[data-ts]').forEach((c) => c.addEventListener('click', () => {
+    const p = new URLSearchParams();
+    if (c.dataset.ts) p.set('status', c.dataset.ts);
+    if (search) p.set('q', search);
+    location.hash = `#/tickets${p.toString() ? `?${p}` : ''}`;
+  }));
+  let st;
+  $('#tq').addEventListener('input', (e) => {
+    clearTimeout(st);
+    st = setTimeout(() => {
+      const p = new URLSearchParams();
+      if (status) p.set('status', status);
+      if (e.target.value.trim()) p.set('q', e.target.value.trim());
+      location.hash = `#/tickets${p.toString() ? `?${p}` : ''}`;
+    }, 450);
+  });
+  if (search) { const i = $('#tq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+}
+
+function tFile(f) {
+  const url = esc(f.url);
+  if (f.kind === 'image') return `<a class="tm-img" href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="${esc(f.name)}" loading="lazy"></a>`;
+  if (f.kind === 'audio') {
+    return `<div class="tm-audio"><span class="tiny">${icon('mic', 14)} ${f.voice ? 'پیام صوتی' : esc(f.name)}${f.secs ? ` · ${clock(f.secs, num)}` : ''}</span>
+      <audio controls preload="none" src="${url}"></audio><a class="tiny link" href="${url}" download="${esc(f.name)}">دانلود</a></div>`;
+  }
+  if (f.kind === 'video') return `<div class="tm-audio"><video controls playsinline preload="metadata" src="${url}"></video><a class="tiny link" href="${url}" download="${esc(f.name)}">دانلود ویدیو</a></div>`;
+  return `<a class="tm-file" href="${url}" download="${esc(f.name)}">${icon('doc', 18)}<span><b>${esc(f.name)}</b><span class="tiny">${kb(f.size)}</span></span>${icon('down', 16)}</a>`;
+}
+
+function tMessages(d) {
+  return d.messages.map((m) => {
+    const p = m.product ? d.products?.[m.product] : null;
+    return `<div class="tm ${m.side === 's' ? 'staff' : 'cust'}">
+      <span class="tm-who">${m.side === 's' ? esc(m.author || 'تیم') : esc(d.customer.name)}</span>
+      ${p ? `<a class="tm-prod" href="#/products/${esc(p.id)}"><img class="thumb s" src="${esc(img(p.img))}" alt="">
+        <span><b>${esc(p.name.fa)}</b><span class="tiny">${esc(toman(p.price))}${p.visible ? '' : ' · مخفی'}</span></span></a>` : ''}
+      ${m.files.length ? `<div class="tm-files">${m.files.map(tFile).join('')}</div>` : ''}
+      ${m.body ? `<p class="tm-body">${esc(m.body)}</p>` : ''}
+      <span class="tm-at">${esc(D_TIME.format(new Date(m.at * 1000)))}</span></div>`;
+  }).join('');
+}
+
+async function viewTicket([code], q, signal) {
+  let d = await api('ticket', { code });
+  if (signal.aborted) return;
+  const t = () => d.ticket;
+  setTitle(t().subject, '#/tickets');
+  ping();
+  main.innerHTML = `
+    <div class="card tk-headc">
+      <div class="tk-top"><div><h2>${esc(t().subject)}</h2>
+        <p class="tiny"><span class="ltr">${esc(t().code)}</span> · ${esc(D_TIME.format(new Date(t().created_at * 1000)))}</p></div>
+        <span class="pill" id="tkPill"></span></div>
+      <div class="tk-cust">
+        <span>${icon('users', 18)} ${esc(d.customer.name)}</span>
+        <a class="callme" href="tel:${esc(d.customer.phone)}">${icon('phone', 15)}<span class="ltr">${esc(d.customer.phone)}</span></a>
+        <a class="link" href="#/customers/${esc(d.customer.phone)}">${num(d.customer.orders)} سفارش</a>
+      </div>
+      <div class="actions" style="margin-top:12px" id="tkActs"></div>
+    </div>
+    <div class="tmsgs" id="tmsgs"></div>
+    <form class="card treply" id="treply" novalidate>
+      <div class="field" data-field="body" style="margin:0"><textarea class="input" id="f-body" name="body" rows="3" placeholder="جوابت رو بنویس…"></textarea><div class="msg"></div></div>
+      <div class="tchips" id="tchips"></div>
+      <div class="trec" id="trec" hidden><i class="rec-dot"></i><b id="trecT">0:00</b><span class="tiny">در حال ضبط…</span>
+        <button class="btn quiet s" type="button" data-t="cancel">لغو</button><button class="btn s" type="button" data-t="stop">تمام</button></div>
+      <div class="tbar" id="tbar">
+        <button class="btn line s" type="button" data-t="file">${icon('clip', 17)}فایل یا عکس</button>
+        <button class="btn line s" type="button" data-t="product">${icon('hanger', 17)}محصول</button>
+        ${canRecord() ? `<button class="btn line s" type="button" data-t="mic">${icon('mic', 17)}پیام صوتی</button>` : ''}
+        <button class="btn s grow" type="submit" id="tsend">فرستادن جواب</button>
+      </div>
+      <div class="bar" id="tprog" hidden><i></i></div>
+      <p class="hint" id="tnote" style="margin:8px 0 0"></p>
+      <input type="file" id="tfile" multiple hidden accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+    </form>`;
+
+  const paint = (scroll) => {
+    $('#tkPill').className = `pill ${TPILL[t().status]}`;
+    $('#tkPill').textContent = TSTATUS[t().status];
+    $('#tkActs').innerHTML = t().status === 'closed'
+      ? '<button class="btn line s" type="button" data-tst="open">باز کردن دوباره</button>'
+      : '<button class="btn line s" type="button" data-tst="closed">بستن تیکت</button>';
+    $('#tmsgs').innerHTML = tMessages(d);
+    $('#tnote').textContent = d.notify
+      ? 'مشتری با پیامک خبردار می‌شه که جواب دادی (هر تیکت حداکثر یه پیامک در ۱۵ دقیقه).'
+      : 'جواب توی بخش تیکت‌های سایت به مشتری نشون داده می‌شه. (پیامک خبر جواب هنوز تنظیم نشده.)';
+    if (scroll) $('#treply').scrollIntoView({ block: 'end' });
+  };
+  paint(true);
+
+  main.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-tst]');
+    if (!b) return;
+    try {
+      d = await api('ticket_status', { code: t().code, status: b.dataset.tst });
+      toast(t().status === 'closed' ? 'تیکت بسته شد' : 'تیکت دوباره باز شد');
+      paint(false);
+      ping();
+    } catch { /* toast shown */ }
+  }, { signal });
+
+  /* the reply box */
+  const caps = d.caps || { file: 5e6, files: 6 };
+  const c = { files: [], voice: null, product: '' };
+  let rec = null;
+  const form = $('#treply');
+  const chips = () => {
+    const by = Object.fromEntries((S.products || []).map((p) => [p.id, p]));
+    $('#tchips').innerHTML = [
+      c.product ? `<span class="chip on">${icon('hanger', 15)}${esc(by[c.product]?.name.fa || c.product)}<button type="button" data-rm="p">${icon('close', 14)}</button></span>` : '',
+      ...c.files.map((f, i) => `<span class="chip on">${esc(f.name)} · ${kb(f.size)}<button type="button" data-rm="${i}">${icon('close', 14)}</button></span>`),
+      c.voice ? `<span class="chip on">${icon('mic', 15)}پیام صوتی · ${clock(c.voice.secs, num)}<button type="button" data-rm="v">${icon('close', 14)}</button></span>` : '',
+    ].join('');
+  };
+  $('#tfile').addEventListener('change', async (e) => {
+    for (const f0 of [...e.target.files]) {
+      if (c.files.length >= caps.files) { toast(`هر پیام حداکثر ${num(caps.files)} فایل.`, 'err'); break; }
+      const f = await shrink(f0);
+      if (f.size > caps.file) { toast(`«${f.name}» بزرگ‌تر از ${mb(caps.file)}ه.`, 'err'); continue; }
+      c.files.push(f);
+    }
+    e.target.value = '';
+    chips();
+  });
+  form.addEventListener('click', async (e) => {
+    const rm = e.target.closest('[data-rm]');
+    if (rm) {
+      const k = rm.dataset.rm;
+      if (k === 'p') c.product = ''; else if (k === 'v') c.voice = null; else c.files.splice(Number(k), 1);
+      chips();
+      return;
+    }
+    const b = e.target.closest('[data-t]');
+    if (!b) return;
+    const act = b.dataset.t;
+    if (act === 'file') $('#tfile').click();
+    else if (act === 'product') pickProducts(c.product ? [c.product] : [], 1, (ids) => { c.product = ids[0] || ''; chips(); });
+    else if (act === 'mic') {
+      try {
+        rec = await record({ max: 300, onTick: (s) => { $('#trecT').textContent = clock(s, num); }, onAutoStop: () => form.querySelector('[data-t="stop"]').click() });
+        $('#trec').hidden = false;
+        $('#tbar').hidden = true;
+      } catch { toast('اجازه‌ی میکروفون داده نشد.', 'err'); }
+    } else if (act === 'stop' && rec) {
+      const v = await rec.stop();
+      rec = null;
+      $('#trec').hidden = true;
+      $('#tbar').hidden = false;
+      if (v.secs >= 1 && v.blob.size) c.voice = v;
+      chips();
+    } else if (act === 'cancel' && rec) {
+      rec.cancel();
+      rec = null;
+      $('#trec').hidden = true;
+      $('#tbar').hidden = false;
+    }
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = form.body.value.trim();
+    if (!body && !c.files.length && !c.voice && !c.product) {
+      showErrors(form, new ApiError('invalid', 422, { field: 'body', message: 'جواب رو بنویس، یا فایل یا پیام صوتی بذار.' }));
+      return;
+    }
+    const fd = new FormData();
+    fd.append('a', 'ticket_reply');
+    fd.append('code', t().code);
+    fd.append('body', body);
+    fd.append('product', c.product);
+    c.files.forEach((f) => fd.append('files[]', f, f.name));
+    if (c.voice) {
+      const ext = c.voice.mime.includes('mp4') ? 'm4a' : c.voice.mime.includes('ogg') ? 'ogg' : 'webm';
+      fd.append('voice', c.voice.blob, `voice.${ext}`);
+      fd.append('voice_secs', String(c.voice.secs));
+    }
+    const btn = $('#tsend');
+    const bar = $('#tprog');
+    btn.disabled = true;
+    bar.hidden = false;
+    try {
+      d = await postForm(fd, (x) => { bar.querySelector('i').style.width = `${Math.round(x * 100)}%`; });
+      form.reset();
+      c.files = []; c.voice = null; c.product = '';
+      chips();
+      showErrors(form, null);
+      toast('جواب فرستاده شد');
+      paint(true);
+      ping();
+    } catch (err) {
+      if (!showErrors(form, err)) toast(say(err), 'err');
+    } finally { btn.disabled = false; bar.hidden = true; }
+  });
+
+  /* A new message from the customer while this is open shows up by itself. */
+  const timer = setInterval(async () => {
+    if (document.hidden) return;
+    try {
+      const fresh = await api('ticket', { code: t().code }, { quiet: true });
+      if (fresh.messages.length !== d.messages.length) { d = fresh; paint(true); }
+    } catch { /* next time */ }
+  }, 20000);
+  signal.addEventListener('abort', () => { clearInterval(timer); rec?.cancel(); });
+}
+
 /* ============================================================= settings */
 /* Order SMS (sms.ir): on/off, the mobile that hears about new orders, the
    balance, and one test message. The key itself never leaves the server. */
@@ -1315,6 +1848,15 @@ function smsCard(sms) {
     <label class="switch"><span><b id="smsWord">${sms.on ? 'روشنه' : 'خاموشه'}</b><br>
       <span class="tiny">بعد از ثبت هر سفارش و هر تغییر وضعیتش، مشتری پیامک می‌گیره؛ خبر هر سفارش جدید هم به شماره‌ی زیر می‌ره.</span></span>
       <input type="checkbox" id="smsOn" ${sms.on ? 'checked' : ''}><span class="knob"></span></label>
+    <form id="tplForm" novalidate style="margin-top:14px">
+      <div class="row2">
+        ${field('sms_tpl_otp', 'قالب کد تأیید (ثبت‌نام و رمز)', `<input class="input ltr-in" id="f-sms_tpl_otp" name="sms_tpl_otp" inputmode="numeric" value="${sms.otp || ''}" placeholder="مثلاً 123456">`,
+    sms.otp ? 'فعاله؛ مشتری‌ها با کد پیامکی ثبت‌نام می‌کنن.' : 'تا خالیه، مشتری‌ها نمی‌تونن حساب بسازن.')}
+        ${field('sms_tpl_ticket', 'قالب خبر جواب تیکت', `<input class="input ltr-in" id="f-sms_tpl_ticket" name="sms_tpl_ticket" inputmode="numeric" value="${sms.ticket || ''}" placeholder="مثلاً 123457">`,
+    'اختیاری؛ خالی باشه، جواب فقط توی سایت دیده می‌شه.')}
+      </div>
+      <button class="btn line s" type="submit">ذخیره‌ی شماره‌ی قالب‌ها</button>
+    </form>
     <form id="smsForm" novalidate style="margin-top:12px">
       ${field('sms_owner', 'شماره‌ی خبر سفارش جدید', `<input class="input ltr-in" id="f-sms_owner" name="sms_owner" inputmode="tel" value="${esc(sms.owner || '')}" placeholder="09xxxxxxxxx">`, 'خالی بذاری، خبر سفارش جدید پیامک نمی‌شه.')}
       <div class="actions" style="gap:8px">
@@ -1347,6 +1889,16 @@ function wireSms(sms, signal) {
       e.target.sms_owner.value = r.sms.owner || '';
       showErrors(e.target, null);
       toast('شماره ذخیره شد');
+    } catch (err) { showErrors(e.target, err); }
+  });
+  $('#tplForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('settings_save', { sms_tpl_otp: e.target.sms_tpl_otp.value, sms_tpl_ticket: e.target.sms_tpl_ticket.value });
+      e.target.sms_tpl_otp.value = r.sms.otp || '';
+      e.target.sms_tpl_ticket.value = r.sms.ticket || '';
+      showErrors(e.target, null);
+      toast('شماره‌ی قالب‌ها ذخیره شد');
     } catch (err) { showErrors(e.target, err); }
   });
   $('#smsTest').addEventListener('click', async (e) => {
@@ -1491,6 +2043,7 @@ async function boot() {
     if (!S.user) { renderAuth(st.setup ? 'setup' : 'login'); return; }
     renderShell();
     route();
+    ping();
   } catch {
     root.className = 'auth';
     root.innerHTML = `<div class="auth-box" style="text-align:center"><i class="mark"></i>
@@ -1499,13 +2052,9 @@ async function boot() {
   }
 }
 
-/* The «سفارش‌ها» badge stays fresh while the panel is open. */
-setInterval(() => {
-  if (!S.user || document.hidden) return;
-  api('ping', {}, { quiet: true }).then((r) => setBadge(r.pending)).catch(() => {});
-}, 60000);
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && S.user) api('ping', {}, { quiet: true }).then((r) => setBadge(r.pending)).catch(() => {});
-});
+/* The «سفارش‌ها» and «تیکت‌ها» badges stay fresh while the panel is open. */
+const ping = () => api('ping', {}, { quiet: true }).then((r) => { setBadge(r.pending); setTBadge(r.tickets); }).catch(() => {});
+setInterval(() => { if (S.user && !document.hidden) ping(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.user) ping(); });
 
 boot();

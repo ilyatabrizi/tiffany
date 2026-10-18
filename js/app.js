@@ -16,6 +16,9 @@ import { needsConsent, askConsent } from './consent.js';
 import { mountColour, applyColourPref } from './colour.js';
 import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
 import { loadCatalogue, beacon, live } from './live.js';
+import {
+  account, loadAccount, refreshUnread, signInSheet, signUpSheet, accountSheet,
+} from './account.js';
 
 import home from './views/home.js';
 import shop from './views/shop.js';
@@ -27,15 +30,17 @@ import saved from './views/saved.js';
 import profile, { addressSheet, resetSheet } from './views/profile.js';
 import { about, contact, terms } from './views/info.js';
 import { fitSheet } from './views/profile.js';
+import tickets from './views/tickets.js';
 
 const VIEWS = {
   '/': home, '/shop': shop, '/bag': bag, '/orders': orders, '/profile': profile,
-  '/saved': saved, '/p': product, '/c': collection,
+  '/saved': saved, '/p': product, '/c': collection, '/tickets': tickets,
   '/about': about, '/contact': contact, '/terms': terms,
 };
 
 /* Each tab owns one of the five colours. It is the only colour in the chrome,
-   and it only shows on the tab you are standing on.
+   and it only shows on the tab you are standing on. Tickets (2026-10-18) is
+   the sixth tab and takes no colour of its own: it is the shop's ink.
 
    The labels are English in every language the shop speaks — the studio asked
    for it, and like the wordmark they read as names. Order still follows the
@@ -45,6 +50,7 @@ const TABS = [
   { id: 'shop', to: '/shop', label: 'Shop', ico: 'hanger', c: 'var(--c-sky)' },
   { id: 'bag', to: '/bag', label: 'Bag', ico: 'bag', c: 'var(--c-cherry)' },
   { id: 'orders', to: '/orders', label: 'Orders', ico: 'box', c: 'var(--c-rust)' },
+  { id: 'tickets', to: '/tickets', label: 'Tickets', ico: 'ticket', c: 'var(--ink)' },
   { id: 'profile', to: '/profile', label: 'Profile', ico: 'user', c: 'var(--c-lilac)' },
 ];
 
@@ -107,25 +113,28 @@ function movePill(id) {
 }
 
 function badgeTabs() {
-  const n = bagCount();
-  const dot = tabbar.querySelector('[data-tab="bag"] .tab-dot');
-  if (!dot) return;
-  dot.hidden = !n;
-  dot.textContent = num(n);
+  const put = (tab, n) => {
+    const dot = tabbar.querySelector(`[data-tab="${tab}"] .tab-dot`);
+    if (!dot) return;
+    dot.hidden = !n;
+    dot.textContent = num(n);
+  };
+  put('bag', bagCount());
+  put('tickets', account.user ? account.unread : 0);   // tickets with an answer not yet opened
 }
 
 /* ---------------------------------------------------------------- topbar */
 function wireTopbar(view, parts, signal) {
   const meta = view.meta ? view.meta(parts) : {};
   const title = meta.title || view.title || BRAND.name;
-  const at = view.topbarAt ?? 60;
+  const at = (typeof view.topbarAt === 'function' ? view.topbarAt(parts) : view.topbarAt) ?? 60;
   const isHome = title === BRAND.name;
 
   topTitle.textContent = isHome ? BRAND.name : title;
   topTitle.classList.toggle('mark', isHome);
   /* The wordmark is Latin; everything else in the bar follows the page. */
   topTitle.setAttribute('dir', isHome ? 'ltr' : dir);
-  topBack.hidden = !view.back;
+  topBack.hidden = !(typeof view.back === 'function' ? view.back(parts) : view.back);
   topAct.hidden = !meta.wishId;
   if (meta.wishId) {
     topAct.dataset.act = 'wish-top';
@@ -146,7 +155,7 @@ let shownHash = '';
 let shownPath = '';
 
 function render(route, { keepScroll = false, how = 'push' } = {}) {
-  const key = ['p', 'c'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
+  const key = ['p', 'c', 'tickets'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
   const view = VIEWS[key] || VIEWS['/'];
   const y = window.scrollY;
   /* Remember where the page being left was scrolled to, so a step back
@@ -163,7 +172,7 @@ function render(route, { keepScroll = false, how = 'push' } = {}) {
   if (isLooksOpen()) closeLooks();
 
   app.innerHTML = view.render(route.parts, route.q);
-  view.mount?.(app, viewAbort.signal);
+  view.mount?.(app, viewAbort.signal, route.parts);
   mountColour(app, viewAbort.signal);
 
   wireTopbar(view, route.parts, viewAbort.signal);
@@ -171,7 +180,7 @@ function render(route, { keepScroll = false, how = 'push' } = {}) {
   badgeTabs();
   /* A product page floats its own buy bar in the tab bar's place — two glass
      bars stacked at the bottom of a phone is one too many. */
-  tabbar.classList.toggle('hide', Boolean(view.hideTabs));
+  tabbar.classList.toggle('hide', Boolean(typeof view.hideTabs === 'function' ? view.hideTabs(route.parts) : view.hideTabs));
 
   /* A refresh stays put; a step back returns to where that page was left; a
      new filter on the same page keeps the place; anything else starts at
@@ -213,6 +222,9 @@ document.addEventListener('click', (e) => {
     case 'about': go('/about'); break;
     case 'reset': resetSheet(); break;
     case 'share': share(); break;
+    case 'signin': signInSheet(); break;
+    case 'signup': signUpSheet(); break;
+    case 'account': accountSheet(); break;
     default: break;
   }
 }, false);
@@ -230,6 +242,14 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('bag:changed', badgeTabs);
+document.addEventListener('account:unread', badgeTabs);
+/* Signing in or out redraws the profile (its header is the account); the
+   tickets page redraws itself. Never on top of an open sheet: a redraw
+   closes sheets, and the visitor may be in the middle of one. */
+document.addEventListener('account:changed', () => {
+  badgeTabs();
+  if (parse().parts[0] === 'profile' && !sheetIsOpen()) refresh();
+});
 document.addEventListener('view:refresh', refresh);
 document.addEventListener('colour:changed', refresh);
 
@@ -361,7 +381,13 @@ catalogue.finally(() => {
   if (live.fresh) tidyStored();
   onRoute((r, how) => render(r, { how }));
   start();
+  loadAccount();
 });
+
+/* A new answer from the team puts a dot on the Tickets tab, checked every
+   two minutes while the shop is open and on screen. */
+setInterval(() => { if (!document.hidden && account.user) refreshUnread(); }, 120000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && account.user) refreshUnread(); });
 
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

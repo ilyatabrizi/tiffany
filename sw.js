@@ -12,7 +12,7 @@
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v10';
+const V = 'tiffany-fa-v11';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
@@ -22,6 +22,7 @@ const SHELL = [
   'js/views/home.js', 'js/views/shop.js', 'js/views/collection.js',
   'js/views/product.js', 'js/views/bag.js', 'js/views/orders.js',
   'js/views/saved.js', 'js/views/profile.js', 'js/views/info.js',
+  'js/views/tickets.js', 'js/account.js', 'js/recorder.js',
   'assets/fonts/iranyekanx-fanum.woff2', 'assets/fonts/cormorant.woff2',
   'assets/brand/wordmark-white-1200.png',
   'assets/brand/alpha-letters.png', 'assets/brand/alpha-bars.png',
@@ -96,8 +97,8 @@ self.addEventListener('fetch', (e) => {
      catalogue for offline starts, see js/live.js.) */
   if (/\/(api|admin)(\/|$)/.test(url.pathname)) return;
 
-  /* Video needs Range support; the network owns it entirely. */
-  if (request.destination === 'video' || request.headers.has('range')) return;
+  /* Video and sound need Range support; the network owns them entirely. */
+  if (request.destination === 'video' || request.destination === 'audio' || request.headers.has('range')) return;
 
   const d = request.destination;
   if (request.mode === 'navigate' || d === 'document' || d === 'script'
