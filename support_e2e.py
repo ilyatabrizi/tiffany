@@ -270,9 +270,12 @@ with sync_playwright() as pw:
           and 'تأییدشده' in page.inner_text('.phead'))
     page.click('[data-act="account"]')
     page.click('#acOut')
-    page.wait_for_selector('.acct-card')
-    check('signed out: the sign-in card is back', page.locator('.acct-card [data-act="signin"]').is_visible())
-    page.click('.acct-card [data-act="signin"]')
+    page.wait_for_selector('.acct-big')
+    check('signed out: a big «ساخت اکانت» where «اضافه کن» was', page.inner_text('.acct-big').strip() == 'ساخت اکانت'
+          and page.locator('.phead .btn').count() == 0
+          and page.evaluate("parseFloat(getComputedStyle(document.querySelector('.acct-big')).fontSize)") >= 18)
+    shot(page, '09b-profile-signed-out')
+    page.click('.acct-cta [data-act="signin"]')
     page.click('[data-go="reset"]')
     page.fill('#ac-phone', '09121112233')
     page.click('#acForm [type=submit]')

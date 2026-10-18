@@ -1383,6 +1383,10 @@ a.bline { color: var(--ink); width: fit-content; }
 .comp [hidden], .viewer-sound[hidden], .tab-dot[hidden] { display: none !important; }
 
 /* ------------------------------------------------------------- account */
+/* Signed out, the profile's one big call: «ساخت اکانت». */
+.acct-cta { margin: 20px var(--gap) 0; display: grid; justify-items: center; gap: 12px; }
+.acct-big { height: 60px; font-size: 18px; font-weight: 700; gap: 10px; letter-spacing: -.01em; }
+.acct-in { font-size: 13.5px; }
 .acct-card {
   margin: 18px var(--gap) 0; padding: 15px 16px; border-radius: var(--r-m);
   background: var(--paper-2); display: grid; gap: 12px;

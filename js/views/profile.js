@@ -201,24 +201,16 @@ export default {
       <div class="avatar">${esc(initials(p.name))}</div>
       <div style="flex:1;min-width:0">
         <h1 class="serif" style="font-size:24px">${named ? esc(p.name) : esc(L('خوش اومدی', 'Welcome', 'Hoş geldin'))}</h1>
-        <p class="tiny" style="margin:2px 0 0">${named
-          ? esc(p.phone || L('بزن تا شماره‌ت رو اضافه کنی', 'Tap to add a phone number', 'Telefon eklemek için dokun'))
-          : esc(L('یه بار اطلاعاتت رو بده، بعدش تکمیل خرید خودش پر می‌شه.',
-            'Add your details once and checkout fills itself in.',
-            'Bilgilerini bir kez gir, ödeme sayfası kendini doldursun.'))}</p>
+        <p class="tiny" style="margin:2px 0 0">${named && p.phone ? `<span dir="ltr">${esc(p.phone)}</span>`
+          : esc(L('یه اکانت بساز تا بتونی تیکت بفرستی و جواب تیم رو همین‌جا بگیری.',
+            'Create an account to send tickets and get the team’s answers right here.',
+            'Talep gönderip ekibin yanıtlarını burada almak için bir hesap oluştur.'))}</p>
       </div>
-      <button class="btn btn-line btn-s" data-act="address" type="button">
-        ${esc(named ? L('ویرایش', 'Edit', 'Düzenle') : L('اضافه کن', 'Add', 'Ekle'))}</button>
     </header>
-    ${account.loaded ? `<div class="acct-card">
-      <div><b>${esc(L('حساب کاربری', 'Your account', 'Hesabın'))}</b>
-        <p class="tiny">${esc(L('با شماره موبایلت وارد شو تا بتونی تیکت بفرستی و جواب تیم رو بگیری.',
-    'Sign in with your mobile number to send tickets and get the team’s answers.',
-    'Talep göndermek ve ekibin yanıtlarını almak için cep numaranla giriş yap.'))}</p></div>
-      <div class="acct-btns">
-        <button class="btn btn-ink btn-s" data-act="signin" type="button">${esc(L('ورود', 'Sign in', 'Giriş'))}</button>
-        <button class="btn btn-line btn-s" data-act="signup" type="button">${esc(L('ثبت‌نام', 'Sign up', 'Kaydol'))}</button>
-      </div></div>` : ''}`;
+    ${account.loaded ? `<div class="acct-cta">
+      <button class="btn btn-ink btn-block acct-big" data-act="signup" type="button">${icon('user', 21)}${esc(L('ساخت اکانت', 'Create an account', 'Hesap oluştur'))}</button>
+      <button class="link-more acct-in" data-act="signin" type="button">${esc(L('اکانت داری؟ وارد شو', 'Have an account? Sign in', 'Hesabın var mı? Giriş yap'))}</button>
+    </div>` : ''}`;
     return `
     <div class="topgap"></div>
     ${headerHtml}
