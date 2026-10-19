@@ -3,7 +3,9 @@
 
    Only while the CEO has switched ordering on (Settings in the panel).
    Prices, names and stock come from the database, never from the browser:
-   the bag only says which piece, which size, which colour and how many. */
+   the bag only says which piece, which size, which colour and how many, and
+   how it will be paid (pay: card on delivery, or c2c — card-to-card now
+   through «تأیید شد»; the answer then carries the payment page). */
 declare(strict_types=1);
 require __DIR__ . '/lib/boot.php';
 
@@ -33,7 +35,9 @@ $city = tf_line($in['city'] ?? '', 40);
 $address = tf_text($in['address'] ?? '', 300);
 $postal = preg_replace('/[^0-9]/', '', tf_digits((string) ($in['postal'] ?? ''))) ?? '';
 $note = tf_text($in['note'] ?? '', 300);
-$pay = 'card';                          // online payment arrives with the gateway
+/* card: by card on delivery. c2c: card-to-card now, through «تأیید شد»
+   (api/lib/pay.php), only while the CEO has it switched on and it works. */
+$pay = ($in['pay'] ?? 'card') === 'c2c' ? 'c2c' : 'card';
 
 if (mb_strlen($name) < 2) {
     throw new TfInvalid('name', 'اسم و فامیل رو بنویس.');
@@ -89,6 +93,9 @@ $pending = (int) $open->fetchColumn();
 $open->closeCursor();
 if ($pending >= 3) {
     throw new TfInvalid('pending', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
+}
+if ($pay === 'c2c' && !tz_available()) {
+    throw new TfInvalid('pay', 'کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.');
 }
 
 $db = db();
@@ -167,7 +174,20 @@ tf_after(static function () use ($code, $name, $phone, $total): void {
     tf_sms_order_placed($code, $name, $phone, $total);
 });
 
-tf_json(['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
-    'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now,
+$out = ['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
+    'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now, 'pay' => $pay,
     'items' => array_map(static fn ($i) => ['id' => $i['id'], 'size' => $i['size'], 'colour' => $i['colour'],
-        'qty' => $i['qty'], 'price' => $i['price']], $items)]);
+        'qty' => $i['qty'], 'price' => $i['price']], $items)];
+/* The order is in; now its payment page. If tayidshod cannot make one, the
+   order stays and is paid on delivery, and the customer is told so. */
+if ($pay === 'c2c') {
+    $row = tz_order($code);
+    $started = $row ? tz_start($row) : ['ok' => false];
+    if ($started['ok']) {
+        $out += ['pay_url' => $started['pay_url'], 'pay_key' => tz_token($code), 'pay_state' => 'pending'];
+    } else {
+        $out['pay'] = 'card';
+        $out['pay_note'] = 'fallback';
+    }
+}
+tf_json($out);

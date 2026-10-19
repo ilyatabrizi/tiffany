@@ -367,6 +367,16 @@ main.main { padding: 16px var(--gap) calc(var(--nav-h) + var(--sb) + 30px); max-
 .pill.cancelled { color: var(--st-cancelled); background: var(--st-cancelled-bg); }
 .pill.hidden-p { color: var(--muted); background: var(--paper-3); }
 .pill.out { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+/* An order row's status and, for card-to-card, its payment side by side. */
+.item .end .pills { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; margin-top: 3px; }
+/* The payment line on an order sheet (card-to-card, «تأیید شد»). */
+.paynote { padding: 11px 13px; border-radius: var(--r); background: var(--paper-3); font-size: 13px; line-height: 1.75;
+  border-inline-start: 3px solid var(--st-new); }
+.paynote span { color: var(--muted); font-size: 12.5px; }
+.paynote.delivered { border-color: var(--st-delivered); }
+.paynote.confirmed { border-color: var(--st-confirmed); }
+.paynote.out { border-color: var(--bad); }
+.paynote.cancelled { border-color: var(--st-cancelled); }
 
 .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .search { flex: 1 1 220px; position: relative; }

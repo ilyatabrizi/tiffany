@@ -388,3 +388,39 @@ black.
 
 `.htaccess`: the microphone is allowed for the site's own pages (voice notes).
 Tests: `support_test.py` (109, API) and `support_e2e.py` (54, browser, fake microphone).
+
+## Card-to-card through «تأیید شد» — added 2026-10-19
+
+**What the customer sees.** With the CEO's switch on, checkout offers «کارت‌به‌کارت، همین
+الان» (chosen first) beside «کارت، موقع تحویل». The order is saved as always (stock taken,
+SMS sent), then `api/lib/pay.php` asks tayidshod.ir (API v1) for a payment: a unique amount
+(the total plus 11–999 toman, so the deposit matches only this order) and its payment page,
+where the customer transfers from their bank app and taps «واریز کردم». TIFFANY taps «رسید»
+in the tayidshod Bale bot; tayidshod sends a signed webhook to `api/pay-hook.php`
+(`X-Tayidshod-Signature: sha256=HMAC(raw body, whsec_…)`) and the order is marked paid.
+«برگشت به فروشگاه» lands on `api/pay.php?a=back`, which asks tayidshod again and opens the
+Orders tab on that order (`/#/orders?pay=CODE&k=KEY`; the key is taken out of the address
+bar at once). Each order's key (`tz_token`, an HMAC) is the only way to see its payment.
+
+**What counts as paid.** Only `order.paid` from tayidshod (webhook, or the server asking
+tayidshod itself) with the same mode as the order and the current key (a test payment never
+counts for a live order) and exactly the unique amount; a confirmed deposit smaller than the
+total becomes «کم واریز شده», anything else that does not add up «بررسی کن». A paid order
+never moves back. Nothing in a link or the browser can mark money.
+
+**When tayidshod says no** (subscription, Bale not connected, cards full, no answer…), the
+order is kept as «کارت موقع تحویل», the customer is told on the spot, and the reason goes in
+the team's note. For subscription/Bale/cards-full answers the option rests 10–15 minutes.
+
+**Panel.** Settings → «کارت‌به‌کارت («تأیید شد»)» (CEO only): the API key (`sk_live_…` or
+`sk_test_…`) and the webhook secret (`whsec_…`) are pasted there, kept in the database
+(outside the web root) and never sent back — the page shows their last four characters. A
+switch, «بررسی اتصال» (tayidshod's `/account`: shop name, test/live, whether live orders are
+open) and the webhook address for the dashboard's test ping. With a test key only signed-in
+staff see the option. Orders show the payment beside the status; an order's sheet has the
+exact amount to look for, the tayidshod id, «بررسی وضعیت پرداخت» and «کپی لینک پرداخت».
+Cancelling an unpaid one closes its payment page at tayidshod too.
+
+Database v5 adds `pay_state, pay_ref, pay_amount, pay_url, pay_mode, paid, paid_at` to
+orders. Tests: `pay_test.py` (88, API) and `pay_e2e.py` (28, browser), both against
+`tests/tayidshod_mock.php` (never deployed; `TIFFANY_TZ_BASE` points the shop at it).

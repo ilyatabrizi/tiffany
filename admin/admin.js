@@ -60,7 +60,23 @@ const BADGES = [['', 'بدون برچسب'], ['new', 'جدید'], ['campaign', '
 const STATUS = { new: 'جدید', confirmed: 'تأیید شده', shipped: 'ارسال شده', delivered: 'تحویل شده', cancelled: 'لغو شده' };
 const STEP = { new: 1, confirmed: 2, shipped: 3, delivered: 4, cancelled: 0 };
 const NEXT = { new: ['confirmed', 'تأیید سفارش'], confirmed: ['shipped', 'ارسال شد'], shipped: ['delivered', 'تحویل شد'] };
-const PAY = { card: 'کارت موقع تحویل', online: 'پرداخت آنلاین' };
+const PAY = { card: 'کارت موقع تحویل', c2c: 'کارت‌به‌کارت («تأیید شد»)', online: 'پرداخت آنلاین' };
+/* Card-to-card («تأیید شد»): where an order's payment stands. [short, the
+   long line on the order sheet, pill colour] */
+const PSTATE = {
+  pending: ['منتظر واریز', 'مشتری هنوز «واریز کردم» رو نزده. مهلتش ۳۰ دقیقه بعد از ثبته.', 'new'],
+  claimed: ['واریز اعلام شد', 'مشتری «واریز کردم» رو زده؛ توی ربات بله‌ی «تأیید شد»، اگه پول رسیده «رسید» رو بزن.', 'confirmed'],
+  paid: ['پرداخت شد', 'پول رسید و توی «تأیید شد» تأییدش کردی.', 'delivered'],
+  rejected: ['واریز نرسید', '«نرسید» زده شد. اگه بعداً پول رو دیدی، از داشبورد «تأیید شد» «تأیید دستی» کن.', 'out'],
+  mismatch: ['مبلغ نادقیق', 'واریزی نزدیک به این سفارش رسیده ولی مبلغش دقیق نیست؛ توی داشبورد «تأیید شد» تصمیم بگیر.', 'confirmed'],
+  expired: ['مهلت تموم شد', 'مهلت پرداخت تموم شد. مشتری تا ۲۴ ساعت می‌تونه «واریز کرده بودم» رو بزنه؛ وگرنه باهاش تماس بگیر یا سفارش رو لغو کن.', 'cancelled'],
+  canceled: ['پرداخت لغو شد', 'صفحه‌ی پرداخت این سفارش بسته شد.', 'cancelled'],
+  short: ['کم واریز شده', 'واریزی که تأیید شد کمتر از مبلغ سفارشه. قبل از ارسال بررسی کن.', 'out'],
+  odd: ['بررسی کن', 'تأییدی رسید که با این سفارش جور نیست (مبلغ یا حالت آزمایشی/اصلی). قبل از ارسال توی داشبورد «تأیید شد» بررسی کن.', 'out'],
+  failed: ['ساخته نشد', 'صفحه‌ی پرداخت ساخته نشد و سفارش «کارت موقع تحویل» شد؛ دلیلش توی یادداشت داخلیه.', 'cancelled'],
+};
+const payPill = (o) => (o.pay === 'c2c' && PSTATE[o.pay_state]
+  ? `<span class="pill ${PSTATE[o.pay_state][2]}">${PSTATE[o.pay_state][0]}</span>` : '');
 const PAGES = { home: 'صفحه‌ی اصلی', shop: 'فروشگاه', bag: 'سبد خرید', orders: 'سفارش‌های مشتری', tickets: 'پشتیبانی و تیکت‌ها',
   profile: 'پروفایل', saved: 'ذخیره‌شده‌ها', about: 'درباره‌ی ما', contact: 'شعبه‌ها و تماس', terms: 'قوانین' };
 /* The shop's cookie sheet: what each device word is called in the panel. */
@@ -89,7 +105,10 @@ const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌ا
   story_add: 'استوری گذاشت', story_edit: 'استوری رو ویرایش کرد', story_repost: 'استوری رو دوباره منتشر کرد',
   story_end: 'استوری رو از سایت برداشت', story_delete: 'استوری رو حذف کرد',
   ticket_reply: 'به تیکت جواب داد', ticket_close: 'تیکت رو بست', ticket_open: 'تیکت رو دوباره باز کرد',
-  sms_template: 'شماره‌ی قالب پیامک رو عوض کرد' };
+  sms_template: 'شماره‌ی قالب پیامک رو عوض کرد',
+  order_paid: 'پرداخت کارت‌به‌کارت سفارش رو تأیید کرد', order_pay_odd: 'پرداختی فرستاد که باید بررسی بشه',
+  pay_failed: 'نتونست صفحه‌ی پرداخت بسازه', pay_key: 'کلید API «تأیید شد» رو گذاشت',
+  pay_secret: 'رمز وب‌هوک «تأیید شد» رو گذاشت', pay_on: 'کارت‌به‌کارت رو روشن کرد', pay_off: 'کارت‌به‌کارت رو خاموش کرد' };
 const ROLE = { ceo: 'مدیرعامل', admin: 'ادمین' };
 
 /* ----------------------------------------------------------------- icons */
@@ -740,7 +759,7 @@ function orderItem(o) {
   return `<button class="item" type="button" data-code="${esc(o.code)}">
     <div class="main-c"><div class="t"><span class="ltr">${esc(o.code)}</span> · ${esc(o.name)}</div>
       <div class="s">${esc(o.city)} · ${num(n)} قطعه · ${esc(ago(o.created_at))}</div></div>
-    <div class="end"><div class="t">${esc(toman(o.total))}</div><span class="pill ${o.status}">${STATUS[o.status]}</span></div></button>`;
+    <div class="end"><div class="t">${esc(toman(o.total))}</div><div class="pills"><span class="pill ${o.status}">${STATUS[o.status]}</span>${payPill(o)}</div></div></button>`;
 }
 
 async function viewOrders(_, q, signal) {
@@ -804,7 +823,7 @@ function exportCsv(orders) {
   const rows = orders.map((o) => [o.code, D_TIME.format(new Date(o.created_at * 1000)), STATUS[o.status], o.name,
     phone(o.phone), o.city, o.address, o.postal,
     o.items.map((i) => `${i.name} (${i.size}${i.colour_name ? `، ${i.colour_name}` : ''}) ×${i.qty}`).join(' | '),
-    o.total, PAY[o.pay] || o.pay].map(cell).join(','));
+    o.total, (PAY[o.pay] || o.pay) + (o.pay === 'c2c' && PSTATE[o.pay_state] ? ` — ${PSTATE[o.pay_state][0]}` : '')].map(cell).join(','));
   const blob = new Blob(['﻿' + [head.map(cell).join(','), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -852,6 +871,7 @@ async function openOrder(code, onChange) {
       <div class="big"><dt>مبلغ کل</dt><dd>${esc(toman(o.total))}</dd></div>
       <div><dt>پرداخت</dt><dd>${esc(PAY[o.pay] || o.pay)}</dd></div>
     </dl>
+    ${payPart(o)}
     ${o.note ? `<p class="label" style="margin-top:16px">یادداشت مشتری</p><p style="margin:0">${esc(o.note)}</p>` : ''}
     <form id="noteForm" style="margin-top:16px">${field('note', 'یادداشت داخلی (فقط تیم می‌بینه)',
     `<textarea class="input" id="f-note" name="note" rows="2">${esc(o.admin_note)}</textarea>`)}
@@ -862,7 +882,11 @@ async function openOrder(code, onChange) {
     const bind = () => {
       sheet.querySelectorAll('[data-to]').forEach((b) => b.addEventListener('click', async () => {
         const to = b.dataset.to;
-        if (to === 'cancelled' && !confirm('این سفارش لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن و دیگه نمی‌شه برش گردوند.')) return;
+        const unpaid = o.pay === 'c2c' && !o.paid;
+        if (to === 'cancelled' && !confirm(o.pay === 'c2c' && o.paid
+          ? 'این سفارش کارت‌به‌کارت پرداخت شده. لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن، ولی پول رو باید خودت به مشتری برگردونی.'
+          : 'این سفارش لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن و دیگه نمی‌شه برش گردوند.')) return;
+        if (to !== 'cancelled' && unpaid && !confirm('پرداخت کارت‌به‌کارت این سفارش هنوز تأیید نشده. با این حال جلو بره؟')) return;
         b.disabled = true;
         try {
           o = (await api('order_status', { code: o.code, status: to })).order;
@@ -872,6 +896,23 @@ async function openOrder(code, onChange) {
           changed = true;
         } catch { b.disabled = false; }
       }));
+      sheet.querySelector('#payCheck')?.addEventListener('click', async (e) => {
+        e.target.disabled = true;
+        try {
+          const was = `${o.pay_state}|${o.paid}`;
+          o = (await api('order_pay_check', { code: o.code })).order;
+          toast(`${was === `${o.pay_state}|${o.paid}` ? 'تغییری نکرده' : 'به‌روز شد'}: ${PSTATE[o.pay_state]?.[0] || '—'}`);
+          if (was !== `${o.pay_state}|${o.paid}`) changed = true;
+          sheet.innerHTML = `<div class="grab"></div>${render()}`;
+          bind();
+        } catch { e.target.disabled = false; }
+      });
+      sheet.querySelector('#payLink')?.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(o.pay_url);
+          toast('لینک پرداخت کپی شد؛ برای مشتری بفرست.');
+        } catch { prompt('لینک پرداخت:', o.pay_url); }
+      });
       sheet.querySelector('#noteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
@@ -883,6 +924,28 @@ async function openOrder(code, onChange) {
     };
     bind();
   }, () => { if (changed && location.hash === at) onChange?.(); });
+}
+
+/** The card-to-card part of an order sheet: where the money stands, the
+    exact amount to look for in the bank, tayidshod's id, and a way to ask
+    tayidshod again or send the customer their payment link. */
+function payPart(o) {
+  if (o.pay !== 'c2c' && o.pay_state !== 'failed') return '';
+  const st = PSTATE[o.pay_state] || ['—', '', 'cancelled'];
+  const page = !o.paid && o.pay === 'c2c' && o.status !== 'cancelled' && o.pay_url
+    && ['pending', 'claimed', 'rejected', 'mismatch', 'expired'].includes(o.pay_state);
+  return `
+    <p class="label" style="margin-top:16px">کارت‌به‌کارت («تأیید شد»)</p>
+    <div class="paynote ${st[2]}"><b>${esc(st[0])}</b>${o.pay_mode === 'test' ? ' <span class="pill hidden-p">آزمایشی</span>' : ''}<br><span>${esc(st[1])}</span></div>
+    ${o.pay === 'c2c' ? `<dl class="kv">
+      ${o.pay_amount ? `<div><dt>مبلغ دقیق واریز</dt><dd>${esc(toman(o.pay_amount))}</dd></div>` : ''}
+      ${o.pay_ref ? `<div><dt>شناسه در «تأیید شد»</dt><dd><span class="ltr">${esc(o.pay_ref)}</span></dd></div>` : ''}
+      ${o.paid && o.paid_at ? `<div><dt>زمان تأیید</dt><dd>${esc(D_TIME.format(new Date(o.paid_at * 1000)))}</dd></div>` : ''}
+    </dl>
+    <div class="actions" style="gap:8px;margin-top:10px">
+      ${!o.paid && o.pay_ref ? '<button class="btn line s" type="button" id="payCheck">بررسی وضعیت پرداخت</button>' : ''}
+      ${page ? '<button class="btn line s" type="button" id="payLink">کپی لینک پرداخت</button>' : ''}
+    </div>` : ''}`;
 }
 
 /* ============================================================= products */
@@ -1836,6 +1899,78 @@ async function viewTicket([code], q, signal) {
 }
 
 /* ============================================================= settings */
+/* Card-to-card («تأیید شد»): the CEO pastes the API key and the webhook
+   secret here (each kept only when a new one is typed; only the last four
+   characters ever come back), switches it on, and checks the connection. */
+function payCard(p) {
+  const a = p.account;
+  const conn = !p.mode ? 'هنوز کلید API گذاشته نشده.'
+    : !a ? 'هنوز بررسی نشده.'
+      : a.ok ? `وصله به «${esc(a.shop || '—')}» · ${a.mode === 'test' ? 'آزمایشی' : 'اصلی'} · سفارش واقعی: ${a.open ? 'بازه' : `متوقفه${a.reason ? ` (${esc(a.reason)})` : ''}`}`
+        : `وصل نشد: ${esc(a.msg || a.code || 'خطا')}`;
+  return `<div class="card" id="payCardBox">
+    <div class="sec-head"><h2>کارت‌به‌کارت («تأیید شد»)</h2>${p.mode ? `<span class="pill ${p.mode === 'live' ? 'delivered' : 'hidden-p'}">${p.mode === 'live' ? 'کلید اصلی' : 'کلید آزمایشی'}</span>` : ''}</div>
+    <label class="switch"><span><b id="payWord">${p.on ? 'روشنه' : 'خاموشه'}</b><br>
+      <span class="tiny">مشتری موقع خرید می‌تونه همون لحظه کارت‌به‌کارت کنه. واریز رو توی ربات بله‌ی «تأیید شد» با «رسید» تأیید می‌کنی و سفارش این‌جا «پرداخت شد» می‌شه.
+      ${p.mode === 'test' ? 'با کلید آزمایشی فقط خود تیم (وقتی توی پنل واردن) این گزینه رو می‌بینه.' : ''}</span></span>
+      <input type="checkbox" id="payOn" ${p.on ? 'checked' : ''}><span class="knob"></span></label>
+    <p class="tiny" id="payConn" style="margin:12px 0 0">${conn}${p.paused_until ? ` · تا ${esc(D_TIME.format(new Date(p.paused_until * 1000)))} موقتاً نشون داده نمی‌شه (جواب «تأیید شد»).` : ''}</p>
+    <form id="payForm" novalidate style="margin-top:14px" autocomplete="off">
+      <div class="row2">
+        ${field('key', 'کلید API', `<input class="input ltr-in" id="f-key" name="key" type="password" autocomplete="off" spellcheck="false" placeholder="${p.key_tail ? `sk_····${esc(p.key_tail)}` : 'sk_live_…'}">`,
+    p.key_tail ? 'ذخیره شده؛ فقط برای عوض کردن، کلید جدید بنویس.' : 'از داشبورد «تأیید شد»، بخش «API و ووکامرس».')}
+        ${field('secret', 'رمز امضای وب‌هوک', `<input class="input ltr-in" id="f-secret" name="secret" type="password" autocomplete="off" spellcheck="false" placeholder="${p.secret_tail ? `whsec_····${esc(p.secret_tail)}` : 'whsec_…'}">`,
+    p.secret_tail ? 'ذخیره شده.' : 'همون صفحه، «رمز امضا».')}
+      </div>
+      <div class="actions" style="gap:8px">
+        <button class="btn line s" type="submit">ذخیره</button>
+        <button class="btn line s" type="button" id="payTest" ${p.mode ? '' : 'disabled'}>بررسی اتصال</button>
+      </div>
+    </form>
+    <p class="tiny" style="margin:14px 0 0">نشانی وب‌هوک (اختیاری؛ هر سفارش خودش این نشانی رو به «تأیید شد» می‌ده):<br>
+      <span class="ltr" style="user-select:all">${esc(p.hook)}</span>${p.ping ? ` · آخرین پیام آزمایشی: ${esc(ago(p.ping))}` : ''}</p>
+  </div>`;
+}
+
+function wirePay(p, signal) {
+  const box = $('#payCardBox');
+  if (!box) return;
+  const redraw = (np) => {
+    box.outerHTML = payCard(np);
+    wirePay(np, signal);
+  };
+  $('#payOn').addEventListener('change', async (e) => {
+    const want = e.target.checked;
+    if (want && p.mode === 'live' && !confirm('کارت‌به‌کارت با کلید اصلی روشن بشه؟ از این لحظه مشتری‌ها موقع خرید می‌تونن کارت‌به‌کارت کنن.')) { e.target.checked = false; return; }
+    try {
+      const r = await api('settings_save', { tz_on: want });
+      toast(r.pay.on ? 'کارت‌به‌کارت روشن شد' : 'کارت‌به‌کارت خاموش شد');
+      redraw(r.pay);
+    } catch (err) {
+      e.target.checked = !want;
+      if (err?.code === 'invalid') toast(err.body.message, 'err');
+    }
+  });
+  $('#payForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = e.target.key.value.trim();
+    const secret = e.target.secret.value.trim();
+    try {
+      const r = await api('pay_save', { key, secret });
+      toast(r.pay.account?.ok ? 'ذخیره شد و وصله' : 'ذخیره شد');
+      redraw(r.pay);
+    } catch (err) { showErrors(e.target, err); }
+  });
+  $('#payTest').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    try {
+      const r = await api('pay_check');
+      toast(r.pay.account?.ok ? 'اتصال برقراره' : 'وصل نشد');
+      redraw(r.pay);
+    } catch { e.target.disabled = false; }
+  });
+}
+
 /* Order SMS (sms.ir): on/off, the mobile that hears about new orders, the
    balance, and one test message. The key itself never leaves the server. */
 function smsCard(sms) {
@@ -1926,11 +2061,13 @@ async function viewSettings(_, q, signal) {
       <div class="card">
         <div class="sec-head"><h2>فروش آنلاین</h2></div>
         ${ceo ? `<label class="switch"><span><b id="storeWord">${open ? 'روشنه' : 'خاموشه'}</b><br>
-          <span class="tiny">وقتی روشنه، مشتری‌ها از سایت سفارش ثبت می‌کنن (پرداخت با کارت موقع تحویل) و سفارش‌ها این‌جا میان.
+          <span class="tiny">وقتی روشنه، مشتری‌ها از سایت سفارش ثبت می‌کنن (پرداخت با کارت موقع تحویل، یا کارت‌به‌کارت اگه پایین روشنش کرده باشی) و سفارش‌ها این‌جا میان.
           تا محصول‌ها و قیمت‌های واقعی رو نذاشتی، خاموش بمونه.</span></span>
           <input type="checkbox" id="store" ${open ? 'checked' : ''}><span class="knob"></span></label>`
     : `<p style="margin:0">${open ? 'روشنه؛ سفارش‌های سایت این‌جا میان.' : 'خاموشه؛ فقط مدیرعامل می‌تونه روشنش کنه.'}</p>`}
       </div>
+
+      ${ceo && st.pay ? payCard(st.pay) : ''}
 
       ${ceo ? smsCard(st.sms) : ''}
 
@@ -1970,6 +2107,7 @@ async function viewSettings(_, q, signal) {
 
   $('#bye').addEventListener('click', logout);
   if (ceo) wireSms(st.sms, signal);
+  if (ceo && st.pay) wirePay(st.pay, signal);
   $('#store')?.addEventListener('change', async (e) => {
     const want = e.target.checked;
     if (want && !confirm('فروش آنلاین روشن بشه؟ از این لحظه مشتری‌ها می‌تونن از سایت سفارش ثبت کنن.')) { e.target.checked = false; return; }

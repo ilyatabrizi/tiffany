@@ -1,7 +1,9 @@
 /* The bag, and the checkout that empties it.
 
    With online ordering switched on in the back office, checkout sends the
-   order to /api/order.php (paid by card on delivery until the gateway is in).
+   order to /api/order.php, paid by card on delivery or — when the CEO has it
+   switched on — by card-to-card right away through «تأیید شد» (js/pay.js):
+   the phone then goes to tayidshod's payment page.
    Switched off, checkout says so and points to Instagram and the stores; it
    never pretends an order went through. When the shop could not ask the
    server just now (a shaky connection), the order is still sent and the
@@ -17,6 +19,7 @@ import { shot, empty, openSheet, closeSheet, toast } from '../ui.js';
 import { go } from '../router.js';
 import { L } from '../i18n.js';
 import { live } from '../live.js';
+import { payOptions, forgetOffer } from '../pay.js';
 
 export const subtotal = () => state.bag.reduce((n, l) => {
   const p = getProduct(l.id);
@@ -85,6 +88,9 @@ const ORDER_ERR = {
   city: () => L('شهر رو بنویس.', 'Please add your city.', 'Lütfen şehrini yaz.'),
   address: () => L('آدرس کامل رو بنویس.', 'Please give your full address.', 'Lütfen açık adresini yaz.'),
   postal: () => L('کد پستی ۱۰ رقمیه.', 'The post code has 10 digits.', 'Posta kodu 10 hanelidir.'),
+  pay: () => L('کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.',
+    'Card-to-card is not available right now — please choose card on delivery.',
+    'Kartla havale şu an kullanılamıyor; lütfen kapıda kartı seç.'),
 };
 
 /** What to tell the customer when the server says no. */
@@ -135,21 +141,37 @@ function closedSheet() {
 /* One order on its way to the server at a time, whichever sheet sent it:
    closing the sheet mid-request and checking out again must not order twice. */
 let placing = false;
+let opening = false;
+
+/* What the customer reads above the form, for the way they pay. */
+const payLede = (pay) => (pay === 'c2c'
+  ? L(`بعد از ثبت، می‌ری صفحه‌ی پرداخت «تأیید شد»: مبلغ رو از اپ بانکت کارت‌به‌کارت می‌کنی و «واریز کردم» رو می‌زنی. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
+    `Next you go to the «تأیید شد» payment page: transfer the amount from your bank app and tap «واریز کردم». Delivery is free and takes ${live.deliveryDays} working days at most.`,
+    `Sonra «تأیید شد» ödeme sayfasına geçersin: tutarı banka uygulamandan havale edip «واریز کردم»a dokunursun. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
+  : L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
+    `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
+    `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`));
+const payButton = (pay) => (pay === 'c2c'
+  ? L('ثبت سفارش و پرداخت', 'Place order and pay', 'Siparişi ver ve öde')
+  : L('ثبت سفارش', 'Place order', 'Siparişi ver'));
 
 /* With the store switched on (back office → Settings), the order goes to the
    shop for real: the server prices it, keeps it and the team sees it in the
    panel. */
-function checkoutSheet() {
+async function checkoutSheet() {
   if (live.fresh && !live.storeOpen) { closedSheet(); return; }
+  if (opening) return;
+  opening = true;
+  const offer = await payOptions().finally(() => { opening = false; });
   const sub = subtotal();
   const ship = shippingFor(sub);
   const { profile, address } = state;
+  /* Card-to-card first when it is on: paid now, nothing to collect at the door. */
+  let pay = offer.c2c ? 'c2c' : 'card';
 
   openSheet(`
     <h2>${esc(L('تکمیل خرید', 'Checkout', 'Ödeme'))}</h2>
-    <p class="lede">${esc(L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
-    `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
-    `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`))}</p>
+    <p class="lede" id="coLede">${esc(payLede(pay))}</p>
 
     <form id="coForm" novalidate>
       <p class="eyebrow" style="margin:18px 0 10px">${esc(L('برای کی', 'Who it is for', 'Kimin için'))}</p>
@@ -174,20 +196,41 @@ function checkoutSheet() {
       <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <p class="eyebrow" style="margin:20px 0 10px">${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}</p>
-      <div class="sizes">
-        <button class="chip on" data-pay="card" type="button">${icon('card', 15)}${esc(L('کارت، موقع تحویل', 'Card, on delivery', 'Kapıda kart'))}</button>
-        <button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>
+      <div class="sizes" id="coPay" role="radiogroup" aria-label="${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}">
+        ${offer.c2c ? `<button class="chip ${pay === 'c2c' ? 'on' : ''}" data-pay="c2c" type="button" role="radio" aria-checked="${pay === 'c2c'}">${icon('card', 15)}${esc(L('کارت‌به‌کارت، همین الان', 'Card-to-card, now', 'Kartla havale, şimdi'))}${offer.test ? ` · ${esc(L('آزمایشی', 'test', 'test'))}` : ''}</button>` : ''}
+        <button class="chip ${pay === 'card' ? 'on' : ''}" data-pay="card" type="button" role="radio" aria-checked="${pay === 'card'}">${icon('truck', 15)}${esc(L('کارت، موقع تحویل', 'Card, on delivery', 'Kapıda kart'))}</button>
+        ${offer.c2c ? '' : `<button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>`}
       </div>
 
       ${totals(sub, ship)}
 
-      <button class="btn btn-ink btn-block" type="submit">${esc(L('ثبت سفارش', 'Place order', 'Siparişi ver'))}</button>
+      <button class="btn btn-ink btn-block" type="submit">${esc(payButton(pay))}</button>
       <div style="height:9px"></div>
       <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">${esc(L('فعلاً نه', 'Not yet', 'Şimdi değil'))}</button>
     </form>`,
   {
     label: L('تکمیل خرید', 'Checkout', 'Ödeme'),
     onMount(sheet) {
+      const choose = (to) => {
+        pay = to;
+        sheet.querySelectorAll('[data-pay]').forEach((b) => {
+          b.classList.toggle('on', b.dataset.pay === to);
+          b.setAttribute('aria-checked', String(b.dataset.pay === to));
+        });
+        sheet.querySelector('#coLede').textContent = payLede(to);
+        sheet.querySelector('#coForm [type="submit"]').textContent = payButton(to);
+      };
+      sheet.querySelector('#coPay').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-pay]');
+        if (b && !b.disabled) { tap(); choose(b.dataset.pay); }
+      });
+      /* The server said card-to-card is not on offer after all: take it away
+         and leave the customer on card on delivery. */
+      const dropC2c = () => {
+        forgetOffer();
+        sheet.querySelector('[data-pay="c2c"]')?.remove();
+        choose('card');
+      };
       sheet.querySelector('#coForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (placing) {
@@ -229,20 +272,23 @@ function checkoutSheet() {
             body: JSON.stringify({
               items: lines.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
               name: get('name'), phone: get('phone'), city: get('city'),
-              address: get('line'), postal: get('postal'), website: get('website'),
+              address: get('line'), postal: get('postal'), website: get('website'), pay,
             }),
           });
           const j = await r.json().catch(() => ({}));
           if (!r.ok || !j.ok) {
             if (j.error === 'closed') live.storeOpen = false;
+            if (j.field === 'pay') dropC2c();
             toast(orderError(r.status, j), 'info', 4200);
             return;
           }
           placed = {
-            code: j.code, placed: j.created_at * 1000, pay: 'card',
+            code: j.code, placed: j.created_at * 1000, pay: j.pay === 'c2c' ? 'c2c' : 'card',
             subtotal: j.subtotal, shipping: j.shipping, total: j.total,
             server: true, status: j.status, phone: get('phone'), lines: j.items || [],
           };
+          if (placed.pay === 'c2c') Object.assign(placed, { payKey: j.pay_key, payState: 'pending', paid: false, payUrl: j.pay_url });
+          if (pay === 'c2c' && placed.pay !== 'c2c') { placed.fellBack = true; forgetOffer(); }
         } catch {
           toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
           return;
@@ -255,7 +301,10 @@ function checkoutSheet() {
            price the server charged — so the order reads the same after the
            catalogue moves. */
         const charged = placed.lines;
+        const { payUrl, fellBack } = placed;
         delete placed.lines;
+        delete placed.payUrl;
+        delete placed.fellBack;
         addOrder({
           ...placed,
           items: lines.map((l) => {
@@ -275,8 +324,20 @@ function checkoutSheet() {
         document.dispatchEvent(new CustomEvent('bag:changed'));
         go('/orders');
         const code = placed.code;
-        setTimeout(() => toast(L(`سفارش ⁦${code}⁩ ثبت شد`, `Order ${code} placed`,
-          `${code} numaralı sipariş alındı`), 'check', 3200), 260);
+        /* Card-to-card: on to tayidshod's page. The Orders tab stays behind
+           it in the history, so the phone's back gesture lands there. */
+        if (placed.pay === 'c2c' && payUrl) {
+          toast(L(`سفارش ⁦${code}⁩ ثبت شد؛ می‌ریم صفحه‌ی پرداخت…`, `Order ${code} placed — on to the payment page…`,
+            `${code} numaralı sipariş alındı; ödeme sayfasına geçiliyor…`), 'check', 3200);
+          setTimeout(() => { location.assign(payUrl); }, 700);
+          return;
+        }
+        setTimeout(() => toast(fellBack
+          ? L(`سفارش ⁦${code}⁩ ثبت شد. کارت‌به‌کارت همین الان در دسترس نبود؛ موقع تحویل با کارت پرداخت کن.`,
+            `Order ${code} placed. Card-to-card was not available just now — please pay by card on delivery.`,
+            `${code} numaralı sipariş alındı. Kartla havale şu an kullanılamadı; teslimatta kartla öde.`)
+          : L(`سفارش ⁦${code}⁩ ثبت شد`, `Order ${code} placed`, `${code} numaralı sipariş alındı`),
+        fellBack ? 'info' : 'check', fellBack ? 6500 : 3200), 260);
       });
     },
   });
@@ -329,6 +390,8 @@ export default {
   },
 
   mount(app, signal) {
+    /* Ask early whether card-to-card is on, so checkout opens without a wait. */
+    if (live.storeOpen && state.bag.length) payOptions().catch(() => {});
     app.addEventListener('click', (e) => {
       const q = e.target.closest('[data-qty]');
       if (q) {

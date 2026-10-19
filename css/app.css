@@ -867,6 +867,15 @@ html[data-colour='always'] .order-thumbs img { filter: none; }
   margin-top: 13px; font-size: 12.5px; color: var(--muted);
 }
 
+/* Card-to-card («تأیید شد»): where an order's payment stands, on its sheet. */
+.paybox {
+  margin: 16px 0 6px; padding: 14px 15px; border-radius: var(--r-m);
+  background: var(--paper-2); display: flex; gap: 12px; align-items: flex-start;
+}
+.paybox > .ico { flex: 0 0 auto; margin-top: 2px; color: var(--accent); }
+.paybox b { font-size: 13.5px; font-weight: 500; }
+.paybox p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.7; }
+
 .track { padding: 6px 0 0; }
 .step {
   position: relative; padding-block: 0 22px; padding-inline: 28px 0;

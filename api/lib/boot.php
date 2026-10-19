@@ -286,6 +286,41 @@ SQL);
     if ($version < 4) {
         tf_migrate_4($db);
     }
+    if ($version < 5) {
+        tf_migrate_5($db);
+    }
+}
+
+/** 2026-10-19: card-to-card through «تأیید شد» (api/lib/pay.php). Each
+    order keeps its tayidshod payment: the state, tayidshod's id, the unique
+    amount, the payment page, test or live, and whether the money is in.
+    Columns are added one by one inside a lock, so two requests opening the
+    database at the same moment cannot both add the same one. */
+function tf_migrate_5(PDO $db): void
+{
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        if ((int) $db->query('PRAGMA user_version')->fetchColumn() < 5) {
+            $have = array_column($db->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+            $cols = [
+                'pay_state' => "TEXT NOT NULL DEFAULT ''", 'pay_ref' => "TEXT NOT NULL DEFAULT ''",
+                'pay_amount' => 'INTEGER NOT NULL DEFAULT 0', 'pay_url' => "TEXT NOT NULL DEFAULT ''",
+                'pay_mode' => "TEXT NOT NULL DEFAULT ''", 'paid' => 'INTEGER NOT NULL DEFAULT 0',
+                'paid_at' => 'INTEGER',
+            ];
+            foreach ($cols as $name => $def) {
+                if (!in_array($name, $have, true)) {
+                    $db->exec("ALTER TABLE orders ADD COLUMN $name $def");
+                }
+            }
+            $db->exec('CREATE INDEX IF NOT EXISTS orders_pay_ref ON orders(pay_ref)');
+            $db->exec('PRAGMA user_version = 5');
+        }
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
 }
 
 /** 2026-10-18: customer accounts (phone checked by an SMS code), support
@@ -932,7 +967,9 @@ function tf_product(string $id): ?array
 }
 
 /* --------------------------------------------------------------- orders */
-const TF_PAY = ['card', 'online'];
+/* card: by card on delivery. c2c: card-to-card at checkout through «تأیید شد»
+   (api/lib/pay.php). online: reserved for a bank gateway. */
+const TF_PAY = ['card', 'c2c', 'online'];
 
 function tf_order_public(array $o): array
 {
@@ -945,6 +982,13 @@ function tf_order_public(array $o): array
         'address' => $o['address'],
         'postal' => $o['postal'],
         'pay' => $o['pay'],
+        'pay_state' => (string) ($o['pay_state'] ?? ''),
+        'pay_ref' => (string) ($o['pay_ref'] ?? ''),
+        'pay_amount' => (int) ($o['pay_amount'] ?? 0),
+        'pay_mode' => (string) ($o['pay_mode'] ?? ''),
+        'pay_url' => (string) ($o['pay_url'] ?? ''),
+        'paid' => (int) ($o['paid'] ?? 0) === 1,
+        'paid_at' => (int) ($o['paid_at'] ?? 0),
         'items' => json_decode((string) $o['items'], true) ?: [],
         'subtotal' => (int) $o['subtotal'],
         'shipping' => (int) $o['shipping'],
@@ -1018,6 +1062,7 @@ function tf_is_bot(string $ua): bool
 
 require_once __DIR__ . '/sms.php';
 require_once __DIR__ . '/shop.php';
+require_once __DIR__ . '/pay.php';
 
 /* --------------------------------------------------------------- devices */
 /* What the cookie sheet asks for, and the only values that are ever kept.

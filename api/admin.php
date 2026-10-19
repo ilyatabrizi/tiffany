@@ -347,7 +347,22 @@ switch ($a) {
                     tf_sms_order_moved($o);
                 });
             }
+            if ($to === 'cancelled' && $o['pay'] === 'c2c' && !$o['paid']) {
+                tf_after(static function () use ($o): void {
+                    tz_cancel($o['code']);       // nobody can pay for it any more
+                });
+            }
         }
+        ok(['order' => order_or_404($o['code'])]);
+
+    case 'order_pay_check':             // ask «تأیید شد» now, when a webhook seems late
+        $o = order_or_404((string) ($in['code'] ?? ''));
+        $row = $o['pay'] === 'c2c' ? tz_order($o['code']) : null;
+        if (!$row || $row['pay_ref'] === '') {
+            throw new TfInvalid('pay', 'این سفارش کارت‌به‌کارت «تأیید شد» نیست.');
+        }
+        tf_throttle('paycheck:' . $me['id'], 60, 3600);
+        tz_refresh($row, true);
         ok(['order' => order_or_404($o['code'])]);
 
     case 'order_note':
@@ -370,7 +385,43 @@ switch ($a) {
 
     /* -------------------------------------------------------- settings */
     case 'settings':
-        ok(['settings' => tf_public_settings()] + ($ceo ? ['sms' => sms_state()] : []));
+        ok(['settings' => tf_public_settings()] + ($ceo ? ['sms' => sms_state(), 'pay' => tz_panel()] : []));
+
+    /* Card-to-card («تأیید شد»): the CEO pastes the API key and the webhook
+       secret; each is kept only when a new one is typed, and only its last
+       four characters ever come back. */
+    case 'pay_save':
+        ceo_only($ceo);
+        $key = trim((string) ($in['key'] ?? ''));
+        $secret = trim((string) ($in['secret'] ?? ''));
+        if ($key !== '' && !preg_match('/^sk_(live|test)_[A-Za-z0-9]{16,100}$/', $key)) {
+            throw new TfInvalid('key', 'کلید API با sk_live_ یا sk_test_ شروع می‌شه؛ همون رو از داشبورد «تأیید شد»، بخش «API و ووکامرس» کپی کن.');
+        }
+        if ($secret !== '' && !preg_match('/^whsec_[A-Za-z0-9]{16,100}$/', $secret)) {
+            throw new TfInvalid('secret', 'رمز امضای وب‌هوک با whsec_ شروع می‌شه.');
+        }
+        if ($key === '' && $secret === '') {
+            throw new TfInvalid('key', 'کلید یا رمز جدید رو وارد کن.');
+        }
+        if ($key !== '') {
+            setting_set('tz_key', $key);
+            setting_set('tz_pause_until', '0');
+            tf_log($me['name'], 'pay_key', tz_mode($key) . ' ····' . substr($key, -4));
+        }
+        if ($secret !== '') {
+            setting_set('tz_secret', $secret);
+            tf_log($me['name'], 'pay_secret', '····' . substr($secret, -4));
+        }
+        tz_account(true);
+        ok(['pay' => tz_panel()]);
+
+    case 'pay_check':                   // «بررسی اتصال»: tayidshod's /account, asked now
+        ceo_only($ceo);
+        tf_throttle('paytest:' . $me['id'], 30, 3600);
+        if (tz_mode() !== '') {
+            tz_account(true);
+        }
+        ok(['pay' => tz_panel()]);
 
     case 'settings_save':
         ceo_only($ceo);
@@ -378,6 +429,14 @@ switch ($a) {
             $open = !empty($in['store_open']);
             setting_set('store_open', $open ? '1' : '0');
             tf_log($me['name'], $open ? 'store_open' : 'store_close');
+        }
+        if (array_key_exists('tz_on', $in)) {
+            $on = !empty($in['tz_on']);
+            if ($on && (tz_mode() === '' || tz_whsec() === '')) {
+                throw new TfInvalid('tz_on', 'اول کلید API و رمز امضای وب‌هوک رو ذخیره کن.');
+            }
+            setting_set('tz_on', $on ? '1' : '0');
+            tf_log($me['name'], $on ? 'pay_on' : 'pay_off');
         }
         if (array_key_exists('sms_on', $in)) {
             $on = !empty($in['sms_on']);
@@ -405,7 +464,7 @@ switch ($a) {
             setting_set('sms_owner', $mob === '' ? '-' : $mob);
             tf_log($me['name'], 'sms_owner', $mob);
         }
-        ok(['settings' => tf_public_settings(), 'sms' => sms_state()]);
+        ok(['settings' => tf_public_settings(), 'sms' => sms_state(), 'pay' => tz_panel()]);
 
     case 'sms_credit':                  // the SMS balance at sms.ir, on the settings page
         ceo_only($ceo);

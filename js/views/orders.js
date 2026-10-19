@@ -4,14 +4,22 @@
    team sets in the back office; opening this tab asks /api/track.php for the
    latest, keyed by the order code AND the phone it was placed with.
    An order kept from the old preview checkout (before the shop took real
-   orders) was never sent anywhere, and says so; it does not move. */
+   orders) was never sent anywhere, and says so; it does not move.
+
+   A card-to-card order (js/pay.js) also shows where its payment stands, and
+   this tab is where tayidshod's «برگشت به فروشگاه» lands:
+   /#/orders?pay=CODE&k=KEY asks the server for that order's answer, takes the
+   key out of the address bar, and opens the order with it. */
 import { getProduct } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, toman, num, fullDate, timeOf, relDay, COMMA } from '../util.js';
-import { state, getOrder, save } from '../store.js';
+import { state, getOrder, save, addOrder } from '../store.js';
 import {
-  shot, empty, openSheet, imgSrc, sheetIsOpen,
+  shot, empty, openSheet, imgSrc, sheetIsOpen, toast,
 } from '../ui.js';
+import {
+  isC2c, payWord, payBox, payStatus,
+} from '../pay.js';
 import { isLooksOpen } from '../looks.js';
 import { lineOpt, totals } from './bag.js';
 import { L } from '../i18n.js';
@@ -62,9 +70,13 @@ const ETA = (order) => {
   return `${fullDate(d)}${COMMA}${relDay(d)}`;
 };
 
+/* Not paid yet, card-to-card: the payment is the news, not the stage. */
+const awaitingPay = (o) => isC2c(o) && !o.paid && !cancelled(o);
+
 function orderCard(o) {
   const i = stageOf(o);
-  const stage = cancelled(o) ? { name: CANCELLED() } : !o.server ? { name: PREVIEW() } : STAGES[i];
+  const stage = cancelled(o) ? { name: CANCELLED() } : !o.server ? { name: PREVIEW() }
+    : awaitingPay(o) ? { name: payWord(o) } : STAGES[i];
   const items = o.items.map(pieceOf).filter(Boolean);
   const placed = new Date(o.placed);
   return `
@@ -105,6 +117,8 @@ function trackSheet(o, { sample = false } = {}) {
             'This order was cancelled. Questions? Call any of our stores.',
             'Bu sipariş iptal edildi. Sorun varsa mağazalarımızı ara.'))
           : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
+
+    ${sample ? '' : payBox(o)}
 
     ${cancelled(o) || preview ? '' : `<div class="track" style="--accent:var(--c-cherry)">
       ${STAGES.map((s, i) => `
@@ -154,7 +168,7 @@ async function trackReal(signal) {
   if (Date.now() - trackedAt < 30000) return;
   trackedAt = Date.now();
   const byPhone = {};
-  state.orders.filter((o) => o.server && o.phone && !['delivered', 'cancelled'].includes(o.status))
+  state.orders.filter((o) => o.server && o.phone && (!['delivered', 'cancelled'].includes(o.status) || awaitingPay(o)))
     .forEach((o) => { (byPhone[o.phone] ||= []).push(o.code); });
   let moved = false;
   for (const [phone, codes] of Object.entries(byPhone)) {
@@ -166,7 +180,13 @@ async function trackReal(signal) {
       const j = await r.json();
       for (const [code, s] of Object.entries(j.orders || {})) {
         const o = getOrder(code);
-        if (o && o.status !== s.status) { o.status = s.status; moved = true; }
+        if (!o) continue;
+        if (o.status !== s.status) { o.status = s.status; moved = true; }
+        if (isC2c(o) && (o.payState !== s.pay_state || Boolean(o.paid) !== Boolean(s.paid))) {
+          o.payState = s.pay_state;
+          o.paid = Boolean(s.paid);
+          moved = true;
+        }
       }
     } catch { return; }       // offline or left the page: keep what we had
   }
@@ -174,6 +194,42 @@ async function trackReal(signal) {
     save();
     if (!sheetIsOpen() && !isLooksOpen()) document.dispatchEvent(new CustomEvent('view:refresh'));
   }
+}
+
+/** Back from tayidshod's payment page: the server's answer for that order,
+    and the order opened on it. An order paid on another browser than the
+    one it was placed in (Instagram's own, say) is added to this phone. */
+async function landFromPayment(code, key) {
+  const here = () => location.hash.startsWith('#/orders');
+  let s;
+  try { s = await payStatus(code, key); } catch {
+    if (here()) {
+      toast(L('وضعیت پرداخت رو الان نتونستیم بگیریم؛ چند دقیقه بعد همین‌جا رو ببین.',
+        'We could not get the payment status just now — look here again in a few minutes.',
+        'Ödeme durumu şu an alınamadı; birkaç dakika sonra buraya tekrar bak.'), 'info', 4500);
+    }
+    return;
+  }
+  let o = getOrder(code);
+  if (!o) {
+    o = addOrder({
+      code, placed: s.created_at * 1000, pay: s.pay, payKey: key, server: true, status: s.status,
+      subtotal: s.subtotal, shipping: s.shipping, total: s.total, phone: s.phone,
+      items: s.items.map((i) => ({
+        id: i.id, size: i.size, colour: i.colour, qty: i.qty, name: i.name, img: i.img,
+        price: i.price, colourName: i.colour_name,
+      })),
+      address: { line: s.address, city: s.city, postal: '' },
+      step: 0,
+    });
+  }
+  Object.assign(o, {
+    pay: s.pay, status: s.status, payState: s.pay_state, paid: s.paid, page: s.page, payKey: o.payKey || key,
+  });
+  save();
+  if (!here()) return;          // the customer has moved on; the order is still kept up to date
+  document.dispatchEvent(new CustomEvent('view:refresh'));
+  trackSheet(o);
 }
 
 export default {
@@ -206,6 +262,18 @@ export default {
   },
 
   mount(app, signal) {
+    const q = new URLSearchParams(location.hash.split('?')[1] || '');
+    const code = q.get('pay');
+    const key = q.get('k');
+    const landing = code && key && /^TF-\d{5}$/.test(code) && /^[a-f0-9]{24}$/.test(key);
+    if (landing) {
+      /* The key leaves the address bar (and the history) at once. */
+      history.replaceState(history.state, '', '#/orders');
+      landFromPayment(code, key);
+    } else if (code) {
+      history.replaceState(history.state, '', '#/orders');
+    }
+
     app.addEventListener('click', (e) => {
       const card = e.target.closest('[data-act="order"]');
       if (card) {
@@ -220,7 +288,9 @@ export default {
        so does a tick every three minutes while it stays open — never in a
        hidden tab, and the list is only redrawn when something moved and no
        sheet (a tracking sheet being read, the cookie question) is open. */
-    trackReal(signal);
+    /* Not while landing from a payment: that answer is on its way, and a
+       redraw from here would close the sheet it opens. */
+    if (!landing) trackReal(signal);
     const t = setInterval(() => {
       if (!document.hidden) trackReal(signal);
     }, 180000);
