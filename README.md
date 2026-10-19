@@ -354,13 +354,21 @@ stories, and the p2-5 film in the hero.
   `robots.txt` (search and AI crawlers welcome, `/api/` and `/admin/` closed). `index.html`
   carries the brand, website and four shops as schema.org data and the new share card
   `assets/img/og-aw27.jpg` (1200×630).
-- **Tests.** `seo_test.py` (31: every piece page, collections, sitemap, llms.txt, robots,
-  site.php against `js/data.js`/`js/config.js` through Node, a browser landing on `/p/…`),
-  run against `php -S … tests/router.php`, which reads the rewrite rules from `.htaccess`.
-  The other suites now run on the real catalogue: api 142, admin 38, popups 56, e2e 183,
-  qa 33, support 144 (story buttons, campaign edits, v6), support_e2e 79, pay 105, pay_e2e 28.
-  The container's Chromium has no H.264, so e2e says so and leaves the film checks to a
-  browser that has one.
+- **Tests.** `seo_test.py` (34: every piece page, collections, sitemap, llms.txt, robots,
+  site.php against `js/data.js`/`js/config.js` through Node, `$1` in product words, a
+  browser landing on `/p/…` and stepping back), run against `php -S … tests/router.php`,
+  which reads the rewrite rules from `.htaccess`. The other suites now run on the real
+  catalogue: api 142, admin 38, popups 56, e2e 183, qa 33, support 150 (story buttons,
+  campaign edits, v6 and v7), support_e2e 71, pay 105, pay_e2e 28 — 840 checks, all passing.
+  The container's Chromium has no H.264, so e2e says so and leaves the film to a browser
+  that has it (checked in Chrome on the live site: hero-3 plays, 1080×1920, 19.47 s).
+- **Live, 2026-10-20 (Tehran).** Backups `~/backup-before-collections-2026-10-20.zip` (all of
+  public_html, 24 MB) and `~/backup-db-before-collections-2026-10-20.zip` (tiffany-data). Then
+  521 photos + the film (hash-checked as served), the PHP (v7 ran: 82 pieces in their sets,
+  one photo list changed, nothing else), the front files and the merged `.htaccess` (cPanel's
+  PHP handler kept), `sw.js` last. Not deleted, no longer used: `media/hero-2.mp4`,
+  `media/hero-2-poster.webp`, `assets/img/r-col-480/960.webp`,
+  `assets/img/r-white-wool-knit-2-480/960.webp` (and the older files listed before).
 
 ## Full review: bugs, security, rush and traffic — 2026-10-16
 
