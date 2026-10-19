@@ -19,8 +19,8 @@ const T = L;
 /** A colour: hex is the key, the three names are labels. */
 const C = (hex, fa, en, tr) => ({ hex, name: L(fa, en, tr), all: [fa, en, tr] });
 
-/* The studio's first real collection (photos and pieces sent 2026-10-14).
-   The three made-up preview collections are gone with the preview pieces. */
+/* The studio's first real collection: its pieces, prices and photos come
+   from the «Tiffany products» Telegram group (2026-10-19). */
 export const COLLECTIONS = [
   {
     id: 'aw27',
@@ -28,13 +28,13 @@ export const COLLECTIONS = [
     season: T('پاییز و زمستون', 'Autumn / Winter', 'Sonbahar / Kış'),
     accent: '#7A4A2E',
     accent2: '#C9B49A',
-    img: 'aw27-col',
+    img: 'r-col',
     lede: T('کالکشن جدید پاییز و زمستون تیفانی.',
       'TIFFANY\'s new autumn and winter collection.',
       'TIFFANY\'nin yeni sonbahar ve kış koleksiyonu.'),
-    body: T('کاپشن و بارونی چرم، بافت‌های پشمی، شومیزهای نخی، شلوارهای جین و اویشو، و کپ و کانورس و کیف برای کامل کردن هر ست.',
-      'Leather jackets and trench coats, wool knits, cotton shirts, denim and Avishu trousers, plus caps, sneakers and a bag to finish each look.',
-      'Deri montlar ve trençkotlar, yün trikolar, pamuklu gömlekler, kot ve Avishu pantolonlar; her kombini tamamlamak için şapka, spor ayakkabı ve çanta.'),
+    body: T('کاپشن و بارونی چرم، پالتو و بارانی، کت پوست و تدی، بافت‌های پشمی، شومیز، سوشرت و شلوارهای جین و اویشو، دامن، و کلاه و باندانا و کانورس و کیف برای کامل کردن هر ست.',
+      'Leather jackets and trench coats, overcoats and raincoats, fur and teddy coats, wool knits, shirts, sweatshirts, denim and Avishu trousers, a skirt, plus caps, bandanas, sneakers and bags to finish each look.',
+      'Deri montlar ve trençkotlar, paltolar ve yağmurluklar, kürk ve teddy ceketler, yün trikolar, gömlekler, sweatshirtler, kot ve Avishu pantolonlar, etek; her kombini tamamlamak için şapka, bandana, spor ayakkabı ve çanta.'),
   },
 ];
 
@@ -120,35 +120,81 @@ export function setCatalogue(list) {
 /** Every size of this piece is sold out. */
 export const soldOut = (p) => Boolean(p && p.sizes.every((s) => p.soldout.includes(s)));
 
-/* استوری‌ها — the stories: the studio's seven looks for the new collection,
-   each one carrying the pieces worn in it. */
+/* استوری‌ها — the stories: the studio's outfits for the new collection, one
+   per captioned post in the «Tiffany products» group (2026-10-19), each one
+   carrying the pieces worn in it (catalog/real/catalog.py builds the frames). */
 const AW = T('کالکشن جدید پاییز و زمستون.', 'The new autumn and winter collection.', 'Yeni sonbahar ve kış koleksiyonu.');
 export const LOOKS = [
-  { id: 'aw1', img: 'aw27-look-1', col: 'aw27', caption: AW,
-    title: T('کاپشن چرم و بافت راه‌راه', 'Leather jacket, striped knit', 'Deri mont, çizgili triko'),
-    items: ['leather-jacket', 'striped-knit', 'chocolate-jeans', 'cotton-cap', 'silk-scarf'] },
-  { id: 'aw2', img: 'aw27-look-2', col: 'aw27', caption: AW,
+  { id: 'r1', img: 'r-look-1', col: 'aw27', caption: AW,
+    title: T('کپ و رویه موهر', 'Cap and mohair top', 'Şapka ve tiftik üst'),
+    items: ['pastel-cotton-cap', 'mohair-top', 'mohair-trousers', 'white-leather-bag'] },
+  { id: 'r2', img: 'r-look-2', col: 'aw27', caption: AW,
+    title: T('بافت دکمه‌دار و جین سفید', 'Buttoned knit, white jeans', 'Düğmeli triko, beyaz kot'),
+    items: ['buttoned-wool-knit', 'wool-scarf', 'white-jeans', 'pastel-cotton-cap'] },
+  { id: 'r3', img: 'r-look-3', col: 'aw27', caption: AW,
+    title: T('کت پوست مصنوعی و ست سوشرت', 'Faux fur coat, sweatshirt set', 'Suni kürk ceket, sweatshirt takımı'),
+    items: ['faux-fur-coat', 'fleece-sweatshirt', 'fleece-trousers', 'silk-satin-bandana'] },
+  { id: 'r4', img: 'r-look-4', col: 'aw27', caption: AW,
+    title: T('کت تدی و ست سوشرت', 'Teddy coat, sweatshirt set', 'Teddy ceket, sweatshirt takımı'),
+    items: ['wool-teddy-coat', 'fleece-sweatshirt', 'fleece-trousers', 'silk-satin-bandana'] },
+  { id: 'r5', img: 'r-look-5', col: 'aw27', caption: AW,
+    title: T('کاپشن چرم روغنی', 'Oiled leather jacket', 'Yağlı deri mont'),
+    items: ['oiled-leather-jacket', 'wool-underknit', 'chocolate-jeans', 'cotton-cap', 'cotton-foulard'] },
+  { id: 'r6', img: 'r-look-6', col: 'aw27', caption: AW,
     title: T('بارونی چرم و ست اویشو', 'Leather trench, Avishu set', 'Deri trençkot, Avishu takım'),
-    items: ['leather-trench', 'avishu-set', 'karl-lagerfeld-bag', 'white-collar-knit', 'cotton-turtleneck'] },
-  { id: 'aw3', img: 'aw27-look-3', col: 'aw27', caption: AW,
+    items: ['oiled-leather-trench', 'avishu-top', 'avishu-trousers', 'white-collar-underknit', 'cotton-turtleneck', 'karl-lagerfeld-bag', 'pastel-cotton-cap'] },
+  { id: 'r7', img: 'r-look-7', col: 'aw27', caption: AW,
     title: T('کت و شلوار جین', 'Denim on denim', 'Kot üstüne kot'),
-    items: ['denim-jacket', 'dark-jeans', 'high-neck-knit'] },
-  { id: 'aw4', img: 'aw27-look-4', col: 'aw27', caption: AW,
+    items: ['denim-jacket', 'dark-jeans', 'high-neck-wool-knit', 'patchwork-bandana'] },
+  { id: 'r8', img: 'r-look-8', col: 'aw27', caption: AW,
     title: T('بارانی گاباردین', 'Gabardine trench', 'Gabardin trençkot'),
-    items: ['gabardine-trench', 'ribbed-knit', 'cotton-shirt', 'bandana', 'waterproof-sneakers'] },
-  { id: 'aw5', img: 'aw27-look-5', col: 'aw27', caption: AW,
-    title: T('وست و شلوار اویشو', 'Avishu vest and trousers', 'Avishu yelek ve pantolon'),
-    items: ['avishu-vest', 'avishu-trousers', 'jacquard-knit', 'cotton-shirt', 'logo-cap', 'waterproof-sneakers'] },
-  { id: 'aw6', img: 'aw27-look-6', col: 'aw27', caption: AW,
-    title: T('بامبر و شلوار تو کرک', 'Bomber and fleece-lined trousers', 'Bomber ve içi polarlı pantolon'),
-    items: ['bomber-jacket', 'fleece-trousers', 'wide-stripe-knit', 'cotton-shirt', 'karl-lagerfeld-bag', 'bandana', 'cotton-cap'] },
-  { id: 'aw7', img: 'aw27-look-7', col: 'aw27', caption: AW,
+    items: ['gabardine-trench', 'ribbed-knit', 'cotton-shirt', 'red-bandana', 'waterproof-sneakers'] },
+  { id: 'r9', img: 'r-look-9', col: 'aw27', caption: AW,
+    title: T('کت پوست کوتاه و جین کرم', 'Short-pile fur jacket, cream jeans', 'Kısa tüylü kürk ceket, krem kot'),
+    items: ['short-fur-jacket', 'pure-wool-underknit', 'plain-shirt', 'green-cream-jeans'] },
+  { id: 'r10', img: 'r-look-10', col: 'aw27', caption: AW,
+    title: T('ست سوشرت بادمجانی', 'Aubergine sweatshirt set', 'Patlıcan moru sweatshirt takımı'),
+    items: ['collared-sweatshirt', 'sweat-trousers', 'striped-wool-knit', 'print-bandana'] },
+  { id: 'r11', img: 'r-look-11', col: 'aw27', caption: AW,
+    title: T('کاپشن چرم واترپروف', 'Waterproof leather jacket', 'Su geçirmez deri mont'),
+    items: ['waterproof-leather-bomber', 'two-tone-wool-knit', 'fleece-trousers', 'brown-paisley-bandana'] },
+  { id: 'r12', img: 'r-look-12', col: 'aw27', caption: AW,
     title: T('کت چرم و جین روشن', 'Leather jacket, light jeans', 'Deri ceket, açık kot'),
-    items: ['waterproof-leather-jacket', 'light-jeans', 'two-tone-knit', 'cotton-shirt', 'cotton-cap'] },
+    items: ['waterproof-leather-jacket', 'light-ripped-jeans', 'cotton-shirt', 'two-tone-stripe-knit', 'baseball-cap'] },
+  { id: 'r13', img: 'r-look-13', col: 'aw27', caption: AW,
+    title: T('وست و شلوار اویشو', 'Avishu vest and trousers', 'Avishu yelek ve pantolon'),
+    items: ['avishu-vest', 'avishu-trousers-grey', 'patterned-wool-knit', 'cotton-shirt', 'logo-cap', 'waterproof-sneakers'] },
+  { id: 'r14', img: 'r-look-14', col: 'aw27', caption: AW,
+    title: T('بامبر و شلوار دورس', 'Bomber, dors trousers', 'Bomber, dors pantolon'),
+    items: ['bomber-jacket', 'dors-trousers', 'striped-pink-knit', 'cotton-shirt', 'black-white-bandana', 'baseball-cap', 'karl-lagerfeld-bag'] },
+  { id: 'r15', img: 'r-look-15', col: 'aw27', caption: AW,
+    title: T('کت پوست کوتاه کلاه‌دار', 'Hooded short-pile fur jacket', 'Kapüşonlu kısa tüylü kürk ceket'),
+    items: ['hooded-fur-jacket', 'white-wool-knit', 'cotton-shirt-white', 'light-wide-jeans', 'red-bandana', 'white-leather-bag'] },
+  { id: 'r16', img: 'r-look-16', col: 'aw27', caption: AW,
+    title: T('پالتو اورسایز و دورس', 'Oversize coat, crew sweatshirt', 'Oversize palto, sweatshirt'),
+    items: ['oversize-coat', 'dors-sweatshirt', 'cotton-trousers', 'patchwork-bandana'] },
+  { id: 'r17', img: 'r-look-17', col: 'aw27', caption: AW,
+    title: T('بارانی شمعی و ست اویشو', 'Waxed trench, Avishu set', 'Mumlu trençkot, Avishu takım'),
+    items: ['waxed-trench', 'avishu-sweatshirt', 'avishu-trousers-olive', 'marc-jacobs-bag'] },
+  { id: 'r18', img: 'r-look-18', col: 'aw27', caption: AW,
+    title: T('پالتو اورسایز و بافت نازک', 'Oversize coat, fine knit', 'Oversize palto, ince triko'),
+    items: ['oversize-coat', 'fine-wool-knit', 'cotton-shirt', 'waxed-trousers', 'floral-bandana', 'zara-bag'] },
+  { id: 'r19', img: 'r-look-19', col: 'aw27', caption: AW,
+    title: T('رویه پشم خالص و یقه‌اسکی', 'Pure wool cardigan, turtleneck', 'Saf yün hırka, balıkçı yaka'),
+    items: ['pure-wool-cardigan', 'turtleneck', 'gabardine-trousers', 'satin-paisley-bandana', 'zara-bag'] },
+  { id: 'r20', img: 'r-look-20', col: 'aw27', caption: AW,
+    title: T('کت پشم خالص و دامن ترنچ', 'Pure wool jacket, trench skirt', 'Saf yün ceket, trençkot kumaşı etek'),
+    items: ['pure-wool-jacket', 'trench-skirt', 'four-colour-bandana', 'zara-bag'] },
+  { id: 'r21', img: 'r-look-21', col: 'aw27', caption: AW,
+    title: T('وست شمعی و جین طوسی', 'Waxed vest, grey jeans', 'Mumlu yelek, gri kot'),
+    items: ['waxed-vest', 'cream-wool-knit', 'grey-jeans', 'canvas-cap'] },
+  { id: 'r22', img: 'r-look-22', col: 'aw27', caption: AW,
+    title: T('بارانی کوتاه و جین سبز', 'Short trench, green jeans', 'Kısa trençkot, yeşil kot'),
+    items: ['short-trench', 'green-cream-jeans', 'marc-jacobs-bag', 'canvas-cap'] },
 ];
 
 /* The panel's own stories (api/catalog.php → stories), each one public for
-   24 hours from when it went up, newest first, ahead of the seven looks.
+   24 hours from when it went up, newest first, ahead of the looks.
    `ends` is on this phone's clock: the server's Date header corrects for a
    phone that is set wrong (see live.js). */
 export const STORIES = [];

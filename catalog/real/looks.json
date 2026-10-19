@@ -1,0 +1,370 @@
+[
+ {
+  "id": "r1",
+  "img": "r-look-1",
+  "title": [
+   "کپ و رویه موهر",
+   "Cap and mohair top",
+   "Şapka ve tiftik üst"
+  ],
+  "items": [
+   "pastel-cotton-cap",
+   "mohair-top",
+   "mohair-trousers",
+   "white-leather-bag"
+  ],
+  "src": "C2"
+ },
+ {
+  "id": "r2",
+  "img": "r-look-2",
+  "title": [
+   "بافت دکمه‌دار و جین سفید",
+   "Buttoned knit, white jeans",
+   "Düğmeli triko, beyaz kot"
+  ],
+  "items": [
+   "buttoned-wool-knit",
+   "wool-scarf",
+   "white-jeans",
+   "pastel-cotton-cap"
+  ],
+  "src": "C3"
+ },
+ {
+  "id": "r3",
+  "img": "r-look-3",
+  "title": [
+   "کت پوست مصنوعی و ست سوشرت",
+   "Faux fur coat, sweatshirt set",
+   "Suni kürk ceket, sweatshirt takımı"
+  ],
+  "items": [
+   "faux-fur-coat",
+   "fleece-sweatshirt",
+   "fleece-trousers",
+   "silk-satin-bandana"
+  ],
+  "src": "C4"
+ },
+ {
+  "id": "r4",
+  "img": "r-look-4",
+  "title": [
+   "کت تدی و ست سوشرت",
+   "Teddy coat, sweatshirt set",
+   "Teddy ceket, sweatshirt takımı"
+  ],
+  "items": [
+   "wool-teddy-coat",
+   "fleece-sweatshirt",
+   "fleece-trousers",
+   "silk-satin-bandana"
+  ],
+  "src": "C5"
+ },
+ {
+  "id": "r5",
+  "img": "r-look-5",
+  "title": [
+   "کاپشن چرم روغنی",
+   "Oiled leather jacket",
+   "Yağlı deri mont"
+  ],
+  "items": [
+   "oiled-leather-jacket",
+   "wool-underknit",
+   "chocolate-jeans",
+   "cotton-cap",
+   "cotton-foulard"
+  ],
+  "src": "C6"
+ },
+ {
+  "id": "r6",
+  "img": "r-look-6",
+  "title": [
+   "بارونی چرم و ست اویشو",
+   "Leather trench, Avishu set",
+   "Deri trençkot, Avishu takım"
+  ],
+  "items": [
+   "oiled-leather-trench",
+   "avishu-top",
+   "avishu-trousers",
+   "white-collar-underknit",
+   "cotton-turtleneck",
+   "karl-lagerfeld-bag",
+   "pastel-cotton-cap"
+  ],
+  "src": "C7"
+ },
+ {
+  "id": "r7",
+  "img": "r-look-7",
+  "title": [
+   "کت و شلوار جین",
+   "Denim on denim",
+   "Kot üstüne kot"
+  ],
+  "items": [
+   "denim-jacket",
+   "dark-jeans",
+   "high-neck-wool-knit",
+   "patchwork-bandana"
+  ],
+  "src": "C8"
+ },
+ {
+  "id": "r8",
+  "img": "r-look-8",
+  "title": [
+   "بارانی گاباردین",
+   "Gabardine trench",
+   "Gabardin trençkot"
+  ],
+  "items": [
+   "gabardine-trench",
+   "ribbed-knit",
+   "cotton-shirt",
+   "red-bandana",
+   "waterproof-sneakers"
+  ],
+  "src": "C9"
+ },
+ {
+  "id": "r9",
+  "img": "r-look-9",
+  "title": [
+   "کت پوست کوتاه و جین کرم",
+   "Short-pile fur jacket, cream jeans",
+   "Kısa tüylü kürk ceket, krem kot"
+  ],
+  "items": [
+   "short-fur-jacket",
+   "pure-wool-underknit",
+   "plain-shirt",
+   "green-cream-jeans"
+  ],
+  "src": "C10"
+ },
+ {
+  "id": "r10",
+  "img": "r-look-10",
+  "title": [
+   "ست سوشرت بادمجانی",
+   "Aubergine sweatshirt set",
+   "Patlıcan moru sweatshirt takımı"
+  ],
+  "items": [
+   "collared-sweatshirt",
+   "sweat-trousers",
+   "striped-wool-knit",
+   "print-bandana"
+  ],
+  "src": "C11"
+ },
+ {
+  "id": "r11",
+  "img": "r-look-11",
+  "title": [
+   "کاپشن چرم واترپروف",
+   "Waterproof leather jacket",
+   "Su geçirmez deri mont"
+  ],
+  "items": [
+   "waterproof-leather-bomber",
+   "two-tone-wool-knit",
+   "fleece-trousers",
+   "brown-paisley-bandana"
+  ],
+  "src": "C12"
+ },
+ {
+  "id": "r12",
+  "img": "r-look-12",
+  "title": [
+   "کت چرم و جین روشن",
+   "Leather jacket, light jeans",
+   "Deri ceket, açık kot"
+  ],
+  "items": [
+   "waterproof-leather-jacket",
+   "light-ripped-jeans",
+   "cotton-shirt",
+   "two-tone-stripe-knit",
+   "baseball-cap"
+  ],
+  "src": "C13"
+ },
+ {
+  "id": "r13",
+  "img": "r-look-13",
+  "title": [
+   "وست و شلوار اویشو",
+   "Avishu vest and trousers",
+   "Avishu yelek ve pantolon"
+  ],
+  "items": [
+   "avishu-vest",
+   "avishu-trousers-grey",
+   "patterned-wool-knit",
+   "cotton-shirt",
+   "logo-cap",
+   "waterproof-sneakers"
+  ],
+  "src": "C14"
+ },
+ {
+  "id": "r14",
+  "img": "r-look-14",
+  "title": [
+   "بامبر و شلوار دورس",
+   "Bomber, dors trousers",
+   "Bomber, dors pantolon"
+  ],
+  "items": [
+   "bomber-jacket",
+   "dors-trousers",
+   "striped-pink-knit",
+   "cotton-shirt",
+   "black-white-bandana",
+   "baseball-cap",
+   "karl-lagerfeld-bag"
+  ],
+  "src": "C15"
+ },
+ {
+  "id": "r15",
+  "img": "r-look-15",
+  "title": [
+   "کت پوست کوتاه کلاه‌دار",
+   "Hooded short-pile fur jacket",
+   "Kapüşonlu kısa tüylü kürk ceket"
+  ],
+  "items": [
+   "hooded-fur-jacket",
+   "white-wool-knit",
+   "cotton-shirt-white",
+   "light-wide-jeans",
+   "red-bandana",
+   "white-leather-bag"
+  ],
+  "src": "C16"
+ },
+ {
+  "id": "r16",
+  "img": "r-look-16",
+  "title": [
+   "پالتو اورسایز و دورس",
+   "Oversize coat, crew sweatshirt",
+   "Oversize palto, sweatshirt"
+  ],
+  "items": [
+   "oversize-coat",
+   "dors-sweatshirt",
+   "cotton-trousers",
+   "patchwork-bandana"
+  ],
+  "src": "C17"
+ },
+ {
+  "id": "r17",
+  "img": "r-look-17",
+  "title": [
+   "بارانی شمعی و ست اویشو",
+   "Waxed trench, Avishu set",
+   "Mumlu trençkot, Avishu takım"
+  ],
+  "items": [
+   "waxed-trench",
+   "avishu-sweatshirt",
+   "avishu-trousers-olive",
+   "marc-jacobs-bag"
+  ],
+  "src": "C18"
+ },
+ {
+  "id": "r18",
+  "img": "r-look-18",
+  "title": [
+   "پالتو اورسایز و بافت نازک",
+   "Oversize coat, fine knit",
+   "Oversize palto, ince triko"
+  ],
+  "items": [
+   "oversize-coat",
+   "fine-wool-knit",
+   "cotton-shirt",
+   "waxed-trousers",
+   "floral-bandana",
+   "zara-bag"
+  ],
+  "src": "C19"
+ },
+ {
+  "id": "r19",
+  "img": "r-look-19",
+  "title": [
+   "رویه پشم خالص و یقه‌اسکی",
+   "Pure wool cardigan, turtleneck",
+   "Saf yün hırka, balıkçı yaka"
+  ],
+  "items": [
+   "pure-wool-cardigan",
+   "turtleneck",
+   "gabardine-trousers",
+   "satin-paisley-bandana",
+   "zara-bag"
+  ],
+  "src": "C21"
+ },
+ {
+  "id": "r20",
+  "img": "r-look-20",
+  "title": [
+   "کت پشم خالص و دامن ترنچ",
+   "Pure wool jacket, trench skirt",
+   "Saf yün ceket, trençkot kumaşı etek"
+  ],
+  "items": [
+   "pure-wool-jacket",
+   "trench-skirt",
+   "four-colour-bandana",
+   "zara-bag"
+  ],
+  "src": "C22"
+ },
+ {
+  "id": "r21",
+  "img": "r-look-21",
+  "title": [
+   "وست شمعی و جین طوسی",
+   "Waxed vest, grey jeans",
+   "Mumlu yelek, gri kot"
+  ],
+  "items": [
+   "waxed-vest",
+   "cream-wool-knit",
+   "grey-jeans",
+   "canvas-cap"
+  ],
+  "src": "C23"
+ },
+ {
+  "id": "r22",
+  "img": "r-look-22",
+  "title": [
+   "بارانی کوتاه و جین سبز",
+   "Short trench, green jeans",
+   "Kısa trençkot, yeşil kot"
+  ],
+  "items": [
+   "short-trench",
+   "green-cream-jeans",
+   "marc-jacobs-bag",
+   "canvas-cap"
+  ],
+  "src": "C24"
+ }
+]

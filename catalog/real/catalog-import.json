@@ -1,0 +1,4752 @@
+[
+ {
+  "id": "white-leather-bag",
+  "name": {
+   "fa": "کیف چرمی سفید",
+   "en": "White leather bag",
+   "tr": "Beyaz deri çanta"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-white-leather-bag",
+   "assets/img/r-white-leather-bag-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم",
+   "en": "Leather",
+   "tr": "Deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 0
+ },
+ {
+  "id": "pastel-cotton-cap",
+  "name": {
+   "fa": "کپ کتان سفید و صورتی پاستیلی",
+   "en": "Cotton cap, white and pastel pink",
+   "tr": "Pamuklu şapka, beyaz ve pastel pembe"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3990000,
+  "images": [
+   "assets/img/r-pastel-cotton-cap",
+   "assets/img/r-pastel-cotton-cap-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#F6CFDB",
+    "fa": "صورتی پاستیلی",
+    "en": "Pastel pink",
+    "tr": "Pastel pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "کتان",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 1
+ },
+ {
+  "id": "mohair-top",
+  "name": {
+   "fa": "رویه موهر پنبه",
+   "en": "Mohair-cotton top",
+   "tr": "Tiftik-pamuk üst"
+  },
+  "cat": "cardigan",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-mohair-top",
+   "assets/img/r-mohair-top-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "موهر پنبه",
+   "en": "Mohair and cotton",
+   "tr": "Tiftik ve pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 2
+ },
+ {
+  "id": "mohair-trousers",
+  "name": {
+   "fa": "شلوار موهر پنبه",
+   "en": "Mohair-cotton trousers",
+   "tr": "Tiftik-pamuk pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 9990000,
+  "images": [
+   "assets/img/r-mohair-trousers",
+   "assets/img/r-mohair-trousers-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "موهر پنبه",
+   "en": "Mohair and cotton",
+   "tr": "Tiftik ve pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 3
+ },
+ {
+  "id": "buttoned-wool-knit",
+  "name": {
+   "fa": "بافت پشم دکمه‌دار",
+   "en": "Buttoned wool knit",
+   "tr": "Düğmeli yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 14990000,
+  "images": [
+   "assets/img/r-buttoned-wool-knit",
+   "assets/img/r-buttoned-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F3D3DE",
+    "fa": "سفید و صورتی",
+    "en": "White and pink",
+    "tr": "Beyaz ve pembe"
+   },
+   {
+    "hex": "#9AA3B5",
+    "fa": "سفید و سرمه‌ای",
+    "en": "White and navy",
+    "tr": "Beyaz ve lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 4
+ },
+ {
+  "id": "wool-scarf",
+  "name": {
+   "fa": "شال گردن پشم",
+   "en": "Wool scarf",
+   "tr": "Yün atkı"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3490000,
+  "images": [
+   "assets/img/r-wool-scarf",
+   "assets/img/r-wool-scarf-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F3D3DE",
+    "fa": "سفید و صورتی",
+    "en": "White and pink",
+    "tr": "Beyaz ve pembe"
+   },
+   {
+    "hex": "#9AA3B5",
+    "fa": "سفید و سرمه‌ای",
+    "en": "White and navy",
+    "tr": "Beyaz ve lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 5
+ },
+ {
+  "id": "white-jeans",
+  "name": {
+   "fa": "شلوار جین سفید",
+   "en": "White jeans",
+   "tr": "Beyaz kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 10990000,
+  "images": [
+   "assets/img/r-white-jeans",
+   "assets/img/r-white-jeans-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 6
+ },
+ {
+  "id": "silk-satin-bandana",
+  "name": {
+   "fa": "باندانا ساتن ابریشمی",
+   "en": "Silk satin bandana",
+   "tr": "İpek saten bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 2990000,
+  "images": [
+   "assets/img/r-silk-satin-bandana",
+   "assets/img/r-silk-satin-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E9B8C8",
+    "fa": "صورتی گل‌دار",
+    "en": "Pink print",
+    "tr": "Pembe desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "ساتن ابریشمی",
+   "en": "Silk satin",
+   "tr": "İpek saten"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 7
+ },
+ {
+  "id": "fleece-sweatshirt",
+  "name": {
+   "fa": "سوشرت سه‌نخ توکرک",
+   "en": "Fleece-lined sweatshirt",
+   "tr": "İçi polarlı sweatshirt"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 13990000,
+  "images": [
+   "assets/img/r-fleece-sweatshirt",
+   "assets/img/r-fleece-sweatshirt-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#9CC3E4",
+    "fa": "آبی",
+    "en": "Blue",
+    "tr": "Mavi"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "سه‌نخ توکرک",
+   "en": "Three-thread, fleece-lined",
+   "tr": "Üç iplik, içi polarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 8
+ },
+ {
+  "id": "fleece-trousers",
+  "name": {
+   "fa": "شلوار سه‌نخ توکرک",
+   "en": "Fleece-lined trousers",
+   "tr": "İçi polarlı pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-fleece-trousers",
+   "assets/img/r-fleece-trousers-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#9CC3E4",
+    "fa": "آبی",
+    "en": "Blue",
+    "tr": "Mavi"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "سه‌نخ توکرک",
+   "en": "Three-thread, fleece-lined",
+   "tr": "Üç iplik, içi polarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 9
+ },
+ {
+  "id": "faux-fur-coat",
+  "name": {
+   "fa": "کت پوست مصنوعی",
+   "en": "Faux fur coat",
+   "tr": "Suni kürk ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 24990000,
+  "images": [
+   "assets/img/r-faux-fur-coat",
+   "assets/img/r-faux-fur-coat-2",
+   "assets/img/r-faux-fur-coat-3"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پوست مصنوعی",
+   "en": "Faux fur",
+   "tr": "Suni kürk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 10
+ },
+ {
+  "id": "wool-teddy-coat",
+  "name": {
+   "fa": "کت تدی پشمی",
+   "en": "Wool teddy coat",
+   "tr": "Yün teddy ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 19490000,
+  "images": [
+   "assets/img/r-wool-teddy-coat",
+   "assets/img/r-wool-teddy-coat-2",
+   "assets/img/r-wool-teddy-coat-3"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   },
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "تدی پشمی",
+   "en": "Wool teddy",
+   "tr": "Yün teddy"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 11
+ },
+ {
+  "id": "oiled-leather-jacket",
+  "name": {
+   "fa": "کاپشن چرم روغنی",
+   "en": "Oiled leather jacket",
+   "tr": "Yağlı deri mont"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 23990000,
+  "images": [
+   "assets/img/r-oiled-leather-jacket",
+   "assets/img/r-oiled-leather-jacket-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم روغنی",
+   "en": "Oiled leather",
+   "tr": "Yağlı deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 12
+ },
+ {
+  "id": "wool-underknit",
+  "name": {
+   "fa": "بافت زیره پشم راه‌راه",
+   "en": "Striped wool underknit",
+   "tr": "Çizgili yün içlik triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 12490000,
+  "images": [
+   "assets/img/r-wool-underknit",
+   "assets/img/r-wool-underknit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9C7B0",
+    "fa": "سفید و شکلاتی",
+    "en": "White and chocolate",
+    "tr": "Beyaz ve çikolata"
+   },
+   {
+    "hex": "#3A3128",
+    "fa": "مشکی و شتری",
+    "en": "Black and camel",
+    "tr": "Siyah ve deve tüyü"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 13
+ },
+ {
+  "id": "cotton-cap",
+  "name": {
+   "fa": "کپ کتان",
+   "en": "Cotton cap",
+   "tr": "Pamuklu şapka"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3490000,
+  "images": [
+   "assets/img/r-cotton-cap",
+   "assets/img/r-cotton-cap-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#7A7A52",
+    "fa": "سبز خاکی",
+    "en": "Khaki green",
+    "tr": "Haki yeşil"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   },
+   {
+    "hex": "#C2185B",
+    "fa": "سرخابی",
+    "en": "Magenta",
+    "tr": "Fuşya"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "کتان",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 14
+ },
+ {
+  "id": "chocolate-jeans",
+  "name": {
+   "fa": "شلوار جین شکلاتی",
+   "en": "Chocolate jeans",
+   "tr": "Çikolata rengi kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 8590000,
+  "images": [
+   "assets/img/r-chocolate-jeans",
+   "assets/img/r-chocolate-jeans-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 15
+ },
+ {
+  "id": "cotton-foulard",
+  "name": {
+   "fa": "فولار نخی",
+   "en": "Cotton foulard",
+   "tr": "Pamuklu fular"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-cotton-foulard",
+   "assets/img/r-cotton-foulard-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 16
+ },
+ {
+  "id": "oiled-leather-trench",
+  "name": {
+   "fa": "بارونی چرم روغنی",
+   "en": "Oiled leather trench coat",
+   "tr": "Yağlı deri trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 34990000,
+  "images": [
+   "assets/img/r-oiled-leather-trench",
+   "assets/img/r-oiled-leather-trench-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم روغنی",
+   "en": "Oiled leather",
+   "tr": "Yağlı deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 17
+ },
+ {
+  "id": "white-collar-underknit",
+  "name": {
+   "fa": "بافت زیره یقه‌سفید",
+   "en": "White-collar underknit",
+   "tr": "Beyaz yakalı içlik triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 7590000,
+  "images": [
+   "assets/img/r-white-collar-underknit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "تریکو",
+   "en": "Tricot knit",
+   "tr": "Triko"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 18
+ },
+ {
+  "id": "avishu-top",
+  "name": {
+   "fa": "رویه اویشو",
+   "en": "Avishu top",
+   "tr": "Avishu üst"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 16990000,
+  "images": [
+   "assets/img/r-avishu-top",
+   "assets/img/r-avishu-top-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 19
+ },
+ {
+  "id": "avishu-trousers",
+  "name": {
+   "fa": "شلوار اویشو",
+   "en": "Avishu trousers",
+   "tr": "Avishu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-avishu-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 20
+ },
+ {
+  "id": "karl-lagerfeld-bag",
+  "name": {
+   "fa": "کیف KARL LAGERFELD",
+   "en": "KARL LAGERFELD bag",
+   "tr": "KARL LAGERFELD çanta"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 7290000,
+  "images": [
+   "assets/img/r-karl-lagerfeld-bag",
+   "assets/img/r-karl-lagerfeld-bag-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "برند KARL LAGERFELD، آلمان.",
+   "en": "KARL LAGERFELD, Germany.",
+   "tr": "KARL LAGERFELD, Almanya."
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده",
+   "en": "Processed leather",
+   "tr": "İşlenmiş deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 21
+ },
+ {
+  "id": "cotton-turtleneck",
+  "name": {
+   "fa": "یقه‌اسکی نخی",
+   "en": "Cotton turtleneck",
+   "tr": "Pamuklu balıkçı yaka"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 4490000,
+  "images": [
+   "assets/img/r-cotton-turtleneck",
+   "assets/img/r-cotton-turtleneck-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A2545",
+    "fa": "بادمجانی",
+    "en": "Aubergine",
+    "tr": "Patlıcan moru"
+   },
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 22
+ },
+ {
+  "id": "denim-jacket",
+  "name": {
+   "fa": "کت جین",
+   "en": "Denim jacket",
+   "tr": "Kot ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-denim-jacket",
+   "assets/img/r-denim-jacket-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1C2230",
+    "fa": "جین تیره",
+    "en": "Dark denim",
+    "tr": "Koyu kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 23
+ },
+ {
+  "id": "dark-jeans",
+  "name": {
+   "fa": "شلوار جین تیره",
+   "en": "Dark jeans",
+   "tr": "Koyu kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 13490000,
+  "images": [
+   "assets/img/r-dark-jeans"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#161B26",
+    "fa": "جین تیره",
+    "en": "Dark denim",
+    "tr": "Koyu kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 24
+ },
+ {
+  "id": "high-neck-wool-knit",
+  "name": {
+   "fa": "بافت پشم یقه‌بلند",
+   "en": "High-neck wool knit",
+   "tr": "Dik yaka yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 8490000,
+  "images": [
+   "assets/img/r-high-neck-wool-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   },
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#9CC3E4",
+    "fa": "آبی",
+    "en": "Blue",
+    "tr": "Mavi"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 25
+ },
+ {
+  "id": "patchwork-bandana",
+  "name": {
+   "fa": "باندانا نخی چهل‌تکه",
+   "en": "Cotton patchwork bandana",
+   "tr": "Pamuklu patchwork bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-patchwork-bandana",
+   "assets/img/r-patchwork-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#B0303F",
+    "fa": "قرمز و سرمه‌ای چهل‌تکه",
+    "en": "Red and navy patchwork",
+    "tr": "Kırmızı-lacivert patchwork"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 26
+ },
+ {
+  "id": "gabardine-trench",
+  "name": {
+   "fa": "بارانی گاباردین پنبه",
+   "en": "Cotton gabardine trench coat",
+   "tr": "Pamuklu gabardin trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 34990000,
+  "images": [
+   "assets/img/r-gabardine-trench"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "گاباردین پنبه",
+   "en": "Cotton gabardine",
+   "tr": "Pamuklu gabardin"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 27
+ },
+ {
+  "id": "ribbed-knit",
+  "name": {
+   "fa": "بافت کبریتی",
+   "en": "Ribbed knit",
+   "tr": "Fitilli triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 12490000,
+  "images": [
+   "assets/img/r-ribbed-knit",
+   "assets/img/r-ribbed-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#5E6B3E",
+    "fa": "سبز لجنی",
+    "en": "Moss green",
+    "tr": "Yosun yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 28
+ },
+ {
+  "id": "cotton-shirt",
+  "name": {
+   "fa": "شومیز نخی",
+   "en": "Cotton shirt",
+   "tr": "Pamuklu gömlek"
+  },
+  "cat": "shirt",
+  "col": "aw27",
+  "price": 7990000,
+  "images": [
+   "assets/img/r-cotton-shirt",
+   "assets/img/r-cotton-shirt-2",
+   "assets/img/r-cotton-shirt-3"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#E6DDCB",
+    "fa": "استخوانی",
+    "en": "Bone",
+    "tr": "Kemik"
+   },
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 29
+ },
+ {
+  "id": "red-bandana",
+  "name": {
+   "fa": "باندانا نخی قرمز",
+   "en": "Red cotton bandana",
+   "tr": "Kırmızı pamuklu bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-red-bandana",
+   "assets/img/r-red-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D3202F",
+    "fa": "قرمز طرح‌دار",
+    "en": "Red paisley",
+    "tr": "Kırmızı şal desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 30
+ },
+ {
+  "id": "waterproof-sneakers",
+  "name": {
+   "fa": "کانورس",
+   "en": "High-top sneakers",
+   "tr": "Bilekli spor ayakkabı"
+  },
+  "cat": "shoes",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-waterproof-sneakers",
+   "assets/img/r-waterproof-sneakers-2",
+   "assets/img/r-waterproof-sneakers-3"
+  ],
+  "sizes": [
+   "37",
+   "38",
+   "39",
+   "40"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده، نزدیک‌ترین نوع به چرم طبیعی، واترپروف و ضدآب",
+   "en": "Processed leather, the closest to natural leather, waterproof",
+   "tr": "Doğal deriye en yakın işlenmiş deri, su geçirmez"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 31
+ },
+ {
+  "id": "short-fur-jacket",
+  "name": {
+   "fa": "کت پوست کوتاه",
+   "en": "Short-pile fur jacket",
+   "tr": "Kısa tüylü kürk ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 17890000,
+  "images": [
+   "assets/img/r-short-fur-jacket",
+   "assets/img/r-short-fur-jacket-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   },
+   {
+    "hex": "#F1ECE2",
+    "fa": "شیری",
+    "en": "Milky white",
+    "tr": "Süt beyazı"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پوست کوتاه",
+   "en": "Short-pile fur",
+   "tr": "Kısa tüylü kürk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 32
+ },
+ {
+  "id": "pure-wool-underknit",
+  "name": {
+   "fa": "بافت زیره پشم خالص",
+   "en": "Pure wool underknit",
+   "tr": "Saf yün içlik triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 12490000,
+  "images": [
+   "assets/img/r-pure-wool-underknit",
+   "assets/img/r-pure-wool-underknit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A2545",
+    "fa": "بادمجانی",
+    "en": "Aubergine",
+    "tr": "Patlıcan moru"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم خالص",
+   "en": "Pure wool",
+   "tr": "Saf yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 33
+ },
+ {
+  "id": "plain-shirt",
+  "name": {
+   "fa": "شومیز ساده",
+   "en": "Plain shirt",
+   "tr": "Düz gömlek"
+  },
+  "cat": "shirt",
+  "col": "aw27",
+  "price": 7990000,
+  "images": [
+   "assets/img/r-plain-shirt"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   },
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 34
+ },
+ {
+  "id": "green-cream-jeans",
+  "name": {
+   "fa": "شلوار جین سبز و کرم",
+   "en": "Green and cream jeans",
+   "tr": "Yeşil ve krem kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 13490000,
+  "images": [
+   "assets/img/r-green-cream-jeans",
+   "assets/img/r-green-cream-jeans-2"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6E7F5C",
+    "fa": "سبز",
+    "en": "Green",
+    "tr": "Yeşil"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 35
+ },
+ {
+  "id": "print-bandana",
+  "name": {
+   "fa": "باندانا گل‌دار",
+   "en": "Floral bandana",
+   "tr": "Çiçekli bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 2990000,
+  "images": [
+   "assets/img/r-print-bandana",
+   "assets/img/r-print-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C98FB0",
+    "fa": "گل‌دار صورتی و بنفش",
+    "en": "Pink and purple floral",
+    "tr": "Pembe-mor çiçekli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 36
+ },
+ {
+  "id": "striped-wool-knit",
+  "name": {
+   "fa": "بافت پشم راه‌راه",
+   "en": "Striped wool knit",
+   "tr": "Çizgili yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 9490000,
+  "images": [
+   "assets/img/r-striped-wool-knit",
+   "assets/img/r-striped-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#B98A86",
+    "fa": "کرم و زرشکی",
+    "en": "Cream and burgundy",
+    "tr": "Krem ve bordo"
+   },
+   {
+    "hex": "#3D5A80",
+    "fa": "آبی و سرمه‌ای",
+    "en": "Blue and navy",
+    "tr": "Mavi ve lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 37
+ },
+ {
+  "id": "collared-sweatshirt",
+  "name": {
+   "fa": "سوشرت",
+   "en": "Sweatshirt",
+   "tr": "Sweatshirt"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 22490000,
+  "images": [
+   "assets/img/r-collared-sweatshirt"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A2545",
+    "fa": "بادمجانی",
+    "en": "Aubergine",
+    "tr": "Patlıcan moru"
+   },
+   {
+    "hex": "#33221A",
+    "fa": "شکلاتی تیره",
+    "en": "Dark chocolate",
+    "tr": "Bitter çikolata"
+   },
+   {
+    "hex": "#7D7873",
+    "fa": "موشی",
+    "en": "Mouse grey",
+    "tr": "Fare grisi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 38
+ },
+ {
+  "id": "sweat-trousers",
+  "name": {
+   "fa": "شلوار ست سوشرت",
+   "en": "Sweatshirt-set trousers",
+   "tr": "Sweatshirt takımı pantolonu"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-sweat-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A2545",
+    "fa": "بادمجانی",
+    "en": "Aubergine",
+    "tr": "Patlıcan moru"
+   },
+   {
+    "hex": "#33221A",
+    "fa": "شکلاتی تیره",
+    "en": "Dark chocolate",
+    "tr": "Bitter çikolata"
+   },
+   {
+    "hex": "#7D7873",
+    "fa": "موشی",
+    "en": "Mouse grey",
+    "tr": "Fare grisi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 39
+ },
+ {
+  "id": "brown-paisley-bandana",
+  "name": {
+   "fa": "باندانا قهوه‌ای",
+   "en": "Brown bandana",
+   "tr": "Kahverengi bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-brown-paisley-bandana"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6A5038",
+    "fa": "قهوه‌ای طرح‌دار",
+    "en": "Brown paisley",
+    "tr": "Kahverengi şal desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 40
+ },
+ {
+  "id": "waterproof-leather-bomber",
+  "name": {
+   "fa": "کاپشن چرم واترپروف",
+   "en": "Waterproof leather jacket",
+   "tr": "Su geçirmez deri mont"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 27990000,
+  "images": [
+   "assets/img/r-waterproof-leather-bomber",
+   "assets/img/r-waterproof-leather-bomber-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#3E2C24",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده، واترپروف و ضدآب",
+   "en": "Processed leather, waterproof",
+   "tr": "İşlenmiş deri, su geçirmez"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 41
+ },
+ {
+  "id": "two-tone-wool-knit",
+  "name": {
+   "fa": "بافت پشمی دورنگ",
+   "en": "Two-tone wool knit",
+   "tr": "İki renkli yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-two-tone-wool-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5D6B7A",
+    "fa": "آبی و قهوه‌ای",
+    "en": "Blue and brown",
+    "tr": "Mavi ve kahverengi"
+   },
+   {
+    "hex": "#7A2E3E",
+    "fa": "قرمز و سرمه‌ای",
+    "en": "Red and navy",
+    "tr": "Kırmızı ve lacivert"
+   },
+   {
+    "hex": "#A3445C",
+    "fa": "زرشکی و صورتی",
+    "en": "Burgundy and pink",
+    "tr": "Bordo ve pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 42
+ },
+ {
+  "id": "baseball-cap",
+  "name": {
+   "fa": "کلاه کپ",
+   "en": "Baseball cap",
+   "tr": "Beyzbol şapkası"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3490000,
+  "images": [
+   "assets/img/r-baseball-cap",
+   "assets/img/r-baseball-cap-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#E6DDCB",
+    "fa": "استخوانی",
+    "en": "Bone",
+    "tr": "Kemik"
+   },
+   {
+    "hex": "#3E7A5E",
+    "fa": "سبز یشمی",
+    "en": "Jade green",
+    "tr": "Yeşim yeşili"
+   },
+   {
+    "hex": "#C2185B",
+    "fa": "سرخابی",
+    "en": "Magenta",
+    "tr": "Fuşya"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 43
+ },
+ {
+  "id": "waterproof-leather-jacket",
+  "name": {
+   "fa": "کت چرم واترپروف",
+   "en": "Waterproof leather jacket",
+   "tr": "Su geçirmez deri ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 23990000,
+  "images": [
+   "assets/img/r-waterproof-leather-jacket",
+   "assets/img/r-waterproof-leather-jacket-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A3326",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده، رویه‌ی واترپروف و ضدآب",
+   "en": "Processed leather, waterproof upper",
+   "tr": "İşlenmiş deri, su geçirmez yüzey"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 44
+ },
+ {
+  "id": "two-tone-stripe-knit",
+  "name": {
+   "fa": "بافت پشم دورنگ راه‌راه",
+   "en": "Two-tone striped wool knit",
+   "tr": "İki renkli çizgili yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 8990000,
+  "images": [
+   "assets/img/r-two-tone-stripe-knit"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5D6B7A",
+    "fa": "آبی و قهوه‌ای",
+    "en": "Blue and brown",
+    "tr": "Mavi ve kahverengi"
+   },
+   {
+    "hex": "#C9506A",
+    "fa": "قرمز و صورتی",
+    "en": "Red and pink",
+    "tr": "Kırmızı ve pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 45
+ },
+ {
+  "id": "light-ripped-jeans",
+  "name": {
+   "fa": "شلوار جین روشن",
+   "en": "Light jeans",
+   "tr": "Açık kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 7090000,
+  "images": [
+   "assets/img/r-light-ripped-jeans",
+   "assets/img/r-light-ripped-jeans-2"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#BFD3E6",
+    "fa": "جین روشن",
+    "en": "Light denim",
+    "tr": "Açık kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 46
+ },
+ {
+  "id": "logo-cap",
+  "name": {
+   "fa": "کلاه کپ لوگودار",
+   "en": "Logo cap",
+   "tr": "Logolu şapka"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3490000,
+  "images": [
+   "assets/img/r-logo-cap"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F2A7C3",
+    "fa": "صورتی",
+    "en": "Pink",
+    "tr": "Pembe"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 47
+ },
+ {
+  "id": "patterned-wool-knit",
+  "name": {
+   "fa": "بافت پشم خالص طرح‌دار",
+   "en": "Patterned pure wool knit",
+   "tr": "Desenli saf yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 13990000,
+  "images": [
+   "assets/img/r-patterned-wool-knit",
+   "assets/img/r-patterned-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9B3C2",
+    "fa": "صورتی و طوسی",
+    "en": "Pink and grey",
+    "tr": "Pembe ve gri"
+   },
+   {
+    "hex": "#CDB79E",
+    "fa": "کرم و قهوه‌ای",
+    "en": "Cream and brown",
+    "tr": "Krem ve kahverengi"
+   },
+   {
+    "hex": "#3D5A80",
+    "fa": "آبی و سرمه‌ای",
+    "en": "Blue and navy",
+    "tr": "Mavi ve lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم خالص",
+   "en": "Pure wool",
+   "tr": "Saf yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 48
+ },
+ {
+  "id": "avishu-vest",
+  "name": {
+   "fa": "وست اویشو",
+   "en": "Avishu vest",
+   "tr": "Avishu yelek"
+  },
+  "cat": "vest",
+  "col": "aw27",
+  "price": 15990000,
+  "images": [
+   "assets/img/r-avishu-vest",
+   "assets/img/r-avishu-vest-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4A4A4D",
+    "fa": "خاکستری تیره",
+    "en": "Dark grey",
+    "tr": "Koyu gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 49
+ },
+ {
+  "id": "avishu-trousers-grey",
+  "name": {
+   "fa": "شلوار اویشو خاکستری تیره",
+   "en": "Dark grey Avishu trousers",
+   "tr": "Koyu gri Avishu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-avishu-trousers-grey",
+   "assets/img/r-avishu-trousers-grey-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#3F3F42",
+    "fa": "خاکستری تیره",
+    "en": "Dark grey",
+    "tr": "Koyu gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 50
+ },
+ {
+  "id": "black-white-bandana",
+  "name": {
+   "fa": "باندانا مشکی و سفید",
+   "en": "Black and white bandana",
+   "tr": "Siyah-beyaz bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-black-white-bandana"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#3C3C3C",
+    "fa": "مشکی و سفید طرح‌دار",
+    "en": "Black and white paisley",
+    "tr": "Siyah-beyaz şal desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 51
+ },
+ {
+  "id": "striped-pink-knit",
+  "name": {
+   "fa": "بافت پشمی راه‌راه صورتی",
+   "en": "Pink striped wool knit",
+   "tr": "Pembe çizgili yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 9490000,
+  "images": [
+   "assets/img/r-striped-pink-knit",
+   "assets/img/r-striped-pink-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D9B3C2",
+    "fa": "صورتی و طوسی",
+    "en": "Pink and grey",
+    "tr": "Pembe ve gri"
+   },
+   {
+    "hex": "#A3445C",
+    "fa": "زرشکی و صورتی",
+    "en": "Burgundy and pink",
+    "tr": "Bordo ve pembe"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 52
+ },
+ {
+  "id": "bomber-jacket",
+  "name": {
+   "fa": "بامبر",
+   "en": "Bomber jacket",
+   "tr": "Bomber ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-bomber-jacket"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "دورس سه‌نخ آستردار",
+   "en": "Three-thread fleece (dors), lined",
+   "tr": "Üç iplik dors, astarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 53
+ },
+ {
+  "id": "dors-trousers",
+  "name": {
+   "fa": "شلوار دورس سه‌نخ توکرک",
+   "en": "Fleece-lined dors trousers",
+   "tr": "İçi polarlı dors pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-dors-trousers",
+   "assets/img/r-dors-trousers-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "دورس سه‌نخ توکرک",
+   "en": "Three-thread fleece (dors), fleece-lined",
+   "tr": "Üç iplik dors, içi polarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 54
+ },
+ {
+  "id": "cotton-shirt-white",
+  "name": {
+   "fa": "شومیز نخ پنبه",
+   "en": "Cotton shirt",
+   "tr": "Pamuklu gömlek"
+  },
+  "cat": "shirt",
+  "col": "aw27",
+  "price": 7990000,
+  "images": [
+   "assets/img/r-cotton-shirt-white"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#E6DDCB",
+    "fa": "استخوانی",
+    "en": "Bone",
+    "tr": "Kemik"
+   },
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ پنبه",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 55
+ },
+ {
+  "id": "white-wool-knit",
+  "name": {
+   "fa": "بافت پشمی سفید",
+   "en": "White wool knit",
+   "tr": "Beyaz yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 11490000,
+  "images": [
+   "assets/img/r-white-wool-knit",
+   "assets/img/r-white-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 56
+ },
+ {
+  "id": "light-wide-jeans",
+  "name": {
+   "fa": "شلوار جین گشاد",
+   "en": "Wide jeans",
+   "tr": "Bol kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 8990000,
+  "images": [
+   "assets/img/r-light-wide-jeans"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C3CCD6",
+    "fa": "جین روشن",
+    "en": "Light denim",
+    "tr": "Açık kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 57
+ },
+ {
+  "id": "hooded-fur-jacket",
+  "name": {
+   "fa": "کت پوست کوتاه کلاه‌دار",
+   "en": "Hooded short-pile fur jacket",
+   "tr": "Kapüşonlu kısa tüylü kürk ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 21090000,
+  "images": [
+   "assets/img/r-hooded-fur-jacket",
+   "assets/img/r-hooded-fur-jacket-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پوست کوتاه",
+   "en": "Short-pile fur",
+   "tr": "Kısa tüylü kürk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 58
+ },
+ {
+  "id": "cotton-trousers",
+  "name": {
+   "fa": "شلوار نخ پنبه",
+   "en": "Cotton trousers",
+   "tr": "Pamuklu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-cotton-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ پنبه",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 59
+ },
+ {
+  "id": "dors-sweatshirt",
+  "name": {
+   "fa": "دورس",
+   "en": "Crew sweatshirt (dors)",
+   "tr": "Bisiklet yaka sweatshirt (dors)"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 13990000,
+  "images": [
+   "assets/img/r-dors-sweatshirt"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C62828",
+    "fa": "قرمز",
+    "en": "Red",
+    "tr": "Kırmızı"
+   },
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   },
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "سه‌نخ توکرک",
+   "en": "Three-thread, fleece-lined",
+   "tr": "Üç iplik, içi polarlı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 60
+ },
+ {
+  "id": "oversize-coat",
+  "name": {
+   "fa": "پالتو اورسایز",
+   "en": "Oversize coat",
+   "tr": "Oversize palto"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 41990000,
+  "images": [
+   "assets/img/r-oversize-coat",
+   "assets/img/r-oversize-coat-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#9E9E9E",
+    "fa": "طوسی",
+    "en": "Grey",
+    "tr": "Gri"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "فوتر پشمی",
+   "en": "Wool coating (futer)",
+   "tr": "Yün kaban kumaşı (futer)"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 61
+ },
+ {
+  "id": "marc-jacobs-bag",
+  "name": {
+   "fa": "کیف MARC JACOBS",
+   "en": "MARC JACOBS bag",
+   "tr": "MARC JACOBS çanta"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-marc-jacobs-bag",
+   "assets/img/r-marc-jacobs-bag-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D8C8B4",
+    "fa": "سفید و قهوه‌ای",
+    "en": "White and brown",
+    "tr": "Beyaz ve kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "برند MARC JACOBS.",
+   "en": "MARC JACOBS.",
+   "tr": "MARC JACOBS."
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "چرم فراوری‌شده",
+   "en": "Processed leather",
+   "tr": "İşlenmiş deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 62
+ },
+ {
+  "id": "waxed-trench",
+  "name": {
+   "fa": "بارانی شمعی",
+   "en": "Waxed trench coat",
+   "tr": "Mumlu trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 34990000,
+  "images": [
+   "assets/img/r-waxed-trench",
+   "assets/img/r-waxed-trench-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7A4E33",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "شمعی",
+   "en": "Waxed fabric",
+   "tr": "Mumlu kumaş"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 63
+ },
+ {
+  "id": "avishu-sweatshirt",
+  "name": {
+   "fa": "سوشرت اویشو",
+   "en": "Avishu sweatshirt",
+   "tr": "Avishu sweatshirt"
+  },
+  "cat": "hoodie",
+  "col": "aw27",
+  "price": 16990000,
+  "images": [
+   "assets/img/r-avishu-sweatshirt"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6F7552",
+    "fa": "سبز زیتونی",
+    "en": "Olive green",
+    "tr": "Zeytin yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 64
+ },
+ {
+  "id": "avishu-trousers-olive",
+  "name": {
+   "fa": "شلوار اویشو سبز زیتونی",
+   "en": "Olive Avishu trousers",
+   "tr": "Zeytin yeşili Avishu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-avishu-trousers-olive"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#6F7552",
+    "fa": "سبز زیتونی",
+    "en": "Olive green",
+    "tr": "Zeytin yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "اویشو",
+   "en": "Avishu",
+   "tr": "Avishu"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 65
+ },
+ {
+  "id": "floral-bandana",
+  "name": {
+   "fa": "باندانا نخی گل‌دار",
+   "en": "Floral cotton bandana",
+   "tr": "Çiçekli pamuklu bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1990000,
+  "images": [
+   "assets/img/r-floral-bandana"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#D79BB4",
+    "fa": "صورتی گل‌دار",
+    "en": "Pink print",
+    "tr": "Pembe desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "نخ",
+   "en": "Cotton",
+   "tr": "Pamuk"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 66
+ },
+ {
+  "id": "fine-wool-knit",
+  "name": {
+   "fa": "بافت پشمی نازک",
+   "en": "Fine wool knit",
+   "tr": "İnce yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 9490000,
+  "images": [
+   "assets/img/r-fine-wool-knit",
+   "assets/img/r-fine-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#9AA07E",
+    "fa": "سبز و کرم",
+    "en": "Green and cream",
+    "tr": "Yeşil ve krem"
+   },
+   {
+    "hex": "#CDB79E",
+    "fa": "کرم و قهوه‌ای",
+    "en": "Cream and brown",
+    "tr": "Krem ve kahverengi"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشمی نازک",
+   "en": "Fine wool",
+   "tr": "İnce yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 67
+ },
+ {
+  "id": "waxed-trousers",
+  "name": {
+   "fa": "شلوار شمعی ضدآب",
+   "en": "Waterproof waxed trousers",
+   "tr": "Su geçirmez mumlu pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-waxed-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#8C9166",
+    "fa": "سبز زیتونی روشن",
+    "en": "Light olive green",
+    "tr": "Açık zeytin yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "شمعی ضدآب",
+   "en": "Waxed fabric, waterproof",
+   "tr": "Mumlu kumaş, su geçirmez"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 68
+ },
+ {
+  "id": "zara-bag",
+  "name": {
+   "fa": "کیف زارا",
+   "en": "Zara bag",
+   "tr": "Zara çanta"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 12990000,
+  "images": [
+   "assets/img/r-zara-bag",
+   "assets/img/r-zara-bag-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   }
+  ],
+  "note": {
+   "fa": "اورجینال زارا.",
+   "en": "Original Zara.",
+   "tr": "Orijinal Zara."
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جیر و چرم",
+   "en": "Suede and leather",
+   "tr": "Süet ve deri"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 69
+ },
+ {
+  "id": "gabardine-trousers",
+  "name": {
+   "fa": "شلوار گاباردین",
+   "en": "Gabardine trousers",
+   "tr": "Gabardin pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 15490000,
+  "images": [
+   "assets/img/r-gabardine-trousers"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   },
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "گاباردین گرم‌بالا",
+   "en": "Heavyweight gabardine",
+   "tr": "Ağır gramajlı gabardin"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 70
+ },
+ {
+  "id": "pure-wool-cardigan",
+  "name": {
+   "fa": "رویه پشم خالص",
+   "en": "Pure wool cardigan",
+   "tr": "Saf yün hırka"
+  },
+  "cat": "cardigan",
+  "col": "aw27",
+  "price": 27990000,
+  "images": [
+   "assets/img/r-pure-wool-cardigan",
+   "assets/img/r-pure-wool-cardigan-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم خالص",
+   "en": "Pure wool",
+   "tr": "Saf yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 71
+ },
+ {
+  "id": "turtleneck",
+  "name": {
+   "fa": "یقه‌اسکی",
+   "en": "Turtleneck",
+   "tr": "Balıkçı yaka"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 9690000,
+  "images": [
+   "assets/img/r-turtleneck"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#F5F5F2",
+    "fa": "سفید",
+    "en": "White",
+    "tr": "Beyaz"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 72
+ },
+ {
+  "id": "satin-paisley-bandana",
+  "name": {
+   "fa": "باندانا حریر ساتن",
+   "en": "Satin bandana",
+   "tr": "Saten bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 2990000,
+  "images": [
+   "assets/img/r-satin-paisley-bandana",
+   "assets/img/r-satin-paisley-bandana-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#5C4030",
+    "fa": "قهوه‌ای طرح‌دار",
+    "en": "Brown paisley",
+    "tr": "Kahverengi şal desenli"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "حریر ساتن",
+   "en": "Satin silk",
+   "tr": "Saten ipek"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 73
+ },
+ {
+  "id": "pure-wool-jacket",
+  "name": {
+   "fa": "کت پشم خالص",
+   "en": "Pure wool jacket",
+   "tr": "Saf yün ceket"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 18990000,
+  "images": [
+   "assets/img/r-pure-wool-jacket",
+   "assets/img/r-pure-wool-jacket-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم خالص",
+   "en": "Pure wool",
+   "tr": "Saf yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 74
+ },
+ {
+  "id": "trench-skirt",
+  "name": {
+   "fa": "دامن ترنچ",
+   "en": "Trench skirt",
+   "tr": "Trençkot kumaşı etek"
+  },
+  "cat": "skirts",
+  "col": "aw27",
+  "price": 15990000,
+  "images": [
+   "assets/img/r-trench-skirt"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#4E3226",
+    "fa": "شکلاتی",
+    "en": "Chocolate",
+    "tr": "Çikolata"
+   },
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "ترنچ",
+   "en": "Trench twill",
+   "tr": "Trençkot kumaşı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 75
+ },
+ {
+  "id": "four-colour-bandana",
+  "name": {
+   "fa": "باندانا",
+   "en": "Bandana",
+   "tr": "Bandana"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 1690000,
+  "images": [
+   "assets/img/r-four-colour-bandana"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7B1E2B",
+    "fa": "زرشکی",
+    "en": "Burgundy",
+    "tr": "Bordo"
+   },
+   {
+    "hex": "#6B4430",
+    "fa": "قهوه‌ای",
+    "en": "Brown",
+    "tr": "Kahverengi"
+   },
+   {
+    "hex": "#111111",
+    "fa": "مشکی",
+    "en": "Black",
+    "tr": "Siyah"
+   },
+   {
+    "hex": "#1F2A44",
+    "fa": "سرمه‌ای",
+    "en": "Navy",
+    "tr": "Lacivert"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 76
+ },
+ {
+  "id": "canvas-cap",
+  "name": {
+   "fa": "کلاه برزنتی",
+   "en": "Canvas cap",
+   "tr": "Kanvas şapka"
+  },
+  "cat": "accessories",
+  "col": "aw27",
+  "price": 3490000,
+  "images": [
+   "assets/img/r-canvas-cap",
+   "assets/img/r-canvas-cap-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#C2185B",
+    "fa": "سرخابی",
+    "en": "Magenta",
+    "tr": "Fuşya"
+   },
+   {
+    "hex": "#5E6B3E",
+    "fa": "سبز لجنی",
+    "en": "Moss green",
+    "tr": "Yosun yeşili"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "برزنت",
+   "en": "Canvas",
+   "tr": "Kanvas"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 77
+ },
+ {
+  "id": "cream-wool-knit",
+  "name": {
+   "fa": "بافت پشمی کرم",
+   "en": "Cream wool knit",
+   "tr": "Krem yün triko"
+  },
+  "cat": "knit",
+  "col": "aw27",
+  "price": 12490000,
+  "images": [
+   "assets/img/r-cream-wool-knit",
+   "assets/img/r-cream-wool-knit-2"
+  ],
+  "sizes": [
+   "OS"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#E3D5BC",
+    "fa": "کرم",
+    "en": "Cream",
+    "tr": "Krem"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "پشم",
+   "en": "Wool",
+   "tr": "Yün"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 78
+ },
+ {
+  "id": "waxed-vest",
+  "name": {
+   "fa": "وست شمعی",
+   "en": "Waxed vest",
+   "tr": "Mumlu yelek"
+  },
+  "cat": "vest",
+  "col": "aw27",
+  "price": 22990000,
+  "images": [
+   "assets/img/r-waxed-vest",
+   "assets/img/r-waxed-vest-2"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#8B7D5B",
+    "fa": "خاکی",
+    "en": "Khaki",
+    "tr": "Haki"
+   },
+   {
+    "hex": "#3D4636",
+    "fa": "سبز تیره",
+    "en": "Dark green",
+    "tr": "Koyu yeşil"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "شمعی",
+   "en": "Waxed fabric",
+   "tr": "Mumlu kumaş"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 79
+ },
+ {
+  "id": "grey-jeans",
+  "name": {
+   "fa": "شلوار جین طوسی",
+   "en": "Grey jeans",
+   "tr": "Gri kot pantolon"
+  },
+  "cat": "trousers",
+  "col": "aw27",
+  "price": 10990000,
+  "images": [
+   "assets/img/r-grey-jeans"
+  ],
+  "sizes": [
+   "34",
+   "36",
+   "38",
+   "40",
+   "42"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#8F918F",
+    "fa": "جین طوسی",
+    "en": "Grey denim",
+    "tr": "Gri kot"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "جین",
+   "en": "Denim",
+   "tr": "Kot"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 80
+ },
+ {
+  "id": "short-trench",
+  "name": {
+   "fa": "بارانی کوتاه یقه‌دار",
+   "en": "Short collared trench jacket",
+   "tr": "Kısa yakalı trençkot"
+  },
+  "cat": "jacket",
+  "col": "aw27",
+  "price": 25990000,
+  "images": [
+   "assets/img/r-short-trench"
+  ],
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "stock": null,
+  "fit": "true",
+  "badge": "",
+  "colours": [
+   {
+    "hex": "#7D7650",
+    "fa": "خاکی",
+    "en": "Khaki",
+    "tr": "Haki"
+   }
+  ],
+  "note": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "detail": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "fabric": {
+   "fa": "ترنچ",
+   "en": "Trench twill",
+   "tr": "Trençkot kumaşı"
+  },
+  "care": {
+   "fa": "",
+   "en": "",
+   "tr": ""
+  },
+  "visible": true,
+  "sort": 81
+ }
+]

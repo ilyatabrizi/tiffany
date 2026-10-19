@@ -10,3 +10,6 @@ dist/
 
 # product photos uploaded from the back office live on the server only
 uploads/
+
+# the studio p2-5 film as sent (720x1280, 18.6MB): kept local, media/hero-2.mp4 is the shipped encode
+catalog/real/src/

@@ -1,6 +1,6 @@
 /* استوری‌ها — the story viewer: full-bleed frames you swipe through. First
    the stories the team posted from the panel (each one up for 24 hours, a
-   photo or a video), then the studio's seven campaign looks. Each one can
+   photo or a video), then the studio's campaign looks. Each one can
    carry the pieces it shows. Always in colour — this is the one place the
    shop stops holding back.
 

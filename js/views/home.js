@@ -30,8 +30,8 @@ const langSwitch = () => `
 const hero = () => `
 <section class="hero">
   <div class="hero-media full-colour">
-    <img src="media/hero-poster.webp" alt="" width="576" height="1024" fetchpriority="high">
-    <video src="media/hero.mp4" poster="media/hero-poster.webp" muted playsinline
+    <img src="media/hero-2-poster.webp" alt="" width="720" height="1280" fetchpriority="high">
+    <video src="media/hero-2.mp4" poster="media/hero-2-poster.webp" muted playsinline
            loop preload="metadata" aria-label="${esc(L('فیلم کمپین', 'Campaign film', 'Kampanya filmi'))}"></video>
   </div>
   ${langSwitch()}
@@ -73,7 +73,7 @@ const editorial = () => `
 <section class="sec">
   <article class="ed">
     <span class="shot">
-      <img ${shot('aw27-ed', '(max-width:520px) 92vw, 470px')}
+      <img ${shot('r-ed', '(max-width:520px) 92vw, 470px')}
            alt="${esc(L('کالکشن Autumn / Winter 2027', 'Autumn / Winter 2027 collection', 'Autumn / Winter 2027 koleksiyonu'))}"
            loading="lazy" decoding="async" width="480" height="300">
     </span>
@@ -81,9 +81,9 @@ const editorial = () => `
       <p class="eyebrow">${esc(L('کالکشن جدید', 'New collection', 'Yeni koleksiyon'))}</p>
       <h3 class="serif" dir="ltr">Autumn / Winter 2027</h3>
       <p class="lede">${esc(L(
-        'هفت ست برای پاییز و زمستون: کاپشن و بارونی چرم، بافت‌های پشمی، شومیزهای نخی و جین.',
-        'Seven looks for autumn and winter: leather jackets and trench coats, wool knits, cotton shirts and denim.',
-        'Sonbahar ve kış için yedi kombin: deri montlar ve trençkotlar, yün trikolar, pamuklu gömlekler ve kot.'))}</p>
+        'ست‌های پاییز و زمستون: کاپشن و بارونی چرم، پالتو و بارانی، بافت‌های پشمی، شومیز و جین.',
+        'Looks for autumn and winter: leather jackets and trench coats, overcoats and raincoats, wool knits, shirts and denim.',
+        'Sonbahar ve kış kombinleri: deri montlar ve trençkotlar, paltolar ve yağmurluklar, yün trikolar, gömlekler ve kot.'))}</p>
       <div style="height:16px"></div>
       <button class="btn btn-line btn-s" data-act="collection" data-id="aw27"
               type="button">${esc(L('دیدن کالکشن', 'See the collection', 'Koleksiyonu gör'))}</button>

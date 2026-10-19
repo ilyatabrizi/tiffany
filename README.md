@@ -275,6 +275,34 @@ look photos, one collection (`aw27`) and the seven looks as stories.
 - Every price is a placeholder (1,000,000 Toman) until the studio sets real prices in
   the panel.
 
+## The real catalogue, from the «Tiffany products» group — 2026-10-19
+
+The 28 placeholder pieces (one price, cut from seven low-resolution screenshots)
+are replaced by the studio's own list: 82 pieces, real prices, 22 outfits as
+stories, and the p2-5 film in the hero.
+
+- **Source:** `catalog/real/group.txt` is the exact copy of the group's 88 messages
+  (24 captioned posts, C1–C24). Names, fabrics, colour lists, sizes and prices come
+  from it word for word; photos are the studio's full-resolution `DSC*.JPG` files
+  (kept on the Mac, not in git).
+- `catalog/real/catalog.py SRC OUT` cuts the 4:5 piece crops
+  (`assets/img/r-<id>[-k]-480/960.webp`), the 22 story frames (`r-look-N`), the
+  collection cover (`r-col`) and the editorial (`r-ed`), and writes
+  `catalog-import.json` plus `looks.json` (pasted into `LOOKS` in `js/data.js`).
+- `catalog/real/check.py` maps every caption item to its piece and fails on any
+  price that differs from the caption text. The one exception is recorded in it:
+  C19 writes the shirt as ۹۹۰۰۰۰; Ilya confirmed ۷٬۹۹۰٬۰۰۰ like the other four posts.
+- Pieces repeated word for word in several posts are listed once (the five-colour
+  shirt, caps, sneakers, the C4/C5 set). Merged on matching photos and details:
+  the oversize coat (C17 + C19), the green/cream jeans (C10 + C24), the fleece
+  trousers (C4/C5 + C12) and two bandanas worn twice.
+- Ilya's answers for what the captions leave open: C12 leather jacket S/M/L; the
+  C5 teddy coat in five colours (سفید، کرم، زرشکی، مشکی، شکلاتی); C23 jeans size 41 → 42.
+- **Hero:** `media/hero-2.mp4` is p2-5 at 720×1280, silent, H.264, 2.2MB, cut at
+  20.8 s so the black logo card at the end does not flash behind the wordmark on
+  every loop. Poster `media/hero-2-poster.webp`. The studio's file stays local
+  (`catalog/real/src/`, in `.gitignore`).
+
 ## Full review: bugs, security, rush and traffic — 2026-10-16
 
 Two independent code reviews (backend security, front end), then every fix covered

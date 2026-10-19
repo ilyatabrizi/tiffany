@@ -82,7 +82,7 @@ export const about = {
     ${head(L('از ۱۳۹۹', 'Since 2020', '2020’den beri'), L('درباره‌ی ما', 'About us', 'Hakkımızda'))}
     <article class="info">
       <span class="shot full-colour info-photo">
-        <img ${shot('aw27-ed', '(max-width:520px) 92vw, 470px')}
+        <img ${shot('r-ed', '(max-width:520px) 92vw, 470px')}
              alt="${esc(L('کمپین تیفانی', 'TIFFANY campaign', 'TIFFANY kampanyası'))}"
              decoding="async" width="480" height="300">
       </span>

@@ -1449,7 +1449,7 @@ async function pickProducts(chosen, max, onDone) {
 
 /* ============================================================= stories */
 /* A story is a photo or a video, up for 24 hours on the shop's home page
-   (the strip and the hero's «استوری‌ها»), ahead of the seven campaign looks.
+   (the strip and the hero's «استوری‌ها»), ahead of the campaign looks.
    Pieces can be tagged on it, like the looks. After 24 hours it moves to the
    archive here, where it can go up again for another 24. */
 const left = (ts) => {
@@ -1531,7 +1531,7 @@ async function viewStories(_, q, signal) {
     </form>
     <section class="sec"><div class="sec-head"><h2>الان توی سایت</h2><span class="tiny">${num(d.live.length)} استوری</span></div>
       ${d.live.length ? `<div class="st-grid">${d.live.map((x) => card(x, true)).join('')}</div>`
-    : '<p class="tiny">الان استوری‌ای توی سایت نیست؛ فقط هفت لوک کمپین نشون داده می‌شن.</p>'}</section>
+    : '<p class="tiny">الان استوری‌ای توی سایت نیست؛ فقط لوک‌های کمپین نشون داده می‌شن.</p>'}</section>
     <section class="sec"><div class="sec-head"><h2>آرشیو</h2><span class="tiny">بعد از ۲۴ ساعت این‌جا میان</span></div>
       ${d.archive.length ? `<div class="st-grid">${d.archive.map((x) => card(x, false)).join('')}</div>` : '<p class="tiny">هنوز خالیه.</p>'}</section>`;
 

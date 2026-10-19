@@ -1,0 +1,150 @@
+<title>TIFFANY AW27 Catalogue Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column of posts; each post puts the caption exactly as written beside the pieces built from it. */
+:root {
+  --bg: #F6F5F3; --surface: #FFFFFF; --ink: #1D1A18; --muted: #6E6862; --line: #E3DFDA;
+  --accent: #7A4A2E; --flag-bg: #FFF4DE; --flag-ink: #6B4A00; --q-bg: #F1E9E3;
+  --display: 'Cormorant Garamond', 'Times New Roman', serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fa: 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161413; --surface: #201D1B; --ink: #EDE8E3; --muted: #A49C94; --line: #34302C;
+  --accent: #D7A27F; --flag-bg: #3A2E14; --flag-ink: #F2D38C; --q-bg: #2A221E; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #161413; --surface: #201D1B; --ink: #EDE8E3; --muted: #A49C94; --line: #34302C;
+  --accent: #D7A27F; --flag-bg: #3A2E14; --flag-ink: #F2D38C; --q-bg: #2A221E; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 40px; }
+h1, h2 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.05; }
+h2 { font-size: 30px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; color: var(--accent); font-weight: 600; margin: 0 0 8px; }
+.lede { color: var(--muted); max-width: 64ch; margin: 10px 0 0; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 18px; font-variant-numeric: tabular-nums; }
+.stats b { font-size: 22px; font-family: var(--display); display: block; line-height: 1; }
+.stats span { color: var(--muted); font-size: 13px; }
+section > header { display: grid; gap: 6px; margin-bottom: 16px; }
+.qs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.q { background: var(--q-bg); border-radius: 14px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.q h3 { margin: 0; font-size: 15px; }
+.q blockquote { margin: 0; font-family: var(--fa); direction: rtl; text-align: right; background: var(--surface); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; }
+.q p { margin: 0; color: var(--muted); font-size: 14px; }
+ul.made { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 80ch; }
+.post { border-top: 1px solid var(--line); padding-top: 22px; display: grid; gap: 16px; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); align-items: start; }
+@media (max-width: 760px) { .post { grid-template-columns: minmax(0, 1fr); } }
+.cap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.tag { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--accent); font-weight: 600; margin: 0 0 6px; }
+.cap pre { margin: 0; font: 14px/1.7 var(--fa); direction: rtl; text-align: right; white-space: pre-wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; max-height: 70vh; overflow: auto; }
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.ph { position: relative; aspect-ratio: 4 / 5; background: var(--line); }
+.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph .n { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+.bd { padding: 12px 14px 14px; direction: rtl; text-align: right; font-family: var(--fa); display: grid; gap: 6px; }
+.bd h4 { margin: 0; font-size: 16px; font-weight: 700; }
+.en { margin: 0; font: 12px/1.4 var(--body); color: var(--muted); text-align: left; }
+.price { margin: 0; font-size: 18px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.price small { font-size: 12px; font-weight: 500; color: var(--muted); }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13.5px; }
+dt { color: var(--muted); }
+dd { margin: 0; min-width: 0; }
+.cols { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.sw { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line); display: inline-block; }
+.cn { margin-inline-end: 6px; }
+.none { color: var(--muted); font: 12px var(--body); }
+.flag { margin: 4px 0 0; background: var(--flag-bg); color: var(--flag-ink); font: 12.5px/1.45 var(--body); text-align: left; padding: 8px 10px; border-radius: 8px; }
+.dup { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 8px; font-family: var(--fa); direction: rtl; min-width: 0; }
+.dup img { width: 54px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 8px; flex: none; }
+.dup span { display: block; font: 12px var(--body); color: var(--muted); text-align: left; }
+.looks { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr)); }
+.looks figure { margin: 0; }
+.looks img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; display: block; }
+.looks figcaption { font: 13px/1.4 var(--fa); direction: rtl; text-align: right; margin-top: 6px; }
+.looks figcaption span { display: block; font: 11px var(--body); color: var(--muted); text-align: left; }
+.media { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.media figure { margin: 0; display: grid; gap: 6px; max-width: 100%; }
+.media img { border-radius: 10px; display: block; max-width: 100%; }
+.media figcaption { font-size: 13px; color: var(--muted); }
+ol.gone { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+ol.gone li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding: 6px 0; font-family: var(--fa); direction: rtl; min-width: 0; }
+ol.gone code { font-size: 12px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">tiffanybv.com · Autumn / Winter 2027</p>
+    <h1>The real catalogue, before it goes live</h1>
+    <p class="lede">Built only from the «Tiffany products» Telegram group: all 88 messages, 24 captioned posts and 79 photos. Each post below shows its caption exactly as written, next to the pieces made from it. Every price was checked by script against the caption text; only one differs from what I set, and it's question 1.</p>
+    <div class="stats">
+      <div><b>{{NP}}</b><span>pieces</span></div>
+      <div><b>140</b><span>product photos</span></div>
+      <div><b>22</b><span>stories, one per outfit</span></div>
+      <div><b>{{NGONE}}</b><span>live pieces replaced</span></div>
+    </div>
+  </header>
+
+  <section>
+    <header><p class="eyebrow">Needs your answer</p><h2>Three things the captions don't settle</h2></header>
+    <div class="qs">
+      <div class="q"><h3>1 · Shirt price in post C19</h3>
+        <blockquote>شومیز:
+رنگبندی: قهوه ای استخوانی صورتی سرمه ای قرمز
+جنس : نخی
+سایزیندی: s m l xl
+۹۹۰۰۰۰</blockquote>
+        <p>The same shirt, with the same five colours, is ۷٬۹۹۰٬۰۰۰ in C9, C13, C14 and C15. The catalogue uses ۷٬۹۹۰٬۰۰۰ unless you say ۹۹۰٬۰۰۰ is right.</p></div>
+      <div class="q"><h3>2 · Sizes of the waterproof leather jacket (C12)</h3>
+        <blockquote>کاپشن چرم:
+جنس :    چرم فراوری شده واترپروف ضد اب قهوه ای
+۲۷۹۹۰۰۰۰</blockquote>
+        <p>No sizes are given. The other leather jackets are S, M, L.</p></div>
+      <div class="q"><h3>3 · Teddy coat colours (C5)</h3>
+        <blockquote>رنگ : سفید کرمی زرشکی مشکی شکلاتی</blockquote>
+        <p>Read as four colours: سفید کرمی (creamy white, the one in the photos), زرشکی، مشکی، شکلاتی. It could also be five, with سفید and کرمی separate.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <header><p class="eyebrow">Choices I made</p><h2>Read these once</h2></header>
+    <ul class="made">
+      <li>Posts that repeat a piece word for word are listed once: bandana, sweatshirt and trousers (C4 = C5), the white/pastel-pink cap (C2 = C7), the five-colour cap (C13 = C15), the sneakers (C9 + C14), and the five-colour shirt (C9, C13, C14, C15, C19).</li>
+      <li>Merged because the photos or the details match: the oversize coat (C17 + C19), the green/cream jeans (C10 + C24), the fleece trousers (C4/C5 + C12), and two bandanas worn twice (C8 + C17, C9 + C16).</li>
+      <li>Kept apart because a detail differs: the C16 shirt (lists سفید in place of صورتی), the C10 plain shirt (four other colours), and the C15 dors trousers (a different colour list). Tell me if any of these is really the same piece.</li>
+      <li>«تک رنگ» pieces take the colour visible in the photo (for example مشکی for the oiled leather jacket). Each «تک رنگ تک مدل» bandana is its own piece, named by its print.</li>
+      <li>Sizes: std, فری and تک سایز become one size; jeans 34 to 42 (41 → 42, as you said); sneakers 37 to 40.</li>
+      <li>Brands go only where the caption names them: KARL LAGERFELD, MARC JACOBS, original Zara.</li>
+      <li>Names are short and distinct, built from the caption words plus what the photo shows (for example «بافت پشم یقه‌بلند»). English and Turkish names are translations of those.</li>
+    </ul>
+  </section>
+
+  <section>
+    <header><p class="eyebrow">The pieces</p><h2>Post by post</h2></header>
+    <div class="wrap" style="gap:28px">{{POSTS}}</div>
+  </section>
+
+  <section>
+    <header><p class="eyebrow">Stories</p><h2>22 outfits for the story strip</h2>
+      <p class="lede">Each story links to the pieces worn in it. A bag carried in the photo is linked too.</p></header>
+    <div class="looks">{{LOOKS}}</div>
+  </section>
+
+  <section>
+    <header><p class="eyebrow">Home and collection</p><h2>Hero film, cover and editorial</h2></header>
+    <div class="media">
+      <figure><img src="{{POSTER}}" width="160" alt=""><figcaption>p2-5 film: 720×1280, muted, 22 s, 2.3 MB</figcaption></figure>
+      <figure><img src="{{COVER}}" width="200" alt=""><figcaption>Collection cover</figcaption></figure>
+      <figure><img src="{{ED}}" width="420" alt=""><figcaption>Home editorial and About page</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <header><p class="eyebrow">Being replaced</p><h2>The {{NGONE}} pieces live on the site now</h2>
+      <p class="lede">The import replaces every product in the panel, including any that are hidden there. Their old photo files stay on the server; nothing is deleted from disk. Orders already placed keep their own copy of names and prices.</p></header>
+    <ol class="gone">{{GONE}}</ol>
+  </section>
+</div>

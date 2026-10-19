@@ -12,7 +12,7 @@
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v12';
+const V = 'tiffany-fa-v13';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
@@ -28,7 +28,7 @@ const SHELL = [
   'assets/brand/alpha-letters.png', 'assets/brand/alpha-bars.png',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
   'assets/icons/favicon-32.png',
-  'media/hero-poster.webp',
+  'media/hero-2-poster.webp',
 ];
 
 /* A local preview must never be served from cache, or every edit needs a
