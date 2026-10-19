@@ -178,7 +178,7 @@ code, r = a.acc('otp', purpose='signup', phone='۰۹۱۲ ۱۱۱ ۲۲۳۳', name=
 sent = sms()
 check('a code is texted with the code template', code == 200 and r['wait'] == 60 and len(sent) == 1
       and sent[0]['body']['templateId'] == OTP_TPL and sent[0]['body']['mobile'] == '09121112233'
-      and re.fullmatch(r'\d{5}', sent[0]['body']['parameters'][0]['value'])
+      and re.fullmatch(r'\d{6}', sent[0]['body']['parameters'][0]['value'])
       and sent[0]['body']['parameters'][0]['name'] == 'CODE', str(sent))
 check('the code is never stored as it is', last_code('09121112233') not in json.dumps(db('SELECT * FROM otps')))
 code, r = a.acc('otp', purpose='signup', phone='09121112233')
@@ -225,14 +225,19 @@ code, r = c.acc('otp', purpose='signup', phone='09122223344')
 check('a sixth code in an hour for one number is refused', code == 429 and r['error'] == 'too_many', str(r))
 db("DELETE FROM attempts WHERE k LIKE 'otp%'")
 con = sqlite3.connect(os.path.join(DATA, 'tiffany.sqlite'))
-con.executemany("INSERT INTO attempts (k, at) VALUES ('otp:all', ?)", [(int(time.time()),)] * 150)
+con.executemany("INSERT INTO attempts (k, at) VALUES ('otp:all:signup', ?)", [(int(time.time()),)] * 150)
 con.commit()
 con.close()
 code, r = Shopper().acc('otp', purpose='signup', phone='09125556677')
 check('the whole shop sends at most 150 codes an hour (the SMS credit is the studio’s)', code == 429, str(r))
 check('…noted once in error.log, not once per try', Shopper().acc('otp', purpose='signup', phone='09125556678')[0] == 429
-      and open(os.path.join(DATA, 'error.log')).read().count('150 in the last hour') == 1)
+      and open(os.path.join(DATA, 'error.log')).read().count("sms codes (signup): the hour's budget is used up") == 1)
+known = db('SELECT phone FROM customers WHERE active = 1 LIMIT 1')
+if known:
+    code, r = Shopper().acc('otp', purpose='reset', phone=known[0][0])
+    check('…which never uses up the password-reset codes (their own budget)', code == 200, str(r))
 db("DELETE FROM attempts WHERE k LIKE 'otp%'")
+db("DELETE FROM otps")
 code, r = c.acc('otp', purpose='signup', phone='09990000000')
 check('a code SMS that fails says so (502) and leaves no code', code == 502 and r['error'] == 'sms'
       and not db("SELECT 1 FROM otps WHERE phone = '09990000000'"), str(r))
@@ -509,7 +514,7 @@ check('catalogue', requests.get(f'{BASE}/api/catalog.php').status_code == 200)
 check('a GET to tickets.php: 405', requests.get(f'{BASE}/api/tickets.php').status_code == 405)
 log = open(os.path.join(DATA, 'error.log')).read().strip().splitlines() if os.path.exists(os.path.join(DATA, 'error.log')) else []
 check('error.log holds only the two lines this test caused: the SMS ceiling and the SMS meant to fail',
-      len(log) == 2 and '150 in the last hour' in log[0] and 'sms otp to 0999…00' in log[1], '\n'.join(log[-5:]))
+      len(log) == 2 and "the hour's budget is used up" in log[0] and 'sms otp to 0999…00' in log[1], '\n'.join(log[-5:]))
 
 for f in os.listdir('uploads/s') if os.path.isdir('uploads/s') else []:
     os.remove(os.path.join('uploads/s', f))

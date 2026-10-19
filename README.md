@@ -356,7 +356,7 @@ write lock while a ping comes in.
 ## Accounts, tickets, stories, WhatsApp — added 2026-10-18
 
 **Customer accounts** (`api/account.php`, `js/account.js`). The account is the mobile
-number, proven once by a five-digit SMS code; then phone + password. Sign-up and «forgot
+number, proven once by a six-digit SMS code (five before 2026-10-19); then phone + password. Sign-up and «forgot
 password» both use the code (3 minutes, five guesses, a new one after 60 s; five an hour
 and ten a day per number, twenty an hour per address, 150 an hour for the whole shop).
 Sessions are their own cookie `tf_shop` (90 days, HttpOnly, SameSite=Strict, `/api/`).
@@ -421,6 +421,29 @@ staff see the option. Orders show the payment beside the status; an order's shee
 exact amount to look for, the tayidshod id, «بررسی وضعیت پرداخت» and «کپی لینک پرداخت».
 Cancelling an unpaid one closes its payment page at tayidshod too.
 
+**Unpaid orders.** A card-to-card order whose page ran out, was closed or was refused does
+not count against the «three waiting orders per number» rule, and 26 hours after it was
+placed (30 minutes to pay + the 24 hours tayidshod gives for «واریز کرده بودم») an unpaid
+one is cancelled and its pieces go back on the shelf (`tz_sweep`, at most every 10 minutes,
+after an answer has gone out). Claimed, rejected or odd payments wait for a person.
+
 Database v5 adds `pay_state, pay_ref, pay_amount, pay_url, pay_mode, paid, paid_at` to
-orders. Tests: `pay_test.py` (88, API) and `pay_e2e.py` (28, browser), both against
+orders. Tests: `pay_test.py` (105, API) and `pay_e2e.py` (28, browser), both against
 `tests/tayidshod_mock.php` (never deployed; `TIFFANY_TZ_BASE` points the shop at it).
+
+### Two independent reviews — 2026-10-19
+
+Payment: nothing could mark an order paid without TIFFANY confirming the money. Fixed:
+bad webhook signatures no longer lock out good ones; abandoned orders are released (above);
+no answer from tayidshod → asked once more (same order_id, same order); a page made but not
+used is closed at tayidshod, and money reported for it later flags the order «بررسی کن»;
+an order cancelled while its page was being made stays cancelled; «کم واریز شده» / «بررسی
+کن» are not overwritten by a late event; the payment link's status no longer carries the
+address. Accounts and tickets: SMS codes are now six digits and decided in one locked step
+(parallel requests used to get several codes), sign-up and reset have separate shop-wide
+budgets (150 / 60 an hour) plus 40 a day per wider address; logins count a try before the
+password check (no racing past six); 60 «is there an account?» answers an hour per address;
+ten current-password guesses an hour; ticket files are named by what they really are
+(«receipt.hta» that is a PDF becomes «receipt.pdf»), photos at most 20 MP (stories 30 MP),
+files are moved before the database lock and the 300 MB a day is checked again under it;
+public stories no longer name the team member.

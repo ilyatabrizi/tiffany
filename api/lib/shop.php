@@ -145,45 +145,61 @@ function tf_otp_hash(string $phone, string $purpose, string $code): string
     return hash_hmac('sha256', "$purpose|$phone|$code", tf_secret('otp_secret'));
 }
 
-/** Text a fresh five-digit code. While the last one is under a minute old
+/** Text a fresh six-digit code. While the last one is under a minute old
     the answer is 429 with `wait` (seconds). A failed SMS is a 502 and leaves
-    no code behind. */
+    no code behind.
+
+    The gap, every counter and the new code are decided in one locked step,
+    so requests sent together cannot each get a code (review 2026-10-19).
+    Limits: five an hour and ten a day per number; twenty an hour per address
+    (a carrier puts many phones behind one) and forty a day per wider address
+    (an IPv6 /48); and for the whole shop 150 sign-up codes and 60 reset codes
+    an hour — separate, so someone texting random numbers to «sign up» uses
+    up the sign-up budget, never the real customers' password resets. Every
+    code is paid for out of the studio's SMS credit. */
 function tf_otp_send(string $phone, string $purpose): void
 {
     $db = db();
     $now = time();
-    $st = $db->prepare('SELECT sent_at FROM otps WHERE phone = ? AND purpose = ?');
-    $st->execute([$phone, $purpose]);
-    $last = (int) $st->fetchColumn();
-    $st->closeCursor();
-    if ($last && $now - $last < TF_OTP_GAP) {
-        tf_fail(429, 'wait', ['wait' => TF_OTP_GAP - ($now - $last)]);
-    }
-    /* Five codes an hour and ten a day per number; twenty an hour per address
-       (a carrier puts many phones behind one). */
     $ip = tf_ip_key();
-    if (tf_too_many('otp:ph:' . $phone, 5, 3600) || tf_too_many('otp:day:' . $phone, 10, 86400)
-        || tf_too_many('otp:ip:' . $ip, 20, 3600)) {
-        tf_fail(429, 'too_many');
-    }
-    /* Every code is paid for out of the studio's SMS credit. However many
-       addresses someone uses, the whole shop sends at most 150 an hour. */
-    if (tf_too_many('otp:all', 150, 3600)) {
-        if (!tf_too_many('otp:all-noted', 1, 3600)) {          // one line in error.log an hour, not one per try
-            tf_note_attempt('otp:all-noted');
-            tf_log_error(new RuntimeException('sms codes: 150 in the last hour, holding the rest'));
+    $wide = tf_ip_wide();
+    $all = 'otp:all:' . $purpose;
+    $code = (string) random_int(100000, 999999);
+    $refuse = null;
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $st = $db->prepare('SELECT sent_at FROM otps WHERE phone = ? AND purpose = ?');
+        $st->execute([$phone, $purpose]);
+        $last = (int) $st->fetchColumn();
+        $st->closeCursor();
+        if ($last && $now - $last < TF_OTP_GAP) {
+            $refuse = [429, 'wait', ['wait' => TF_OTP_GAP - ($now - $last)]];
+        } elseif (tf_too_many('otp:ph:' . $phone, 5, 3600) || tf_too_many('otp:day:' . $phone, 10, 86400)
+            || tf_too_many('otp:ip:' . $ip, 20, 3600) || tf_too_many('otp:ipday:' . $wide, 40, 86400)) {
+            $refuse = [429, 'too_many', []];
+        } elseif (tf_too_many($all, $purpose === 'reset' ? 60 : 150, 3600)) {
+            if (!tf_too_many($all . '-noted', 1, 3600)) {      // one line in error.log an hour, not one per try
+                tf_note_attempt($all . '-noted');
+                tf_log_error(new RuntimeException("sms codes ($purpose): the hour's budget is used up, holding the rest"));
+            }
+            $refuse = [429, 'too_many', []];
+        } else {
+            foreach (['otp:ph:' . $phone, 'otp:day:' . $phone, 'otp:ip:' . $ip, 'otp:ipday:' . $wide, $all] as $k) {
+                tf_note_attempt($k);
+            }
+            $db->prepare('INSERT INTO otps (phone, purpose, hash, expires_at, tries, sent_at) VALUES (?, ?, ?, ?, 0, ?)
+                          ON CONFLICT(phone, purpose) DO UPDATE SET hash = excluded.hash,
+                            expires_at = excluded.expires_at, tries = 0, sent_at = excluded.sent_at')
+                ->execute([$phone, $purpose, tf_otp_hash($phone, $purpose, $code), $now + TF_OTP_TTL, $now]);
         }
-        tf_fail(429, 'too_many');
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
     }
-    tf_note_attempt('otp:ph:' . $phone);
-    tf_note_attempt('otp:day:' . $phone);
-    tf_note_attempt('otp:ip:' . $ip);
-    tf_note_attempt('otp:all');
-    $code = (string) random_int(10000, 99999);
-    $db->prepare('INSERT INTO otps (phone, purpose, hash, expires_at, tries, sent_at) VALUES (?, ?, ?, ?, 0, ?)
-                  ON CONFLICT(phone, purpose) DO UPDATE SET hash = excluded.hash,
-                    expires_at = excluded.expires_at, tries = 0, sent_at = excluded.sent_at')
-        ->execute([$phone, $purpose, tf_otp_hash($phone, $purpose, $code), $now + TF_OTP_TTL, $now]);
+    if ($refuse) {
+        tf_fail(...$refuse);
+    }
     if (!tf_sms_otp($phone, $code)) {
         $db->prepare('DELETE FROM otps WHERE phone = ? AND purpose = ?')->execute([$phone, $purpose]);
         tf_fail(502, 'sms');
@@ -209,7 +225,9 @@ function tf_otp_check(string $phone, string $purpose, string $typed): void
     if ($use->rowCount() !== 1) {
         tf_bad('code', 'spent', 'این کد چند بار اشتباه زده شد؛ یه کد تازه بگیر.');
     }
-    if (strlen($code) !== 5 || !hash_equals((string) $row['hash'], tf_otp_hash($phone, $purpose, $code))) {
+    /* Six digits since 2026-10-19 (five before: a code sent just before the
+       change still works for its three minutes). */
+    if (strlen($code) < 5 || strlen($code) > 6 || !hash_equals((string) $row['hash'], tf_otp_hash($phone, $purpose, $code))) {
         tf_bad('code', 'wrong', 'کد درست نیست.');
     }
     $db->prepare('DELETE FROM otps WHERE phone = ? AND purpose = ?')->execute([$phone, $purpose]);
@@ -479,7 +497,9 @@ function tf_intake(array $files, ?array $voice, int $voiceSecs): array
             'secs' => $isVoice ? max(0, min(600, $voiceSecs)) : 0,
             'name' => $isVoice ? 'voice.' . $ext : $name];
         if ($kind === 'image' && $mime !== 'image/gif') {
-            $img = tf_image_open($item['path'], 40000000);
+            /* 20 MP at most: a photo is decoded whole (plus a turned copy), and
+               the shop already shrinks big ones to 2400 px before sending. */
+            $img = tf_image_open($item['path'], 20000000);
             if (!$img) {
                 tf_bad('files', 'type', "«{$name}» باز نشد؛ یه عکس دیگه بفرست.");
             }
@@ -500,9 +520,13 @@ function tf_intake(array $files, ?array $voice, int $voiceSecs): array
             $item['mime'] = $png ? 'image/png' : 'image/jpeg';
             $item['ext'] = $png ? 'png' : 'jpg';
             $item['size'] = (int) filesize($tmp);
-            if (!$png) {
-                $item['name'] = preg_replace('/\.[A-Za-z0-9]{1,5}$/', '', $item['name']) . '.jpg';
-            }
+        }
+        /* The name ends in what the file really is (its first bytes), never in
+           what the sender called it: «receipt.hta» that is a PDF is kept and
+           handed to the team as «receipt.pdf». */
+        if (!$isVoice) {
+            $base = preg_replace('/\.[A-Za-z0-9]{1,5}$/', '', $item['name']) ?: 'file';
+            $item['name'] = mb_substr($base, 0, 90) . '.' . $item['ext'];
         }
         $out[] = $item;
     }
@@ -640,21 +664,35 @@ function tf_ticket_thread(array $t, bool $forStaff): array
     return ['messages' => $out, 'products' => array_filter($products)];
 }
 
-/** Add one message (and its files) to a thread, in one locked step. A
-    customer's message opens the ticket again; the team's marks it answered.
-    Returns the new message id. */
+/* What one customer may upload in a day (files of every message together),
+   so one account cannot fill the host's disk. */
+const TF_CUSTOMER_DAY_BYTES = 300 * 1024 * 1024;
+
+/** Bytes one customer sent in the last 24 hours. */
+function tf_customer_bytes_today(int $cid): int
+{
+    $st = db()->prepare("SELECT COALESCE(SUM(f.size), 0) FROM ticket_files f JOIN ticket_msgs m ON m.id = f.msg_id
+                         JOIN tickets t ON t.id = f.ticket_id WHERE t.customer_id = ? AND m.side = 'c' AND f.created_at > ?");
+    $st->execute([$cid, time() - 86400]);
+    $used = (int) $st->fetchColumn();
+    $st->closeCursor();                 // an open read would make the next write fail under load
+    return $used;
+}
+
+/** Add one message (and its files) to a thread. A customer's message opens
+    the ticket again; the team's marks it answered. Returns the new message id.
+
+    The files are moved into place first, OUTSIDE the database lock (copying a
+    big file can take a while and every other write would wait); only the rows
+    are written under it. A customer's message is held to the daily quota
+    there too, so messages sent together cannot all squeeze under it. */
 function tf_ticket_post(array $t, string $side, string $author, string $body, string $product, array $files): int
 {
     $db = db();
     $now = time();
     $moved = [];
-    $db->exec('BEGIN IMMEDIATE');
+    $kept = [];
     try {
-        $db->prepare('INSERT INTO ticket_msgs (ticket_id, side, author, body, product, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-            ->execute([$t['id'], $side, $author, $body, $product, $now]);
-        $mid = (int) $db->lastInsertId();
-        $ins = $db->prepare('INSERT INTO ticket_files (id, ticket_id, msg_id, kind, name, mime, ext, size, voice, secs, w, h, created_at)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         foreach ($files as $f) {
             $id = bin2hex(random_bytes(10));
             $dest = tf_file_path($id, $f['ext']);
@@ -667,6 +705,26 @@ function tf_ticket_post(array $t, string $side, string $author, string $body, st
             }
             $moved[] = $dest;
             @chmod($dest, 0600);
+            $kept[] = [$id, $f];
+        }
+        $db->exec('BEGIN IMMEDIATE');
+    } catch (Throwable $e) {
+        foreach ($moved as $m) {
+            @unlink($m);
+        }
+        throw $e;
+    }
+    try {
+        if ($side === 'c' && $files
+            && tf_customer_bytes_today((int) $t['customer_id']) + array_sum(array_column($files, 'size')) > TF_CUSTOMER_DAY_BYTES) {
+            throw new TfRefuse(429, 'quota');
+        }
+        $db->prepare('INSERT INTO ticket_msgs (ticket_id, side, author, body, product, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([$t['id'], $side, $author, $body, $product, $now]);
+        $mid = (int) $db->lastInsertId();
+        $ins = $db->prepare('INSERT INTO ticket_files (id, ticket_id, msg_id, kind, name, mime, ext, size, voice, secs, w, h, created_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        foreach ($kept as [$id, $f]) {
             $ins->execute([$id, $t['id'], $mid, $f['kind'], $f['name'], $f['mime'], $f['ext'], $f['size'],
                 $f['voice'] ? 1 : 0, $f['secs'], $f['w'], $f['h'], $now]);
         }
@@ -722,7 +780,6 @@ function tf_story_out(array $r): array
         'h' => (int) $r['h'],
         'caption' => json_decode((string) $r['caption'], true) ?: ['fa' => '', 'en' => '', 'tr' => ''],
         'items' => json_decode((string) $r['items'], true) ?: [],
-        'by' => $r['by_name'],
         'created_at' => (int) $r['created_at'],
         'expires_at' => (int) $r['expires_at'],
     ];
@@ -772,7 +829,7 @@ function tf_video_codec(string $path): string
     as WebP at 1080 and 540 wide. Returns the base path, uploads/s/<name>. */
 function tf_story_image(string $path): array
 {
-    $img = tf_image_open($path);
+    $img = tf_image_open($path, 30000000);         // the panel shrinks big photos first
     if (!$img) {
         throw new TfInvalid('media', 'این عکس باز نشد؛ JPG، PNG یا WebP بفرست.');
     }

@@ -102,7 +102,24 @@ final class TfInvalid extends RuntimeException
     }
 }
 
+/** A refusal deep inside a step (a quota found full under the lock): thrown,
+    so the caller can clean up on the way out, then answered as status+word. */
+final class TfRefuse extends RuntimeException
+{
+    public int $status;
+    public string $word;
+    public function __construct(int $status, string $word)
+    {
+        parent::__construct($word);
+        $this->status = $status;
+        $this->word = $word;
+    }
+}
+
 set_exception_handler(static function (Throwable $e): void {
+    if ($e instanceof TfRefuse) {
+        tf_fail($e->status, $e->word);
+    }
     if ($e instanceof TfInvalid) {
         tf_fail(422, 'invalid', ['field' => $e->field, 'message' => $e->getMessage()]);
     }
@@ -611,6 +628,53 @@ function tf_note_attempt(string $key): void
 function tf_clear_attempts(string $key): void
 {
     db()->prepare('DELETE FROM attempts WHERE k = ?')->execute([$key]);
+}
+
+/** Count a try first, then decide, in one locked step, so requests arriving
+    together cannot all slip in under a limit. $limits: [[key, max, window],
+    …]. False (and nothing counted) when any of them is already full. Not to
+    be called inside another transaction. */
+function tf_spend(array $limits): bool
+{
+    $db = db();
+    $now = time();
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $st = $db->prepare('SELECT COUNT(*) FROM attempts WHERE k = ? AND at > ?');
+        foreach ($limits as [$k, $max, $win]) {
+            $st->execute([$k, $now - $win]);
+            $n = (int) $st->fetchColumn();
+            $st->closeCursor();
+            if ($n >= $max) {
+                $db->exec('COMMIT');
+                return false;
+            }
+        }
+        $ins = $db->prepare('INSERT INTO attempts (k, at) VALUES (?, ?)');
+        foreach ($limits as [$k]) {
+            $ins->execute([$k, $now]);
+        }
+        $db->exec('COMMIT');
+        return true;
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
+}
+
+/** Give one counted try back (it turned out to be the right password). */
+function tf_unspend(string $key): void
+{
+    db()->prepare('DELETE FROM attempts WHERE rowid = (SELECT rowid FROM attempts WHERE k = ? ORDER BY at DESC LIMIT 1)')
+        ->execute([$key]);
+}
+
+/** The address a DAILY limit counts against: an IPv6 subscriber usually holds
+    a whole /48, so it counts as one; IPv4 as it is. */
+function tf_ip_wide(): string
+{
+    $k = tf_ip_key();
+    return substr($k, -5) === '::/64' ? substr($k, 0, 12) . '::/48' : $k;
 }
 
 function tf_throttle(string $key, int $max, int $window): void

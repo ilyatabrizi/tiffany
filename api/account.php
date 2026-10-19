@@ -8,7 +8,7 @@
      reset    phone + code + new password → signed in, every other device out
      logout / profile / password   (signed in; X-CSRF)
 
-   The phone number is the account: it is proven once by a five-digit SMS
+   The phone number is the account: it is proven once by a six-digit SMS
    code (api/lib/shop.php), and it is the number orders and ticket answers
    go to. Passwords are bcrypt; logins are rate-limited per address, per
    number and per pair, like the panel's. */
@@ -45,6 +45,14 @@ function phone_in(array $in): string
     return $p;
 }
 
+/** Each answer to «is there an account on this number?» counts: sixty an
+    hour per address (a carrier puts many phones behind one), so the list of
+    customers' numbers cannot be read off one by one. */
+function lookups(): void
+{
+    tf_throttle('acct:ip:' . tf_ip_key(), 60, 3600);
+}
+
 function name_in(array $in): string
 {
     $n = tf_line($in['name'] ?? '', 60);
@@ -71,6 +79,7 @@ switch ($a) {
             tf_fail(503, 'otp_off');
         }
         $phone = phone_in($in);
+        lookups();
         $have = tf_customer_by_phone($phone);
         if ($purpose === 'signup') {
             if (array_key_exists('name', $in)) {
@@ -92,6 +101,7 @@ switch ($a) {
         $phone = phone_in($in);
         $name = name_in($in);
         $pass = tf_customer_password((string) ($in['password'] ?? ''));
+        lookups();
         if (tf_customer_by_phone($phone)) {
             tf_bad('phone', 'taken', 'با این شماره قبلاً ثبت‌نام شده؛ وارد شو.');
         }
@@ -115,7 +125,10 @@ switch ($a) {
         $ipKey = 'clogin:ip:' . tf_ip_key();
         $pairKey = 'clogin:ph:' . $phone . '|' . tf_ip_key();
         $phKey = 'clogin:any:' . $phone;
-        if (tf_too_many($ipKey, 20, 900) || tf_too_many($pairKey, 6, 900) || tf_too_many($phKey, 30, 900)) {
+        /* Each try is counted BEFORE the password is checked, in one locked
+           step, so tries sent together cannot all get past the limit; a right
+           password gives its count back. */
+        if (!tf_spend([[$ipKey, 20, 900], [$pairKey, 6, 900], [$phKey, 30, 900]])) {
             tf_fail(429, 'too_many');
         }
         $c = $phone !== '' ? tf_customer_by_phone($phone) : null;
@@ -123,11 +136,9 @@ switch ($a) {
             if (!$c) {
                 password_verify($pass, tf_dummy_hash());      // the same work as a real check
             }
-            tf_note_attempt($ipKey);
-            tf_note_attempt($pairKey);
-            tf_note_attempt($phKey);
             tf_fail(401, 'wrong');
         }
+        tf_unspend($ipKey);
         if (password_needs_rehash($c['pass'], PASSWORD_DEFAULT)) {
             db()->prepare('UPDATE customers SET pass = ? WHERE id = ?')
                 ->execute([password_hash($pass, PASSWORD_DEFAULT), $c['id']]);
@@ -140,6 +151,7 @@ switch ($a) {
     case 'reset':
         $phone = phone_in($in);
         $pass = tf_customer_password((string) ($in['password'] ?? ''));
+        lookups();
         $c = tf_customer_by_phone($phone);
         if (!$c || !$c['active']) {
             tf_bad('phone', 'unknown', 'با این شماره حسابی نداریم.');
@@ -172,6 +184,9 @@ switch ($a) {
         tf_json(me_out($me));
 
     case 'password':
+        /* Ten guesses at the current password an hour: a stolen session alone
+           cannot be turned into the account for good. */
+        tf_throttle('cpass:' . $me['id'], 10, 3600);
         if (!password_verify((string) ($in['current'] ?? ''), $me['pass'])) {
             tf_bad('current', 'wrong', 'رمز فعلی درست نیست.');
         }

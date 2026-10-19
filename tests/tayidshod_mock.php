@@ -14,8 +14,10 @@
      /mock/hook  {id, event, secret, sig?, body?}             send a signed webhook to the
                  order's callback_url; answers with the shop's status and body
      /mock/next  {fail?: code, http?: n, pay_amount_delta?: n, pay_url?: url, mode?: m,
-                  closed?: reason}                            how the next calls misbehave
+                  closed?: reason, slow?: seconds}            how the next calls misbehave
+                 (slow: the next new order is made, then answered that late)
      /mock/log                                                every request so far
+     /mock/orders                                             every order it holds
    /p/{id} is a plain payment page. */
 declare(strict_types=1);
 
@@ -61,6 +63,9 @@ if (preg_match('#^/p/(ord_\w+)$#', $path, $m)) {
 /* ------------------------------------------------------------ controls */
 if ($path === '/mock/log') {
     $out(200, $S['log']);
+}
+if ($path === '/mock/orders') {
+    $out(200, array_values($S['orders']));
 }
 if ($path === '/mock/next') {
     $S['next'] = is_array($body) ? $body : [];
@@ -145,6 +150,10 @@ if ($path === '/api/v1/orders' && $method === 'POST') {
         'paid_at' => null, 'claimed_at' => null, 'decided_at' => null, 'deposit' => null];
     $S['orders'][$id] = $o;
     $S['next'] = [];
+    if (!empty($next['slow'])) {
+        $save();
+        sleep((int) $next['slow']);
+    }
     $out(201, $o);
 }
 

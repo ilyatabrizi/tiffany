@@ -263,7 +263,10 @@ async function checkoutSheet() {
         btn.disabled = true;
         placing = true;
         const ctl = new AbortController();
-        const giveUp = setTimeout(() => ctl.abort(), 30000);
+        /* Card-to-card waits on tayidshod too (at most ~15 s there): 45 s
+           before the phone gives up, so a slow answer is not taken for a
+           failed order and placed twice. */
+        const giveUp = setTimeout(() => ctl.abort(), 45000);
         try {
           const r = await fetch('api/order.php', {
             method: 'POST',

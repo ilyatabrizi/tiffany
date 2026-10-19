@@ -19,9 +19,6 @@ function hook_reply(int $code, string $msg): void
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     hook_reply(405, 'post only');
 }
-if (tf_too_many('hookbad:' . tf_ip_key(), 30, 3600)) {
-    hook_reply(429, 'too many bad calls');
-}
 $raw = (string) file_get_contents('php://input', false, null, 0, 100001);
 if (strlen($raw) > 100000) {
     hook_reply(413, 'too big');
@@ -31,8 +28,10 @@ if ($secret === '') {
     hook_reply(503, 'webhook secret is not set');
 }
 $sig = (string) ($_SERVER['HTTP_X_TAYIDSHOD_SIGNATURE'] ?? '');
+/* Nothing counts bad signatures: a secret cannot be guessed this way, and a
+   limit would also shut out tayidshod's real calls from the same address
+   (say, while a new secret is being pasted into the panel). */
 if (!hash_equals('sha256=' . hash_hmac('sha256', $raw, $secret), $sig)) {
-    tf_note_attempt('hookbad:' . tf_ip_key());
     hook_reply(401, 'bad signature');
 }
 $d = json_decode($raw, true);

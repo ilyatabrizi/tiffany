@@ -104,7 +104,10 @@ switch ($a) {
         $ipKey = 'login:ip:' . tf_ip_key();
         $pairKey = 'login:em:' . $email . '|' . tf_ip_key();
         $emKey = 'login:any:' . $email;
-        if (tf_too_many($ipKey, 20, 900) || tf_too_many($pairKey, 6, 900) || tf_too_many($emKey, 30, 900)) {
+        /* Counted before the password is checked, in one locked step, so
+           tries sent together cannot all get past the limit; a right password
+           gives its count back. */
+        if (!tf_spend([[$ipKey, 20, 900], [$pairKey, 6, 900], [$emKey, 30, 900]])) {
             tf_fail(429, 'too_many');
         }
         $st = db()->prepare('SELECT * FROM users WHERE email = ? AND active = 1');
@@ -115,11 +118,9 @@ switch ($a) {
             if (!$u) {
                 password_verify($pass, tf_dummy_hash());   // same work as a real check
             }
-            tf_note_attempt($ipKey);
-            tf_note_attempt($pairKey);
-            tf_note_attempt($emKey);
             tf_fail(401, 'wrong');
         }
+        tf_unspend($ipKey);
         if (password_needs_rehash($u['pass'], PASSWORD_DEFAULT)) {
             db()->prepare('UPDATE users SET pass = ? WHERE id = ?')
                 ->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
@@ -176,10 +177,12 @@ switch ($a) {
         ok();
 
     case 'ping':                        // the badges on «سفارش‌ها» and «تیکت‌ها», every minute or so
+        tf_after('tz_sweep');           // unpaid card-to-card orders past their time go back on the shelf
         ok(['pending' => (int) db()->query("SELECT COUNT(*) FROM orders WHERE status = 'new'")->fetchColumn(),
             'tickets' => (int) db()->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn()]);
 
     case 'password':
+        tf_throttle('cpass:a:' . $me['id'], 10, 3600);   // a stolen session cannot guess its way to the password
         if (!password_verify((string) ($in['current'] ?? ''), $me['pass'])) {
             throw new TfInvalid('current', 'رمز فعلی درست نیست.');
         }
@@ -394,10 +397,10 @@ switch ($a) {
         ceo_only($ceo);
         $key = trim((string) ($in['key'] ?? ''));
         $secret = trim((string) ($in['secret'] ?? ''));
-        if ($key !== '' && !preg_match('/^sk_(live|test)_[A-Za-z0-9]{16,100}$/', $key)) {
+        if ($key !== '' && !preg_match('/^sk_(live|test)_[A-Za-z0-9_-]{16,128}$/', $key)) {
             throw new TfInvalid('key', 'کلید API با sk_live_ یا sk_test_ شروع می‌شه؛ همون رو از داشبورد «تأیید شد»، بخش «API و ووکامرس» کپی کن.');
         }
-        if ($secret !== '' && !preg_match('/^whsec_[A-Za-z0-9]{16,100}$/', $secret)) {
+        if ($secret !== '' && !preg_match('/^whsec_[A-Za-z0-9_-]{16,128}$/', $secret)) {
             throw new TfInvalid('secret', 'رمز امضای وب‌هوک با whsec_ شروع می‌شه.');
         }
         if ($key === '' && $secret === '') {
@@ -492,7 +495,7 @@ switch ($a) {
         $live->execute([$now]);
         $old = db()->prepare('SELECT * FROM stories WHERE expires_at <= ? ORDER BY created_at DESC, id DESC LIMIT 120');
         $old->execute([$now]);
-        ok(['live' => array_map('tf_story_out', $live->fetchAll()), 'archive' => array_map('tf_story_out', $old->fetchAll()),
+        ok(['live' => array_map('staff_story', $live->fetchAll()), 'archive' => array_map('staff_story', $old->fetchAll()),
             'now' => $now, 'cap' => tf_upload_cap(TF_STORY_CAP)]);
 
     case 'story_add':                   // multipart: media (+ poster for a video), caption_*, items
@@ -536,27 +539,27 @@ switch ($a) {
                 json_encode($items), $me['name'], $now, $now + TF_STORY_SECS]);
         $sid = (int) db()->lastInsertId();
         tf_log($me['name'], 'story_add', $kind === 'video' ? 'ویدیو' : 'عکس');
-        ok(['story' => tf_story_out(story_or_404($sid))]);
+        ok(['story' => staff_story(story_or_404($sid))]);
 
     case 'story_edit':
         $s = story_or_404((int) ($in['id'] ?? 0));
         db()->prepare('UPDATE stories SET caption = ?, items = ? WHERE id = ?')
             ->execute([json_encode(story_caption($in), JSON_UNESCAPED_UNICODE), json_encode(story_items($in['items'] ?? [])), $s['id']]);
         tf_log($me['name'], 'story_edit', '#' . $s['id']);
-        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+        ok(['story' => staff_story(story_or_404((int) $s['id']))]);
 
     case 'story_repost':                // back on the site for another 24 hours, at the front
         $s = story_or_404((int) ($in['id'] ?? 0));
         $now = time();
         db()->prepare('UPDATE stories SET created_at = ?, expires_at = ? WHERE id = ?')->execute([$now, $now + TF_STORY_SECS, $s['id']]);
         tf_log($me['name'], 'story_repost', '#' . $s['id']);
-        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+        ok(['story' => staff_story(story_or_404((int) $s['id']))]);
 
     case 'story_end':                   // off the site now, kept in the archive
         $s = story_or_404((int) ($in['id'] ?? 0));
         db()->prepare('UPDATE stories SET expires_at = ? WHERE id = ? AND expires_at > ?')->execute([time(), $s['id'], time()]);
         tf_log($me['name'], 'story_end', '#' . $s['id']);
-        ok(['story' => tf_story_out(story_or_404((int) $s['id']))]);
+        ok(['story' => staff_story(story_or_404((int) $s['id']))]);
 
     case 'story_delete':
         $s = story_or_404((int) ($in['id'] ?? 0));
@@ -742,6 +745,12 @@ function story_caption(array $in): array
     $c = is_array($in['caption'] ?? null) ? $in['caption']
         : ['fa' => $in['caption_fa'] ?? '', 'en' => $in['caption_en'] ?? '', 'tr' => $in['caption_tr'] ?? ''];
     return tf_i18n($c, 140);
+}
+
+/** A story as the panel sees it: the public one plus who on the team posted it. */
+function staff_story(array $r): array
+{
+    return tf_story_out($r) + ['by' => $r['by_name']];
 }
 
 function story_or_404(int $id): array

@@ -1,7 +1,7 @@
 /* The customer's account: signed in or not, and the three sheets that change
    that — sign in, sign up (with the SMS code), and a forgotten password.
 
-   The account is the phone number, proven once by a five-digit code from
+   The account is the phone number, proven once by a six-digit code from
    sms.ir. It is what tickets need (the team's answers have to reach someone)
    and it fills in the checkout name and number. Everything else the shop
    keeps — the bag, saved pieces, measurements, the address — stays on the
@@ -170,7 +170,7 @@ const phoneIn = (v = '') => `<input id="ac-phone" name="phone" inputmode="tel" a
   value="${esc(v)}" placeholder="0912 000 0000">`;
 const passIn = (auto) => `<input id="ac-password" name="password" type="password" dir="ltr" autocomplete="${auto}">`;
 const codeIn = () => `<input id="ac-code" name="code" inputmode="numeric" autocomplete="one-time-code" dir="ltr"
-  maxlength="9" class="code-in" placeholder="• • • • •">`;
+  maxlength="9" class="code-in" placeholder="• • • • • •">`;
 
 /** Signed in: remember who, fill in checkout, say hello. */
 function welcome(j, then) {
@@ -232,9 +232,9 @@ function wireLinks(sheet, then) {
 function codeStep(sheet, { phone, purpose, extra = '', submit, back }) {
   const box = sheet.querySelector('#acBody');
   box.innerHTML = `
-    <p class="lede">${L(`کد ۵ رقمی‌ای که به <span dir="ltr">${esc(phone)}</span> پیامک شد رو بنویس.`,
-    `Type the 5-digit code we texted to <span dir="ltr">${esc(phone)}</span>.`,
-    `<span dir="ltr">${esc(phone)}</span> numarasına gönderdiğimiz 5 haneli kodu yaz.`)}</p>
+    <p class="lede">${L(`کد ۶ رقمی‌ای که به <span dir="ltr">${esc(phone)}</span> پیامک شد رو بنویس.`,
+    `Type the 6-digit code we texted to <span dir="ltr">${esc(phone)}</span>.`,
+    `<span dir="ltr">${esc(phone)}</span> numarasına gönderdiğimiz 6 haneli kodu yaz.`)}</p>
     <form id="acCode" novalidate>
       ${field('code', L('کد تأیید', 'Code', 'Doğrulama kodu'), codeIn())}
       ${extra}
@@ -273,10 +273,10 @@ function codeStep(sheet, { phone, purpose, extra = '', submit, back }) {
   const form = box.querySelector('#acCode');
   const code = form.code;
   code.focus();
-  /* Five digits typed (or pasted, or filled in from the SMS) is enough. */
+  /* Six digits typed (or pasted, or filled in from the SMS) is enough. */
   code.addEventListener('input', () => {
     const d = typed(code.value).replace(/\D/g, '');
-    if (d.length === 5 && !form.querySelector('[name=password]')) form.requestSubmit();
+    if (d.length === 6 && !form.querySelector('[name=password]')) form.requestSubmit();
   });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -219,7 +219,7 @@ async function landFromPayment(code, key) {
         id: i.id, size: i.size, colour: i.colour, qty: i.qty, name: i.name, img: i.img,
         price: i.price, colourName: i.colour_name,
       })),
-      address: { line: s.address, city: s.city, postal: '' },
+      address: null,
       step: 0,
     });
   }

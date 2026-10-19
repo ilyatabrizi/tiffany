@@ -87,14 +87,17 @@ if (!$want) {
 if ($units > TF_ORDER_MAX) {
     throw new TfInvalid('count', 'توی هر سفارش حداکثر ' . TF_ORDER_MAX . ' قطعه می‌شه گرفت.');
 }
-$open = db()->prepare("SELECT COUNT(*) FROM orders WHERE phone = ? AND status = 'new'");
+/* A card-to-card order whose payment page ran out (or was closed or
+   refused) does not hold the number back; tz_sweep cancels it in time. */
+$open = db()->prepare("SELECT COUNT(*) FROM orders WHERE phone = ? AND status = 'new'
+                       AND NOT (pay = 'c2c' AND paid = 0 AND pay_state IN ('expired', 'canceled', 'rejected'))");
 $open->execute([$phone]);
 $pending = (int) $open->fetchColumn();
 $open->closeCursor();
 if ($pending >= 3) {
     throw new TfInvalid('pending', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
 }
-if ($pay === 'c2c' && !tz_available()) {
+if ($pay === 'c2c' && !tz_available(true)) {
     throw new TfInvalid('pay', 'کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.');
 }
 
@@ -172,6 +175,7 @@ try {
 tf_note_attempt('order:ok:' . tf_ip_key());
 tf_after(static function () use ($code, $name, $phone, $total): void {
     tf_sms_order_placed($code, $name, $phone, $total);
+    tz_sweep();                         // unpaid card-to-card orders past their time, put back (at most every 10 min)
 });
 
 $out = ['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
@@ -187,7 +191,9 @@ if ($pay === 'c2c') {
         $out += ['pay_url' => $started['pay_url'], 'pay_key' => tz_token($code), 'pay_state' => 'pending'];
     } else {
         $out['pay'] = 'card';
-        $out['pay_note'] = 'fallback';
+        if (empty($started['gone'])) {
+            $out['pay_note'] = 'fallback';
+        }
     }
 }
 tf_json($out);

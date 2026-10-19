@@ -72,10 +72,10 @@ const PSTATE = {
   expired: ['مهلت تموم شد', 'مهلت پرداخت تموم شد. مشتری تا ۲۴ ساعت می‌تونه «واریز کرده بودم» رو بزنه؛ وگرنه باهاش تماس بگیر یا سفارش رو لغو کن.', 'cancelled'],
   canceled: ['پرداخت لغو شد', 'صفحه‌ی پرداخت این سفارش بسته شد.', 'cancelled'],
   short: ['کم واریز شده', 'واریزی که تأیید شد کمتر از مبلغ سفارشه. قبل از ارسال بررسی کن.', 'out'],
-  odd: ['بررسی کن', 'تأییدی رسید که با این سفارش جور نیست (مبلغ یا حالت آزمایشی/اصلی). قبل از ارسال توی داشبورد «تأیید شد» بررسی کن.', 'out'],
+  odd: ['بررسی کن', 'از «تأیید شد» پرداختی رسید که با این سفارش جور نیست (مبلغ، حالت آزمایشی/اصلی، یا سفارشی که کارت‌به‌کارت نشده بود). قبل از ارسال توی داشبورد «تأیید شد» بررسی کن.', 'out'],
   failed: ['ساخته نشد', 'صفحه‌ی پرداخت ساخته نشد و سفارش «کارت موقع تحویل» شد؛ دلیلش توی یادداشت داخلیه.', 'cancelled'],
 };
-const payPill = (o) => (o.pay === 'c2c' && PSTATE[o.pay_state]
+const payPill = (o) => ((o.pay === 'c2c' || o.pay_state === 'odd') && PSTATE[o.pay_state]
   ? `<span class="pill ${PSTATE[o.pay_state][2]}">${PSTATE[o.pay_state][0]}</span>` : '');
 const PAGES = { home: 'صفحه‌ی اصلی', shop: 'فروشگاه', bag: 'سبد خرید', orders: 'سفارش‌های مشتری', tickets: 'پشتیبانی و تیکت‌ها',
   profile: 'پروفایل', saved: 'ذخیره‌شده‌ها', about: 'درباره‌ی ما', contact: 'شعبه‌ها و تماس', terms: 'قوانین' };
@@ -930,7 +930,7 @@ async function openOrder(code, onChange) {
     exact amount to look for in the bank, tayidshod's id, and a way to ask
     tayidshod again or send the customer their payment link. */
 function payPart(o) {
-  if (o.pay !== 'c2c' && o.pay_state !== 'failed') return '';
+  if (o.pay !== 'c2c' && !['failed', 'odd'].includes(o.pay_state)) return '';
   const st = PSTATE[o.pay_state] || ['—', '', 'cancelled'];
   const page = !o.paid && o.pay === 'c2c' && o.status !== 'cancelled' && o.pay_url
     && ['pending', 'claimed', 'rejected', 'mismatch', 'expired'].includes(o.pay_state);

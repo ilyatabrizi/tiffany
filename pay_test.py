@@ -10,6 +10,7 @@ import os
 import re
 import sqlite3
 import sys
+import time
 from urllib.parse import urlparse, parse_qs
 
 import requests
@@ -257,7 +258,6 @@ code, r = ceo('product', id='alphabet-tee')
 before = r['product'].get('stock')
 code, r = ceo('order_status', code=f['code'], status='cancelled')
 check('cancelled', code == 200 and r['order']['status'] == 'cancelled')
-import time
 for _ in range(20):
     if state(f['code'])[0] == 'canceled':
         break
@@ -324,11 +324,85 @@ check('…card on delivery still works', place(pay='card')[1].get('pay') == 'car
 check('…webhooks for orders already made still land', hook(ref(c['code']), 'order.expired',
       secret='whsec_' + 'N3wN3wN3wN3wN3wN3wN3wN3w')['body']['result'] == 'ok' and state(c['code'])[0] == 'expired')
 
+print('\nreview fixes (2026-10-19)')
+NEW = 'whsec_' + 'N3wN3wN3wN3wN3wN3wN3wN3w'
+ceo('settings_save', tz_on=True)
+bads = [hook(rid, 'order.paid', secret='whsec_' + 'bad' * 7)['status'] for _ in range(35)]
+check('bad signatures are refused, every time', set(bads) == {401}, str(set(bads)))
+r = hook('', 'ping', secret=NEW, to=f'{BASE}/api/pay-hook.php')
+check('…and never shut out tayidshod\'s real calls from the same address', r['status'] == 200 and r['body']['result'] == 'pong', str(r))
+code, j = place()
+check('status for the customer has no address in it', 'address' not in pay_get('status', j['code'], j['pay_key']).json()['order'])
+# a short deposit stays flagged when a late «claimed» comes in
+code, s1 = place()
+r1 = ref(s1['code'])
+mock('set', id=r1, status='paid', deposit={'amount': 1000})
+hook(r1, 'order.paid', secret=NEW)
+r = hook(r1, 'order.claimed', secret=NEW)
+check('«کم واریز شده» is not overwritten by a late claimed', r['body']['result'] == 'kept for review' and state(s1['code'])[0] == 'short', str(r))
+# three abandoned card-to-card orders do not block the number
+ph = '09127770001'
+for _ in range(3):
+    db("DELETE FROM attempts WHERE k LIKE 'order:%'")
+    rr = requests.post(f'{BASE}/api/order.php', json={**ORDER, 'phone': ph, 'pay': 'c2c'}).json()
+    rx = ref(rr['code'])
+    mock('set', id=rx, status='expired')
+    hook(rx, 'order.expired', secret=NEW)
+db("DELETE FROM attempts WHERE k LIKE 'order:%'")
+rr = requests.post(f'{BASE}/api/order.php', json={**ORDER, 'phone': ph, 'pay': 'card'})
+check('payment pages that ran out do not hold the number back', rr.status_code == 200, rr.text[:200])
+# no answer in time: asked once more, the same tayidshod order comes back
+mock('next', slow=10)
+t0 = time.time()
+code, sl = place()
+posts = [x for x in requests.get(f'{TZ}/mock/log').json() if x['path'] == '/api/v1/orders' and x['method'] == 'POST']
+check('a slow tayidshod: asked again, and the customer still gets the page', sl.get('pay') == 'c2c'
+      and posts[-1]['body']['order_id'] == posts[-2]['body']['order_id'] == sl['code'], str(sl)[:200])
+check('…one payment at tayidshod, not two', len([o for o in requests.get(f'{TZ}/mock/orders').json() if o['order_id'] == sl['code']]) == 1)
+check('…within the phone\'s wait', time.time() - t0 < 20, f'{time.time() - t0:.1f}s')
+# a payment page made but not used: closed at tayidshod; money for it later is flagged, never counted
+mock('next', pay_url='https://evil.example/p/ord_x')
+code, fb = place()
+stray = [o for o in requests.get(f'{TZ}/mock/orders').json() if o['order_id'] == fb['code']][0]
+check('an unusable payment page is closed at tayidshod', fb['pay'] == 'card' and stray['status'] == 'canceled', str(stray['status']))
+mock('set', id=stray['id'], status='paid')
+r = hook(stray['id'], 'order.paid', secret=NEW)
+row = db('SELECT pay, pay_state, paid FROM orders WHERE code = ?', fb['code'])[0]
+check('money for it later is flagged «بررسی کن», not counted', r['body']['result'] == 'flagged' and row == ('card', 'odd', 0), str((r, row)))
+check('…and the team log says so', any(l['action'] == 'order_pay_odd' and fb['code'] in l['detail'] for l in ceo('log')[1]['log']))
+check('…and the panel order shows it', ceo('order', code=fb['code'])[1]['order']['pay_state'] == 'odd')
+# unpaid card-to-card orders past their time go back on the shelf
+def stock(pid):
+    return ceo('product', id=pid)[1]['product'].get('stock')
+row = json.loads(db("SELECT data FROM products WHERE id = 'alphabet-tee'")[0][0])
+row['stock'] = {sz: 5 for sz in row['sizes']}
+db("UPDATE products SET data = ? WHERE id = 'alphabet-tee'", json.dumps(row, ensure_ascii=False))
+code, ab1 = place()                     # stays pending at tayidshod: webhook missed
+code, ab2 = place()
+mock('set', id=ref(ab2['code']), status='expired')
+hook(ref(ab2['code']), 'order.expired', secret=NEW)
+code, ab3 = place()                     # the customer said they paid: a person decides
+mock('set', id=ref(ab3['code']), status='claimed')
+hook(ref(ab3['code']), 'order.claimed', secret=NEW)
+db("UPDATE orders SET created_at = created_at - 27 * 3600 WHERE code IN (?, ?, ?)", ab1['code'], ab2['code'], ab3['code'])
+db("DELETE FROM settings WHERE k = 'tz_swept'")
+ceo('ping')
+for _ in range(40):
+    if db('SELECT status FROM orders WHERE code = ?', ab2['code'])[0][0] == 'cancelled':
+        break
+    time.sleep(0.25)
+st = {c: db('SELECT status FROM orders WHERE code = ?', c)[0][0] for c in (ab1['code'], ab2['code'], ab3['code'])}
+check('after 26 hours unpaid orders are cancelled (pending and expired)', st[ab1['code']] == 'cancelled' and st[ab2['code']] == 'cancelled', str(st))
+check('…a claimed one waits for a person', st[ab3['code']] == 'new', str(st))
+check('…the pending one is closed at tayidshod', any(x['path'] == f'/api/v1/orders/{ref(ab1["code"])}/cancel' for x in requests.get(f'{TZ}/mock/log').json()))
+check('…the team note says why', 'خودکار لغو شد' in db('SELECT admin_note FROM orders WHERE code = ?', ab2['code'])[0][0])
+check('…and their pieces are back on the shelf', stock('alphabet-tee')['M'] == 4, str(stock('alphabet-tee')))
+ceo('ping')
+check('the sweep runs at most every ten minutes', db("SELECT COUNT(*) FROM log WHERE detail LIKE '%پرداخت نشد%'")[0][0] == 2)
+
 print('\nlimits')
 codes = [pay_get('status', c['code'], '1' * 24).status_code for _ in range(125)]
 check('the payment links are rate-limited per address', 429 in codes)
-bads = [hook(rid, 'order.paid', secret='whsec_' + 'bad' * 7)['status'] for _ in range(32)]
-check('repeated bad signatures are shut out', bads[-1] == 429, str(bads[-3:]))
 
 print(f'\n{ok} ok, {bad} failed')
 sys.exit(1 if bad else 0)
