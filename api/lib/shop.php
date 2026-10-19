@@ -780,9 +780,121 @@ function tf_story_out(array $r): array
         'h' => (int) $r['h'],
         'caption' => json_decode((string) $r['caption'], true) ?: ['fa' => '', 'en' => '', 'tr' => ''],
         'items' => json_decode((string) $r['items'], true) ?: [],
+        'link' => tf_link_out((string) ($r['link'] ?? '')),
         'created_at' => (int) $r['created_at'],
         'expires_at' => (int) $r['expires_at'],
     ];
+}
+
+/* ------------------------------------------------------ story links */
+/** A story's button: a page of the shop (#/p/…, #/c/…, #/shop…) or an
+    http(s) address, and the words on it (empty words: the shop says «ببین»).
+    Anything else — javascript:, data:, a bare word — is refused, never
+    guessed at. An empty address means no button. */
+function tf_link_clean($raw): array
+{
+    if (is_string($raw)) {
+        $raw = $raw === '' ? [] : (json_decode($raw, true) ?: []);
+    }
+    $raw = is_array($raw) ? $raw : [];
+    $url = trim((string) ($raw['url'] ?? ''));
+    if ($url === '') {
+        return [];
+    }
+    $ok = strlen($url) <= 300 && (
+        preg_match('~^#/(p|c)/[a-z0-9][a-z0-9-]{1,60}$~', $url)
+        || preg_match('~^#/shop(\?[a-z0-9=&_-]{0,80})?$~', $url)
+        || (preg_match('~^https?://~i', $url) && filter_var($url, FILTER_VALIDATE_URL)
+            && !preg_match('~[\s"\'<>`]~', $url)));
+    if (!$ok) {
+        throw new TfInvalid('link', 'لینک درست نیست؛ یه آدرس کامل با https:// بنویس، یا یه محصول یا کالکشن انتخاب کن.');
+    }
+    $label = is_array($raw['label'] ?? null) ? $raw['label'] : ['fa' => (string) ($raw['label'] ?? '')];
+    return ['url' => $url, 'label' => tf_i18n($label, 30)];
+}
+
+/** A stored link as the shop gets it; a broken one is simply left off. */
+function tf_link_out(string $stored): array
+{
+    try {
+        return tf_link_clean($stored);
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/* ------------------------------------------------- campaign stories */
+/* The studio's outfit stories live in the shop's code (js/data.js, LOOKS).
+   The panel can change, per story, its title, its text, the pieces it
+   points at, its link, and hide it; only those changes are kept here
+   (settings 'looks_edit', one entry per story id). */
+const TF_LOOK_ITEMS = 8;
+
+function tf_look_clean(array $in): array
+{
+    $out = [];
+    foreach (['title' => 60, 'caption' => 140] as $k => $max) {
+        if (isset($in[$k]) && is_array($in[$k])) {
+            $t = tf_i18n($in[$k], $max);
+            if ($t['fa'] !== '' || $t['en'] !== '' || $t['tr'] !== '') {
+                $out[$k] = $t;
+            }
+        }
+    }
+    if (array_key_exists('items', $in) && is_array($in['items'])) {
+        $items = [];
+        foreach (array_slice($in['items'], 0, 20) as $id) {
+            $id = (string) $id;
+            if (preg_match('/^[a-z0-9][a-z0-9-]{1,60}$/', $id) && tf_product($id) && !in_array($id, $items, true)) {
+                $items[] = $id;
+            }
+        }
+        if (count($items) > TF_LOOK_ITEMS) {
+            throw new TfInvalid('items', 'هر استوری حداکثر ' . TF_LOOK_ITEMS . ' محصول.');
+        }
+        $out['items'] = $items;
+    }
+    $link = tf_link_clean($in['link'] ?? []);
+    if ($link) {
+        $out['link'] = $link;
+    }
+    if (!empty($in['hidden'])) {
+        $out['hidden'] = true;
+    }
+    return $out;
+}
+
+/** Change the saved story edits in one locked step, so two people saving
+    different stories at the same moment both keep their change. */
+function tf_looks_change(callable $change): array
+{
+    $db = db();
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $all = $change(tf_looks_edits());
+        if (count($all) > 80) {
+            throw new TfInvalid('look', 'بیشتر از این نمی‌شه استوری کمپین رو تغییر داد.');
+        }
+        setting_set('looks_edit', json_encode((object) $all, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $db->exec('COMMIT');
+        return $all;
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
+}
+
+/** Every saved change, keyed by story id; a bad entry is dropped, not served. */
+function tf_looks_edits(): array
+{
+    $all = json_decode(setting('looks_edit', '{}'), true);
+    $out = [];
+    foreach (is_array($all) ? $all : [] as $id => $e) {
+        if (is_string($id) && preg_match('/^[a-z0-9-]{1,24}$/', $id) && is_array($e)) {
+            $out[$id] = $e;
+        }
+    }
+    return $out;
 }
 
 /** The stories that are public right now, newest first. */

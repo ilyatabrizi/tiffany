@@ -163,14 +163,40 @@ function showError(sheet, e) {
 }
 
 /* ---------------------------------------------------------------- sheets */
+/* One sheet for both doors. A switch at the top says which one you are at
+   (ورود / ساخت حساب); every field carries its icon; a password can be shown;
+   sign-up and a forgotten password go in two numbered steps — your details,
+   then the six-digit code — so it is always clear what comes next. */
 const field = (name, label, input, hint = '') => `
   <div class="field" data-field="${name}"><label for="ac-${name}">${esc(label)}</label>${input}
     <p class="field-msg" role="alert"></p>${hint ? `<p class="tiny field-hint">${esc(hint)}</p>` : ''}</div>`;
-const phoneIn = (v = '') => `<input id="ac-phone" name="phone" inputmode="tel" autocomplete="tel" dir="ltr"
-  value="${esc(v)}" placeholder="0912 000 0000">`;
-const passIn = (auto) => `<input id="ac-password" name="password" type="password" dir="ltr" autocomplete="${auto}">`;
+/** An input with its icon in front (and, for a password, the eye after). */
+const ibox = (ico, input, after = '') => `<div class="ibox">${icon(ico, 18, 'ibox-ico')}${input}${after}</div>`;
+const phoneIn = (v = '') => ibox('phone', `<input id="ac-phone" name="phone" inputmode="tel" autocomplete="tel" dir="ltr"
+  value="${esc(v)}" placeholder="0912 000 0000">`);
+const nameIn = (v = '') => ibox('user', `<input id="ac-name" name="name" autocomplete="name" value="${esc(v)}"
+  placeholder="${esc(L('مثلاً: مریم احمدی', 'e.g. Maryam Ahmadi', 'örn. Maryam Ahmadi'))}">`);
+const passIn = (auto, id = 'password') => ibox('lock',
+  `<input id="ac-${id}" name="${id}" type="password" dir="ltr" autocomplete="${auto}">`,
+  `<button class="pw-eye" type="button" aria-pressed="false" aria-label="${esc(L('نمایش رمز', 'Show password', 'Şifreyi göster'))}">${icon('eye', 18)}</button>`);
 const codeIn = () => `<input id="ac-code" name="code" inputmode="numeric" autocomplete="one-time-code" dir="ltr"
   maxlength="9" class="code-in" placeholder="• • • • • •">`;
+const PRIVACY = () => `<p class="auth-privacy">${icon('lock', 14)}<span>${esc(L(
+  'شماره‌ت فقط برای ورود، و خبر دادن درباره‌ی سفارش و تیکت‌هات استفاده می‌شه.',
+  'Your number is only used to sign you in and to tell you about your orders and tickets.',
+  'Numaran yalnızca giriş için ve siparişlerin ile taleplerin hakkında bilgi vermek için kullanılır.'))}</span></p>`;
+
+/** The switch between the two doors; none lit while resetting a password. */
+const tabs = (on) => `<div class="auth-tabs" role="tablist" aria-label="${esc(L('حساب', 'Account', 'Hesap'))}">
+  <button role="tab" type="button" data-go="signin" aria-selected="${on === 'signin'}" class="${on === 'signin' ? 'on' : ''}">${esc(L('ورود', 'Sign in', 'Giriş'))}</button>
+  <button role="tab" type="button" data-go="signup" aria-selected="${on === 'signup'}" class="${on === 'signup' ? 'on' : ''}">${esc(L('ساخت حساب', 'Create account', 'Hesap oluştur'))}</button>
+</div>`;
+const head = (title, sub = '') => `<div class="auth-head">
+  <span class="auth-badge">${icon('user', 22)}</span>
+  <div><h2>${esc(title)}</h2>${sub ? `<p class="auth-sub">${esc(sub)}</p>` : ''}</div></div>`;
+/** Step n of 2, with its name; the bar fills with the step. */
+const steps = (n, names) => `<ol class="auth-steps" aria-label="${esc(L(`مرحله‌ی ${num(n)} از ۲`, `Step ${n} of 2`, `Adım ${n}/2`))}">
+  ${names.map((t, i) => `<li class="${i + 1 < n ? 'done' : i + 1 === n ? 'on' : ''}"><b>${num(i + 1)}</b><span>${esc(t)}</span></li>`).join('')}</ol>`;
 
 /** Signed in: remember who, fill in checkout, say hello. */
 function welcome(j, then) {
@@ -189,42 +215,60 @@ const SOON = () => `<div class="note-box">${icon('clock', 18)}<p>${esc(L(
   'Accounts with an SMS code open soon. Until then, reach us on WhatsApp or Instagram.',
   'SMS koduyla hesap açma yakında başlıyor. O zamana kadar bize WhatsApp veya Instagram’dan ulaşabilirsin.'))}</p></div>`;
 
+/** The doors, the show-password eyes and a busy state on the main button. */
+function wire(sheet, then) {
+  sheet.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      ({ signin: signInSheet, signup: signUpSheet, reset: resetSheet })[go.dataset.go]({ then });
+      return;
+    }
+    const eye = e.target.closest('.pw-eye');
+    if (eye) {
+      const input = eye.parentElement.querySelector('input');
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      eye.setAttribute('aria-pressed', String(show));
+      eye.setAttribute('aria-label', show ? L('پنهان کردن رمز', 'Hide password', 'Şifreyi gizle') : L('نمایش رمز', 'Show password', 'Şifreyi göster'));
+      eye.innerHTML = icon(show ? 'eyeOff' : 'eye', 18);
+      input.focus();
+    }
+  });
+}
+const busy = (btn, on) => { btn.disabled = on; btn.classList.toggle('busy', on); };
+
 export function signInSheet({ then, why = '' } = {}) {
   openSheet(`
-    <h2>${esc(L('ورود', 'Sign in', 'Giriş'))}</h2>
-    <p class="lede">${esc(why || L('با شماره موبایل و رمزت.', 'With your mobile number and password.', 'Cep numaran ve şifrenle.'))}</p>
+    ${head(L('حساب تیفانی', 'Your TIFFANY account', 'TIFFANY hesabın'))}
+    ${tabs('signin')}
+    <p class="lede auth-lede">${esc(why || L('با شماره موبایل و رمزت وارد شو.', 'Sign in with your mobile number and password.', 'Cep numaran ve şifrenle giriş yap.'))}</p>
     <form id="acForm" novalidate>
       ${field('phone', L('شماره موبایل', 'Mobile number', 'Cep numarası'), phoneIn(state.profile.phone))}
       ${field('password', L('رمز', 'Password', 'Şifre'), passIn('current-password'))}
+      <div class="auth-forgot"><button class="link-more" type="button" data-go="reset">${esc(L('رمزت یادت رفته؟', 'Forgot your password?', 'Şifreni mi unuttun?'))}</button></div>
       <p class="form-msg" role="alert"></p>
-      <button class="btn btn-ink btn-block" type="submit">${esc(L('ورود', 'Sign in', 'Giriş yap'))}</button>
+      <button class="btn btn-ink btn-block auth-go" type="submit">${esc(L('ورود به حساب', 'Sign in', 'Giriş yap'))}</button>
     </form>
-    <div class="sheet-links">
-      <button class="link-more" type="button" data-go="reset">${esc(L('رمز رو یادت رفته؟', 'Forgot the password?', 'Şifreni mi unuttun?'))}</button>
-      <button class="link-more" type="button" data-go="signup">${esc(L('حساب نداری؟ ثبت‌نام', 'No account? Sign up', 'Hesabın yok mu? Kaydol'))}</button>
-    </div>`,
+    <p class="auth-switch">${esc(L('حساب نداری؟', 'New here?', 'Hesabın yok mu?'))}
+      <button class="link-more" type="button" data-go="signup">${esc(L('یه حساب بساز', 'Create an account', 'Hesap oluştur'))}</button></p>
+    ${PRIVACY()}`,
   {
-    label: L('ورود', 'Sign in', 'Giriş'),
+    label: L('ورود به حساب', 'Sign in', 'Giriş'),
+    cls: 'auth',
     onMount(sheet) {
-      wireLinks(sheet, then);
+      wire(sheet, then);
       const form = sheet.querySelector('#acForm');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = form.querySelector('[type=submit]');
-        btn.disabled = true;
+        busy(btn, true);
         try {
           const j = await call('account.php', 'login', { phone: typed(form.phone.value), password: form.password.value });
           welcome(j, then);
-        } catch (err) { showError(sheet, err); } finally { btn.disabled = false; }
+        } catch (err) { showError(sheet, err); } finally { busy(btn, false); }
       });
     },
   });
-}
-
-function wireLinks(sheet, then) {
-  sheet.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
-    ({ signin: signInSheet, signup: signUpSheet, reset: resetSheet })[b.dataset.go]({ then });
-  }));
 }
 
 /** Step two of sign-up and reset: the code that was just texted, a resend
@@ -232,16 +276,19 @@ function wireLinks(sheet, then) {
 function codeStep(sheet, { phone, purpose, extra = '', submit, back }) {
   const box = sheet.querySelector('#acBody');
   box.innerHTML = `
-    <p class="lede">${L(`کد ۶ رقمی‌ای که به <span dir="ltr">${esc(phone)}</span> پیامک شد رو بنویس.`,
-    `Type the 6-digit code we texted to <span dir="ltr">${esc(phone)}</span>.`,
-    `<span dir="ltr">${esc(phone)}</span> numarasına gönderdiğimiz 6 haneli kodu yaz.`)}</p>
+    ${steps(2, purpose === 'signup'
+    ? [L('اطلاعات تو', 'Your details', 'Bilgilerin'), L('کد پیامکی', 'SMS code', 'SMS kodu')]
+    : [L('شماره موبایل', 'Mobile number', 'Cep numarası'), L('کد و رمز جدید', 'Code and new password', 'Kod ve yeni şifre')])}
+    <p class="lede auth-lede">${L(`کد ۶ رقمی‌ای که به <b dir="ltr">${esc(phone)}</b> پیامک شد رو بنویس.`,
+    `Type the 6-digit code we texted to <b dir="ltr">${esc(phone)}</b>.`,
+    `<b dir="ltr">${esc(phone)}</b> numarasına gönderdiğimiz 6 haneli kodu yaz.`)}</p>
     <form id="acCode" novalidate>
-      ${field('code', L('کد تأیید', 'Code', 'Doğrulama kodu'), codeIn())}
+      ${field('code', L('کد تأیید', 'Verification code', 'Doğrulama kodu'), codeIn())}
       ${extra}
       <p class="form-msg" role="alert"></p>
-      <button class="btn btn-ink btn-block" type="submit">${esc(purpose === 'signup'
-    ? L('ساختن حساب', 'Create my account', 'Hesabımı oluştur')
-    : L('ذخیره و ورود', 'Save and sign in', 'Kaydet ve giriş yap'))}</button>
+      <button class="btn btn-ink btn-block auth-go" type="submit">${esc(purpose === 'signup'
+    ? L('تأیید و ساخت حساب', 'Confirm and create my account', 'Onayla ve hesabımı oluştur')
+    : L('ذخیره‌ی رمز و ورود', 'Save the password and sign in', 'Şifreyi kaydet ve giriş yap'))}</button>
     </form>
     <div class="sheet-links">
       <button class="link-more" type="button" id="acResend" disabled></button>
@@ -281,43 +328,47 @@ function codeStep(sheet, { phone, purpose, extra = '', submit, back }) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = form.querySelector('[type=submit]');
-    btn.disabled = true;
+    busy(btn, true);
     try {
       await submit(typed(code.value).replace(/\D/g, ''), form);
       clearInterval(timer);
-    } catch (err) { showError(sheet, err); } finally { btn.disabled = false; }
+    } catch (err) { showError(sheet, err); } finally { busy(btn, false); }
   });
 }
 
 export function signUpSheet({ then } = {}) {
   openSheet(`
-    <h2>${esc(L('ثبت‌نام', 'Sign up', 'Kaydol'))}</h2>
+    ${head(L('حساب تیفانی', 'Your TIFFANY account', 'TIFFANY hesabın'))}
+    ${tabs('signup')}
     <div id="acBody">
-      <p class="lede">${esc(L(
-    'یه بار شماره‌ت رو با کد پیامکی تأیید کن؛ بعدش می‌تونی تیکت بفرستی و جواب تیم رو همین‌جا بگیری.',
-    'Confirm your number once with an SMS code, then send tickets and get the team’s answers right here.',
-    'Numaranı bir kez SMS koduyla doğrula; sonra talep gönderip ekibin yanıtlarını burada alabilirsin.'))}</p>
-      ${account.otp ? `<form id="acForm" novalidate>
-        ${field('name', L('اسم و فامیل', 'Full name', 'Ad soyad'), `<input id="ac-name" name="name" autocomplete="name" value="${esc(state.profile.name)}">`)}
-        ${field('phone', L('شماره موبایل', 'Mobile number', 'Cep numarası'), phoneIn(state.profile.phone))}
-        ${field('password', L('یه رمز بساز (حداقل ۶ کاراکتر)', 'Choose a password (6+ characters)', 'Bir şifre belirle (en az 6 karakter)'), passIn('new-password'))}
+      ${account.otp ? `${steps(1, [L('اطلاعات تو', 'Your details', 'Bilgilerin'), L('کد پیامکی', 'SMS code', 'SMS kodu')])}
+      <p class="lede auth-lede">${esc(L(
+    'با یه حساب، تیکت می‌فرستی و جواب تیم رو همین‌جا می‌گیری، و موقع خرید اسم و شماره‌ت خودش پر می‌شه.',
+    'With an account you can send tickets and get the team’s answers here, and checkout fills in your name and number.',
+    'Bir hesapla talep gönderip ekibin yanıtlarını burada alırsın; ödeme sırasında adın ve numaran kendiliğinden dolar.'))}</p>
+      <form id="acForm" novalidate>
+        ${field('name', L('اسم و فامیل', 'Full name', 'Ad soyad'), nameIn(state.profile.name))}
+        ${field('phone', L('شماره موبایل', 'Mobile number', 'Cep numarası'), phoneIn(state.profile.phone),
+    L('یه کد ۶ رقمی به این شماره پیامک می‌شه.', 'We text a 6-digit code to this number.', 'Bu numaraya 6 haneli bir kod göndereceğiz.'))}
+        ${field('password', L('رمز (حداقل ۶ کاراکتر)', 'Password (6+ characters)', 'Şifre (en az 6 karakter)'), passIn('new-password'))}
         <p class="form-msg" role="alert"></p>
-        <button class="btn btn-ink btn-block" type="submit">${esc(L('فرستادن کد تأیید', 'Text me the code', 'Kodu gönder'))}</button>
+        <button class="btn btn-ink btn-block auth-go" type="submit">${esc(L('ادامه و دریافت کد', 'Continue and get the code', 'Devam et ve kodu al'))}</button>
       </form>` : SOON()}
-      <div class="sheet-links">
-        <button class="link-more" type="button" data-go="signin">${esc(L('حساب داری؟ ورود', 'Have an account? Sign in', 'Hesabın var mı? Giriş yap'))}</button>
-      </div>
-    </div>`,
+      <p class="auth-switch">${esc(L('حساب داری؟', 'Already have an account?', 'Hesabın var mı?'))}
+        <button class="link-more" type="button" data-go="signin">${esc(L('وارد شو', 'Sign in', 'Giriş yap'))}</button></p>
+    </div>
+    ${PRIVACY()}`,
   {
-    label: L('ثبت‌نام', 'Sign up', 'Kaydol'),
+    label: L('ساخت حساب', 'Create an account', 'Hesap oluştur'),
+    cls: 'auth',
     onMount(sheet) {
-      wireLinks(sheet, then);
+      wire(sheet, then);
       const form = sheet.querySelector('#acForm');
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const d = { name: form.name.value.trim(), phone: typed(form.phone.value), password: form.password.value };
         const btn = form.querySelector('[type=submit]');
-        btn.disabled = true;
+        busy(btn, true);
         try {
           await call('account.php', 'otp', { purpose: 'signup', ...d });
           const shown = d.phone.replace(/\s+/g, '');
@@ -330,7 +381,7 @@ export function signUpSheet({ then } = {}) {
               welcome(j, then);
             },
           });
-        } catch (err) { showError(sheet, err); } finally { btn.disabled = false; }
+        } catch (err) { showError(sheet, err); } finally { busy(btn, false); }
       });
     },
   });
@@ -338,30 +389,30 @@ export function signUpSheet({ then } = {}) {
 
 export function resetSheet({ then } = {}) {
   openSheet(`
-    <h2>${esc(L('رمز جدید', 'New password', 'Yeni şifre'))}</h2>
+    ${head(L('بازیابی رمز', 'Reset your password', 'Şifreni sıfırla'))}
     <div id="acBody">
-      <p class="lede">${esc(L('یه کد به شماره‌ت پیامک می‌کنیم؛ با اون یه رمز تازه می‌سازی.',
-    'We text a code to your number; with it you set a new password.',
-    'Numarana bir kod gönderiyoruz; onunla yeni bir şifre belirlersin.'))}</p>
-      ${account.otp ? `<form id="acForm" novalidate>
+      ${account.otp ? `${steps(1, [L('شماره موبایل', 'Mobile number', 'Cep numarası'), L('کد و رمز جدید', 'Code and new password', 'Kod ve yeni şifre')])}
+      <p class="lede auth-lede">${esc(L('شماره‌ای که باهاش حساب ساختی رو بنویس؛ یه کد برات پیامک می‌کنیم و با اون یه رمز تازه می‌سازی.',
+    'Type the number your account uses; we text you a code to set a new password with.',
+    'Hesabının numarasını yaz; yeni şifre belirlemen için bir kod göndereceğiz.'))}</p>
+      <form id="acForm" novalidate>
         ${field('phone', L('شماره موبایل', 'Mobile number', 'Cep numarası'), phoneIn(state.profile.phone))}
         <p class="form-msg" role="alert"></p>
-        <button class="btn btn-ink btn-block" type="submit">${esc(L('فرستادن کد', 'Text me the code', 'Kodu gönder'))}</button>
+        <button class="btn btn-ink btn-block auth-go" type="submit">${esc(L('ارسال کد', 'Text me the code', 'Kodu gönder'))}</button>
       </form>` : SOON()}
-      <div class="sheet-links">
-        <button class="link-more" type="button" data-go="signin">${esc(L('برگشت به ورود', 'Back to sign in', 'Girişe dön'))}</button>
-      </div>
+      <p class="auth-switch"><button class="link-more" type="button" data-go="signin">${esc(L('برگشت به ورود', 'Back to sign in', 'Girişe dön'))}</button></p>
     </div>`,
   {
-    label: L('رمز جدید', 'New password', 'Yeni şifre'),
+    label: L('بازیابی رمز', 'Reset your password', 'Şifreni sıfırla'),
+    cls: 'auth',
     onMount(sheet) {
-      wireLinks(sheet, then);
+      wire(sheet, then);
       const form = sheet.querySelector('#acForm');
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const phone = typed(form.phone.value).replace(/\s+/g, '');
         const btn = form.querySelector('[type=submit]');
-        btn.disabled = true;
+        busy(btn, true);
         try {
           await call('account.php', 'otp', { purpose: 'reset', phone });
           codeStep(sheet, {
@@ -374,7 +425,7 @@ export function resetSheet({ then } = {}) {
               welcome(j, then);
             },
           });
-        } catch (err) { showError(sheet, err); } finally { btn.disabled = false; }
+        } catch (err) { showError(sheet, err); } finally { busy(btn, false); }
       });
     },
   });
@@ -386,15 +437,18 @@ export function accountSheet() {
   if (!u) { signInSheet(); return; }
   let renamed = false;
   openSheet(`
-    <h2>${esc(L('حساب من', 'My account', 'Hesabım'))}</h2>
-    <p class="lede"><span dir="ltr">${esc(u.phone)}</span> · ${esc(L('تأییدشده با پیامک', 'confirmed by SMS', 'SMS ile doğrulandı'))}</p>
+    <div class="auth-head">
+      <span class="auth-badge">${icon('user', 22)}</span>
+      <div><h2>${esc(L('حساب من', 'My account', 'Hesabım'))}</h2>
+        <p class="auth-sub"><span dir="ltr">${esc(u.phone)}</span> · ${icon('check', 13)}${esc(L('تأییدشده با پیامک', 'confirmed by SMS', 'SMS ile doğrulandı'))}</p></div>
+    </div>
     <form id="acName" novalidate>
-      ${field('name', L('اسم و فامیل', 'Full name', 'Ad soyad'), `<input id="ac-name" name="name" autocomplete="name" value="${esc(u.name)}">`)}
+      ${field('name', L('اسم و فامیل', 'Full name', 'Ad soyad'), nameIn(u.name))}
       <button class="btn btn-line btn-s" type="submit">${esc(L('ذخیره‌ی اسم', 'Save name', 'Adı kaydet'))}</button>
     </form>
     <div class="sheet-rule"></div>
     <form id="acPass" novalidate>
-      ${field('current', L('رمز فعلی', 'Current password', 'Mevcut şifre'), '<input id="ac-current" name="current" type="password" dir="ltr" autocomplete="current-password">')}
+      ${field('current', L('رمز فعلی', 'Current password', 'Mevcut şifre'), passIn('current-password', 'current'))}
       ${field('password', L('رمز جدید', 'New password', 'Yeni şifre'), passIn('new-password'),
     L('با عوض کردن رمز، از گوشی‌های دیگه خارج می‌شی.', 'Changing it signs your other phones out.', 'Değiştirmek diğer telefonlardan çıkış yapar.'))}
       <p class="form-msg" role="alert"></p>
@@ -404,9 +458,11 @@ export function accountSheet() {
     <button class="btn btn-quiet btn-block" type="button" id="acOut">${icon('arrow', 17)}${esc(L('خروج از حساب', 'Sign out', 'Çıkış yap'))}</button>`,
   {
     label: L('حساب من', 'My account', 'Hesabım'),
+    cls: 'auth',
     /* The profile header shows the name: redraw it once the sheet is gone. */
     onClose() { if (renamed) setTimeout(() => document.dispatchEvent(new CustomEvent('view:refresh')), 0); },
     onMount(sheet) {
+      wire(sheet);
       sheet.querySelector('#acName').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {

@@ -216,7 +216,7 @@ export function installSheet({ auto = false, then } = {}) {
         const what = b.dataset.inst;
         if (what === 'never') { remember({ done: true }); closeSheet(); return; }
         if (what === 'copy') {
-          const url = `${location.origin}${location.pathname}`;
+          const url = `${location.origin}/`;
           try {
             await navigator.clipboard.writeText(url);
             toast(L(`لینک کپی شد؛ توی ${device.ios ? 'سافاری' : 'کروم'} بچسبونش`,

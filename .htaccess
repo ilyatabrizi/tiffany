@@ -30,11 +30,20 @@ DirectoryIndex index.html
   # one hostname, not two
   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
   RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # Crawlable addresses for search engines and AI answers (seo.php): a piece,
+  # a collection, the whole shop, the sitemap and llms.txt. In a browser the
+  # shop opens the same page from them (js/router.js).
+  RewriteRule ^p/([a-z0-9][a-z0-9-]{1,60})/?$ seo.php?k=p&id=$1 [L]
+  RewriteRule ^c/([a-z0-9][a-z0-9-]{1,60})/?$ seo.php?k=c&id=$1 [L]
+  RewriteRule ^shop/?$ seo.php?k=shop [L]
+  RewriteRule ^sitemap\.xml$ seo.php?k=sitemap [L]
+  RewriteRule ^llms\.txt$ seo.php?k=llms [L]
 </IfModule>
 
 # -------------------------------------------------------------- caching
-# The app is hash-routed, so index.html is the only page there is — it must
-# never be held. sw.js must never be held either, or an update can never
+# The app is hash-routed; index.html (and seo.php's copies of it, which send
+# their own headers) must never be held. sw.js must never be held either, or an update can never
 # arrive. Fingerprint-free assets get a week and the worker revalidates them.
 <IfModule mod_headers.c>
   <FilesMatch "\.(html|webmanifest)$">

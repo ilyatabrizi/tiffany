@@ -27,7 +27,7 @@ $products = array_map(static function (array $p): array {
 /* The panel's stories that are still inside their 24 hours. The answer
    changes the moment one runs out, so the ETag moves with it. */
 $body = json_encode(['ok' => true, 'products' => $products, 'settings' => tf_public_settings(),
-    'stories' => tf_stories_live()],
+    'stories' => tf_stories_live(), 'looks' => (object) tf_looks_edits()],
     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 $etag = '"' . substr(hash('sha256', $body), 0, 24) . '"';
 

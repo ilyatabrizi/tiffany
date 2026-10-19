@@ -496,9 +496,9 @@ switch ($a) {
         $old = db()->prepare('SELECT * FROM stories WHERE expires_at <= ? ORDER BY created_at DESC, id DESC LIMIT 120');
         $old->execute([$now]);
         ok(['live' => array_map('staff_story', $live->fetchAll()), 'archive' => array_map('staff_story', $old->fetchAll()),
-            'now' => $now, 'cap' => tf_upload_cap(TF_STORY_CAP)]);
+            'now' => $now, 'cap' => tf_upload_cap(TF_STORY_CAP), 'looks' => (object) tf_looks_edits()]);
 
-    case 'story_add':                   // multipart: media (+ poster for a video), caption_*, items
+    case 'story_add':                   // multipart: media (+ poster for a video), caption_*, items, link
         $f = $_FILES['media'] ?? null;
         $cap = tf_upload_cap(TF_STORY_CAP);
         $err = is_array($f) ? (int) ($f['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
@@ -514,6 +514,7 @@ switch ($a) {
         }
         $caption = story_caption($in);
         $items = story_items($in['items'] ?? '[]');
+        $link = tf_link_clean($in['link'] ?? '');
         $poster = '';
         if ($type[0] === 'image') {
             [$media, $w, $h] = tf_story_image((string) $f['tmp_name']);
@@ -533,20 +534,51 @@ switch ($a) {
             }
         }
         $now = time();
-        db()->prepare('INSERT INTO stories (kind, media, poster, w, h, caption, items, by_name, created_at, expires_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        db()->prepare('INSERT INTO stories (kind, media, poster, w, h, caption, items, link, by_name, created_at, expires_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
             ->execute([$kind, $media, $poster, $w, $h, json_encode($caption, JSON_UNESCAPED_UNICODE),
-                json_encode($items), $me['name'], $now, $now + TF_STORY_SECS]);
+                json_encode($items), $link ? json_encode($link, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
+                $me['name'], $now, $now + TF_STORY_SECS]);
         $sid = (int) db()->lastInsertId();
         tf_log($me['name'], 'story_add', $kind === 'video' ? 'ویدیو' : 'عکس');
         ok(['story' => staff_story(story_or_404($sid))]);
 
     case 'story_edit':
         $s = story_or_404((int) ($in['id'] ?? 0));
-        db()->prepare('UPDATE stories SET caption = ?, items = ? WHERE id = ?')
-            ->execute([json_encode(story_caption($in), JSON_UNESCAPED_UNICODE), json_encode(story_items($in['items'] ?? [])), $s['id']]);
+        $link = tf_link_clean($in['link'] ?? []);
+        db()->prepare('UPDATE stories SET caption = ?, items = ?, link = ? WHERE id = ?')
+            ->execute([json_encode(story_caption($in), JSON_UNESCAPED_UNICODE), json_encode(story_items($in['items'] ?? [])),
+                $link ? json_encode($link, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '', $s['id']]);
         tf_log($me['name'], 'story_edit', '#' . $s['id']);
         ok(['story' => staff_story(story_or_404((int) $s['id']))]);
+
+    /* The studio's outfit stories (js/data.js): only the panel's changes are
+       kept, one entry per story; «look_reset» drops a story's changes. */
+    case 'look_save':
+        $lid = (string) ($in['id'] ?? '');
+        if (!preg_match('/^[a-z0-9-]{1,24}$/', $lid)) {
+            tf_fail(400, 'invalid');
+        }
+        $edit = tf_look_clean(is_array($in['look'] ?? null) ? $in['look'] : []);
+        $all = tf_looks_change(static function (array $all) use ($lid, $edit): array {
+            if ($edit) {
+                $all[$lid] = $edit;
+            } else {
+                unset($all[$lid]);
+            }
+            return $all;
+        });
+        tf_log($me['name'], 'look_save', $lid);
+        ok(['looks' => (object) $all]);
+
+    case 'look_reset':
+        $lid = (string) ($in['id'] ?? '');
+        $all = tf_looks_change(static function (array $all) use ($lid): array {
+            unset($all[$lid]);
+            return $all;
+        });
+        tf_log($me['name'], 'look_reset', preg_match('/^[a-z0-9-]{1,24}$/', $lid) ? $lid : '');
+        ok(['looks' => (object) $all]);
 
     case 'story_repost':                // back on the site for another 24 hours, at the front
         $s = story_or_404((int) ($in['id'] ?? 0));

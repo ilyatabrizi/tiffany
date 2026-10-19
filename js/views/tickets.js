@@ -42,7 +42,7 @@ function signedOut() {
       'Bir sorun, sipariş sorunu veya talebin mi var? Fotoğraf, dosya, sesli mesaj veya ürünle birlikte talep gönder. Önce giriş yap.'),
     `<div class="tk-cta">
       <button class="btn btn-ink" type="button" data-tk="signin">${esc(L('ورود', 'Sign in', 'Giriş yap'))}</button>
-      <button class="btn btn-line" type="button" data-tk="signup">${esc(L('ثبت‌نام', 'Sign up', 'Kaydol'))}</button>
+      <button class="btn btn-line" type="button" data-tk="signup">${esc(L('ساخت حساب', 'Create account', 'Hesap oluştur'))}</button>
     </div>
     <a class="wa-line" href="${waLink(L('سلام، یه سؤال داشتم.', 'Hello, I have a question.', 'Merhaba, bir sorum var.'))}" target="_blank" rel="noopener">
       ${icon('chat', 17)}<span>${esc(L('یا از واتساپ بپرس', 'Or ask on WhatsApp', 'Ya da WhatsApp’tan sor'))}</span></a>`)}`;

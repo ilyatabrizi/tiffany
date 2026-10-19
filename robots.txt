@@ -1,0 +1,22 @@
+# TIFFANY by Vanda — https://tiffanybv.com
+# Every page of the shop is open to search engines and AI assistants; the
+# data endpoints and the back office are not pages.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# AI assistants and answer engines, named so their owners see the welcome.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://tiffanybv.com/sitemap.xml

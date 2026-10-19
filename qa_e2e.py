@@ -106,14 +106,14 @@ with sync_playwright() as pw:
     print('\nbags and saved lists from the old catalogue')
     ctx, page = fresh(browser, saved={
         'bag': [{'id': 'rib-tee', 'size': 'M', 'colour': '#FFFFFF', 'qty': 2},            # gone piece
-                {'id': 'striped-knit', 'size': 'فری‌سایز', 'colour': 'سفید و شکلاتی', 'qty': 1},  # old labels
-                {'id': 'striped-knit', 'size': 'OS', 'colour': '#D9C7B0', 'qty': 1},       # same line, new style
-                {'id': 'leather-jacket', 'size': 'XS', 'colour': '#111111', 'qty': 1}],    # size it is not made in
-        'wish': ['rib-tee', 'leather-jacket', 'linen-dress'], 'orders': []})
+                {'id': 'buttoned-wool-knit', 'size': 'فری‌سایز', 'colour': 'سفید و صورتی', 'qty': 1},  # old labels
+                {'id': 'buttoned-wool-knit', 'size': 'OS', 'colour': '#F3D3DE', 'qty': 1},       # same line, new style
+                {'id': 'oiled-leather-jacket', 'size': 'XS', 'colour': '#111111', 'qty': 1}],    # size it is not made in
+        'wish': ['rib-tee', 'oiled-leather-jacket', 'linen-dress'], 'orders': []})
     st = state(page)
     check('gone pieces and sizes leave the bag; old labels become codes; doubles merge',
-          st['bag'] == [{'id': 'striped-knit', 'size': 'OS', 'colour': '#D9C7B0', 'qty': 2}], str(st['bag']))
-    check('the saved list keeps only real pieces', st['wish'] == ['leather-jacket'], str(st['wish']))
+          st['bag'] == [{'id': 'buttoned-wool-knit', 'size': 'OS', 'colour': '#F3D3DE', 'qty': 2}], str(st['bag']))
+    check('the saved list keeps only real pieces', st['wish'] == ['oiled-leather-jacket'], str(st['wish']))
     check('the visitor is told', 'برداشته شدن' in page.inner_text('#toastDock'))
     page.goto(BASE + '/#/bag')
     page.wait_for_timeout(600)
@@ -121,7 +121,7 @@ with sync_playwright() as pw:
     ctx.close()
 
     big = [{'id': i, 'size': 'S', 'colour': c, 'qty': 9} for i, c in [
-        ('leather-jacket', '#111111'), ('chocolate-jeans', '#4B3226'), ('leather-trench', '#111111'),
+        ('oiled-leather-jacket', '#111111'), ('chocolate-jeans', '#4E3226'), ('oiled-leather-trench', '#111111'),
         ('denim-jacket', '#1C2230'), ('gabardine-trench', '#1F2A44'), ('bomber-jacket', '#6B4430')]]
     ctx, page = fresh(browser, saved={'bag': big, 'wish': [], 'orders': []})
     st = state(page)
@@ -139,7 +139,7 @@ with sync_playwright() as pw:
     # -------------------------------------------- closed shop, no fake orders
     print('\ncheckout while ordering is off')
     ctx, page = fresh(browser)
-    add_to_bag(page, 'leather-jacket', 'M')
+    add_to_bag(page, 'oiled-leather-jacket', 'M')
     page.goto(BASE + '/#/bag')
     page.wait_for_timeout(500)
     page.locator('[data-act="checkout"]').click()
@@ -154,7 +154,7 @@ with sync_playwright() as pw:
     store(True)
     n0 = orders()
     ctx, page = fresh(browser)
-    add_to_bag(page, 'leather-jacket', 'M')
+    add_to_bag(page, 'oiled-leather-jacket', 'M')
     page.route('**/api/order.php', lambda r: (page.wait_for_timeout(2500), r.continue_()))
     page.goto(BASE + '/#/bag')
     page.wait_for_timeout(500)
@@ -176,19 +176,19 @@ with sync_playwright() as pw:
 
     # ------------------------------------- the price paid, not today's price
     print('\norders keep what was paid')
-    sql("UPDATE products SET price = 2500000, data = json_set(data, '$.price', 2500000) WHERE id = 'leather-jacket'")
+    sql("UPDATE products SET price = 2500000, data = json_set(data, '$.price', 2500000) WHERE id = 'oiled-leather-jacket'")
     ctx, page = fresh(browser, saved={'bag': [], 'wish': [], 'orders': [
         {'code': code, 'placed': 1792150000000, 'server': True, 'status': 'new', 'phone': '09121110000',
          'subtotal': 1000000, 'shipping': 0, 'total': 1000000, 'address': {'line': 'x', 'city': 'y'},
-         'items': [{'id': 'leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1, 'price': 1000000,
-                    'name': 'کاپشن چرم', 'img': 'assets/img/aw-leather-jacket', 'colourName': 'مشکی'}]}]})
+         'items': [{'id': 'oiled-leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1, 'price': 1000000,
+                    'name': 'کاپشن چرم', 'img': 'assets/img/r-oiled-leather-jacket', 'colourName': 'مشکی'}]}]})
     page.goto(BASE + '/#/orders')
     page.wait_for_timeout(700)
     page.locator('.order').first.click()
     page.wait_for_timeout(600)
     line = page.locator('.sheet .line-price').first.inner_text()
     check('a line shows the price paid after the price changes', '۱٬۰۰۰٬۰۰۰' in line, line)
-    sql("UPDATE products SET price = 1000000, data = json_set(data, '$.price', 1000000) WHERE id = 'leather-jacket'")
+    sql("UPDATE products SET price = 23990000, data = json_set(data, '$.price', 23990000) WHERE id = 'oiled-leather-jacket'")
     page.keyboard.press('Escape')
     ctx.close()
 
@@ -196,7 +196,7 @@ with sync_playwright() as pw:
     print('\norders from the old preview checkout')
     ctx, page = fresh(browser, saved={'bag': [], 'wish': [], 'orders': [
         {'code': 'TF-12345', 'placed': 1760000000000, 'pay': 'card', 'subtotal': 1000000, 'shipping': 0,
-         'total': 1000000, 'items': [{'id': 'leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1}],
+         'total': 1000000, 'items': [{'id': 'oiled-leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1}],
          'address': {'line': 'x', 'city': 'y'}, 'step': 0}]})
     page.goto(BASE + '/#/orders')
     page.wait_for_timeout(600)
@@ -262,7 +262,7 @@ with sync_playwright() as pw:
     page.locator('#fitForm button[type="submit"]').click()
     page.wait_for_timeout(500)
     check('stored in Latin digits', state(page)['fit']['bust'] == '90', str(state(page)['fit']))
-    page.goto(BASE + '/#/p/leather-jacket')
+    page.goto(BASE + '/#/p/oiled-leather-jacket')
     page.wait_for_timeout(700)
     fit = page.inner_text('.fitbox')
     check('the product page names the size', 'نمی‌دونی' not in fit and 'M' in fit, fit)
@@ -305,7 +305,7 @@ with sync_playwright() as pw:
     ctx.add_init_script(QUIET)
     page = ctx.new_page()
     page.goto('data:text/html,<p>another site</p>')
-    page.goto(BASE + '/#/p/leather-jacket')
+    page.goto(BASE + '/#/p/oiled-leather-jacket')
     ready(page)
     page.locator('.pdp-back').click()
     page.wait_for_timeout(800)
@@ -366,7 +366,7 @@ with sync_playwright() as pw:
     page.wait_for_timeout(1200)
     check('the About photo is the new collection and loads', page.evaluate(
         "(() => { const i = document.querySelector('.info-photo img'); return !!i && i.complete"
-        " && i.naturalWidth > 0 && i.currentSrc.includes('aw27'); })()"))
+        " && i.naturalWidth > 0 && /assets\\/img\\/r-ed-\\d+\\.webp$/.test(i.currentSrc); })()"))
     # The host answers a missing page anywhere with /404.html; mimic that at a
     # nested address, where a relative way home would loop.
     nf = (pathlib.Path(__file__).parent / '404.html').read_text()

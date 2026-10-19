@@ -14,7 +14,7 @@ import { getProduct, isOneSize } from './data.js';
 import { promptInstall, shouldOfferInstall, installSheet } from './install.js';
 import { needsConsent, askConsent } from './consent.js';
 import { mountColour, applyColourPref } from './colour.js';
-import { openLooks, closeLooks, isLooksOpen, looksItemTo } from './looks.js';
+import { openLooks, closeLooks, isLooksOpen, looksItemTo, looksLinkTo } from './looks.js';
 import { loadCatalogue, beacon, live } from './live.js';
 import {
   account, loadAccount, refreshUnread, signInSheet, signUpSheet, accountSheet,
@@ -155,7 +155,10 @@ let shownHash = '';
 let shownPath = '';
 
 function render(route, { keepScroll = false, how = 'push' } = {}) {
-  const key = ['p', 'c', 'tickets'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
+  /* Until 2026-10-20 the whole season was one collection, «aw27»; links to it
+     shared since then open the shop, which is that whole season now. */
+  if (route.path === '/c/aw27') { go('/shop', { replace: true }); return; }
+  const key =['p', 'c', 'tickets'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
   const view = VIEWS[key] || VIEWS['/'];
   const y = window.scrollY;
   /* Remember where the page being left was scrolled to, so a step back
@@ -191,8 +194,13 @@ function render(route, { keepScroll = false, how = 'push' } = {}) {
     behavior: 'auto',
   });
 
+  /* The same titles the crawlable pages (seo.php) give, so a search engine
+     that runs the page reads one title, not two. */
   const t = view.meta?.(route.parts)?.title || view.title || BRAND.name;
-  document.title = t === BRAND.name ? `${BRAND.name} ${BRAND.sub}` : `${t} — ${BRAND.name}`;
+  document.title = t === BRAND.name
+    ? L('TIFFANY by Vanda | تیفانی، پوشاک زنانه — کالکشن پاییز و زمستون ۲۰۲۷',
+      'TIFFANY by Vanda | Womenswear — Autumn / Winter 2027', 'TIFFANY by Vanda | Kadın giyim — Sonbahar / Kış 2027')
+    : `${t} | ${BRAND.full}`;
   if (!keepScroll) beacon(route);
 }
 
@@ -229,10 +237,24 @@ document.addEventListener('click', (e) => {
   }
 }, false);
 
+/* A page opened at a crawlable address (/p/…, /c/…, /shop) carries
+   <base href="/"> from seo.php, so a plain «#/terms» link there would load
+   /#/terms as a new page. Inside the shop it is a step like any other. */
+document.addEventListener('click', (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (!document.querySelector('base')) return;
+  const a = e.target.closest('a[href^="#/"]');
+  if (!a || a.target) return;
+  e.preventDefault();
+  go(a.getAttribute('href').slice(1));
+});
+
 /* The look viewer's chips live outside #app, so they get their own hook. */
 document.addEventListener('click', (e) => {
   const v = e.target.closest('[data-vitem]');
   if (v) looksItemTo(v.dataset.vitem);
+  const k = e.target.closest('[data-vlink]');
+  if (k && /^\/(p|c)\/[a-z0-9-]+$|^\/shop(\?.*)?$/.test(k.dataset.vlink)) looksLinkTo(k.dataset.vlink);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -254,7 +276,10 @@ document.addEventListener('view:refresh', refresh);
 document.addEventListener('colour:changed', refresh);
 
 async function share() {
-  const url = location.href;
+  /* A piece, a collection or the shop list is shared by its own address
+     (seo.php), which shows its name, price and photo in a chat preview. */
+  const r = parse();
+  const url = /^\/(p|c)\/[a-z0-9-]+$|^\/shop$/.test(r.path) ? `${location.origin}${r.path}` : location.href;
   try {
     if (navigator.share) { await navigator.share({ title: BRAND.full, url }); return; }
     await navigator.clipboard.writeText(url);

@@ -327,18 +327,19 @@ check('sign out', code == 200 and ceo('products')[0] == 401)
 print('\ncatalogue import')
 ceo = Panel()
 ceo('login', email='ceo@tiffany.test', password='third-long-pass-3')
-def piece(i, sizes, cat='trousers', price=1000000):
-    return {'id': f'imp-{i}', 'name': {'fa': f'قطعه {i}', 'en': f'Piece {i}'}, 'cat': cat, 'col': 'aw27',
+def piece(i, sizes, cat='trousers', price=1000000, col='aw27-denim-red'):
+    return {'id': f'imp-{i}', 'name': {'fa': f'قطعه {i}', 'en': f'Piece {i}'}, 'cat': cat, 'col': col,
             'price': price, 'images': ['assets/img/aw-dark-jeans'], 'sizes': sizes, 'stock': None,
             'colours': [{'hex': '#161B26', 'fa': 'جین تیره', 'en': 'Dark denim'}], 'visible': True}
 imp = os.path.join(DATA, 'catalog-import.json')
 with open(imp, 'w') as fh:
-    json.dump([piece(1, ['34', '36', '42']), piece(2, ['37', '40'], 'shoes'), piece(3, ['OS', 'S'], 'accessories')], fh)
+    json.dump([piece(1, ['34', '36', '42']), piece(2, ['37', '40'], 'shoes'), piece(3, ['OS', 'S'], 'accessories', col='aw27')], fh)
 cat = requests.get(f'{BASE}/api/catalog.php').json()['products']
 check('import replaces every product', [p['id'] for p in cat] == ['imp-1', 'imp-2', 'imp-3'], str([p['id'] for p in cat]))
 check('waist and shoe sizes accepted, in order', cat[0]['sizes'] == ['34', '36', '42'] and cat[1]['sizes'] == ['37', '40'])
 check('one size wins over letters', cat[2]['sizes'] == ['OS'])
-check('the collection is aw27', all(p['col'] == 'aw27' for p in cat))
+check('the collection is kept', cat[0]['col'] == 'aw27-denim-red' and cat[1]['col'] == 'aw27-denim-red', str([p['col'] for p in cat]))
+check('…and the old single collection (aw27) reads as none', cat[2]['col'] == '')
 requests.get(f'{BASE}/api/catalog.php')
 code, r = ceo('log')
 check('imported once, logged once', sum(1 for x in r['log'] if x['action'] == 'catalog_import') == 1)

@@ -17,7 +17,7 @@ import json
 import pathlib
 import sys
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter, ImageOps
 
 # --------------------------------------------------------------- colours
 COL = {
@@ -260,7 +260,7 @@ P = [
     # C9 and C16: the same red bandana
     p('red-bandana', 'باندانا نخی قرمز', 'Red cotton bandana', 'Kırmızı pamuklu bandana', 'accessories',
       OS, colours('قرمز طرح‌دار'), 'نخ', 1_990_000, 'C9, C16',
-      [('01382', .45, .28, .22), ('02133', .585, .285, .2)]),
+      [('01382', .46, .3, .4), ('02133', .57, .34, .4)]),
     # C9 and C14 (C14 gives the sizes and the longer fabric line)
     p('waterproof-sneakers', 'کانورس', 'High-top sneakers', 'Bilekli spor ayakkabı', 'shoes',
       SHOES, colours('سفید', 'زرشکی', 'سرمه‌ای'),
@@ -350,7 +350,7 @@ P = [
       [('02156', .5, .42, .3)]),
     p('white-wool-knit', 'بافت پشمی سفید', 'White wool knit', 'Beyaz yün triko', 'knit',
       OS, colours('سفید'), 'پشم', 11_490_000, 'C16',
-      [('02156', .48, .47, .35), ('02133', .4, .45, .4)]),
+      [('02156', .48, .47, .35)]),
     p('light-wide-jeans', 'شلوار جین گشاد', 'Wide jeans', 'Bol kot pantolon', 'trousers',
       JEANS, colours('جین روشن', hexes={'جین روشن': '#C3CCD6'}), '', 8_990_000, 'C16',
       [('02133', .43, .68, .5)]),
@@ -488,23 +488,49 @@ LOOKS = [
     ('C24', ('01732', .68, .5, .6), ('بارانی کوتاه و جین سبز', 'Short trench, green jeans', 'Kısa trençkot, yeşil kot'),
      ['short-trench', 'green-cream-jeans', 'marc-jacobs-bag', 'canvas-cap']),
 ]
-COVER = ('01975', .5, .45, 1.0)     # 3:4
+# One collection per photo set the studio posted (each set follows its
+# captions in the group): id, the captions it covers, its 3:4 cover frame.
+COLS = [
+    ('aw27-pink-mohair', ('C1', 'C2', 'C3'), ('02892', .52, .55, .72)),
+    ('aw27-pink-fleece', ('C4', 'C5'), ('02606', .5, .45, 1.0)),
+    ('aw27-black-leather', ('C6', 'C7'), ('01888', .52, .47, .75)),
+    ('aw27-denim-red', ('C8', 'C9'), ('01363', .45, .5, .85)),
+    ('aw27-aubergine', ('C10', 'C11'), ('02362', .5, .5, .9)),
+    ('aw27-brown-leather', ('C12', 'C13'), ('01480', .5, .45, .9)),
+    ('aw27-grey-pink', ('C14', 'C15'), ('01472', .5, .5, .85)),
+    ('aw27-grey-red', ('C16', 'C17'), ('02193', .5, .5, .9)),
+    ('aw27-olive-brown', ('C18', 'C19', 'C20'), ('01975', .56, .56, .7)),
+    ('aw27-chocolate-wool', ('C21', 'C22'), ('02772', .45, .54, .8)),
+    ('aw27-olive-khaki', ('C23', 'C24'), ('01732', .5, .5, .9)),
+]
+COL_OF = {c: cid for cid, caps, _ in COLS for c in caps}
 EDITORIAL = ('01488', .5, .5, 1.0)  # 16:10, the one landscape photo
 
 # Pieces whose sizes the captions do not give: Ilya's answers, 2026-10-19.
 SIZES_ASKED = {'waterproof-leather-bomber': LS}
 
 
+# A crop never takes less than 40% of a portrait photo's width (27% of the
+# landscape one): about 1,870 of the original's pixels, so even the 1440-wide
+# file is a reduction, never an enlargement. Tighter crops looked soft.
+MIN_W = {'portrait': .40, 'landscape': .267}
+SHARPEN = ImageFilter.UnsharpMask(radius=0.8, percent=55, threshold=2)
+
+
 def save(im, name, widths, ratio, out):
     for W in widths:
         H = round(W * ratio)
-        im.resize((W, H), Image.LANCZOS).save(out / f'{name}-{W}.webp', 'WEBP', quality=82, method=6)
+        small = im.resize((W, H), Image.LANCZOS)
+        if im.width > W * 1.15:          # sharpen what was reduced, as any web export does
+            small = small.filter(SHARPEN)
+        small.save(out / f'{name}-{W}.webp', 'WEBP', quality=84, method=6)
 
 
 def box(size, cx, cy, w, ratio):
     """A ratio (h/w) box, w as a fraction of the photo's width, centred on
     (cx, cy) and slid back inside the photo; shrunk if it cannot fit."""
     W, H = size
+    w = max(w, MIN_W['portrait' if H > W else 'landscape'])
     bw = w * W
     bh = bw * ratio
     if bh > H:
@@ -544,13 +570,14 @@ def build(src, out, only=None, draft=False):
         imgs = []
         for k, (n, cx, cy, w) in enumerate(p['crops']):
             name = f"r-{p['id']}" + (f'-{k + 1}' if k else '')
-            jobs.append((n, (cx, cy, w), name, (480, 960), 1.25))
+            jobs.append((n, (cx, cy, w), name, (480, 960, 1440), 1.25))
             imgs.append(f'assets/img/{name}')
         note = p.get('note')
+        col = COL_OF[p['src'].split(',')[0].strip()]   # the set it first appears in
         cat.append({
             'id': p['id'],
             'name': {'fa': p['fa'], 'en': p['en'], 'tr': p['tr']},
-            'cat': p['cat'], 'col': 'aw27', 'price': int(p['price']),
+            'cat': p['cat'], 'col': col, 'price': int(p['price']),
             'images': imgs, 'sizes': sizes, 'stock': None, 'fit': 'true', 'badge': '',
             'colours': p['col'],
             'note': {'fa': note[0], 'en': note[1], 'tr': note[2]} if note else {'fa': '', 'en': '', 'tr': ''},
@@ -561,10 +588,11 @@ def build(src, out, only=None, draft=False):
         })
     looks = []
     for k, (c, (n, cx, cy, w), title, items) in enumerate(LOOKS, 1):
-        jobs.append((n, (cx, cy, w), f'r-look-{k}', (720, 1080), 16 / 9))
-        looks.append({'id': f'r{k}', 'img': f'r-look-{k}', 'title': title, 'items': items, 'src': c})
-    jobs.append((COVER[0], COVER[1:], 'r-col', (480, 960), 4 / 3))
-    jobs.append((EDITORIAL[0], EDITORIAL[1:], 'r-ed', (480, 960), 10 / 16))
+        jobs.append((n, (cx, cy, w), f'r-look-{k}', (720, 1080, 1440), 16 / 9))
+        looks.append({'id': f'r{k}', 'img': f'r-look-{k}', 'col': COL_OF[c], 'title': title, 'items': items, 'src': c})
+    for cid, caps, (n, cx, cy, w) in COLS:
+        jobs.append((n, (cx, cy, w), 'r-col-' + cid[5:], (480, 960, 1440), 4 / 3))
+    jobs.append((EDITORIAL[0], EDITORIAL[1:], 'r-ed', (480, 960, 1440), 10 / 16))
     # one photo open at a time: group the jobs by photo
     for n in sorted({j[0] for j in jobs}):
         if only and n not in only:
@@ -576,10 +604,23 @@ def build(src, out, only=None, draft=False):
     return cat, looks
 
 
+def looks_js(looks):
+    """js/looks-data.js, the shop's and the panel's copy of the stories."""
+    q = lambda x: "'" + x.replace('\\', '\\\\').replace("'", "\\'") + "'"
+    rows = '\n'.join(
+        f"  {{ id: '{l['id']}', img: '{l['img']}', col: '{l['col']}',\n"
+        f"    t: [{q(l['title'][0])}, {q(l['title'][1])}, {q(l['title'][2])}],\n"
+        f"    items: [{', '.join(q(i) for i in l['items'])}] }}," for l in looks)
+    head = pathlib.Path(__file__).resolve().parents[2] / 'js' / 'looks-data.js'
+    intro = head.read_text().split('export const LOOK_DEFS = [')[0]
+    return intro + 'export const LOOK_DEFS = [\n' + rows + '\n];\n'
+
+
 if __name__ == '__main__':
     src, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
     only = next((a.split('=', 1)[1].split(',') for a in sys.argv if a.startswith('--only=')), None)
     cat, looks = build(src, out / 'img', only=only, draft='--draft' in sys.argv)
     (out / 'catalog-import.json').write_text(json.dumps(cat, ensure_ascii=False, indent=1), encoding='utf-8')
     (out / 'looks.json').write_text(json.dumps(looks, ensure_ascii=False, indent=1), encoding='utf-8')
+    (out / 'looks-data.js').write_text(looks_js(looks), encoding='utf-8')
     print(len(cat), 'pieces;', sum(len(p['images']) for p in cat), 'piece images;', len(looks), 'looks')

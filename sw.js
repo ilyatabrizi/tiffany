@@ -12,11 +12,11 @@
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v13';
+const V = 'tiffany-fa-v14';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
-  'js/app.js', 'js/colour.js', 'js/config.js', 'js/data.js', 'js/hero.js', 'js/i18n.js',
+  'js/app.js', 'js/colour.js', 'js/config.js', 'js/data.js', 'js/looks-data.js', 'js/hero.js', 'js/i18n.js',
   'js/icons.js', 'js/install.js', 'js/looks.js', 'js/router.js', 'js/store.js',
   'js/ui.js', 'js/util.js', 'js/live.js', 'js/device.js', 'js/consent.js',
   'js/views/home.js', 'js/views/shop.js', 'js/views/collection.js',
@@ -28,7 +28,7 @@ const SHELL = [
   'assets/brand/alpha-letters.png', 'assets/brand/alpha-bars.png',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
   'assets/icons/favicon-32.png',
-  'media/hero-2-poster.webp',
+  'media/hero-3-poster.webp',
 ];
 
 /* A local preview must never be served from cache, or every edit needs a
@@ -68,6 +68,14 @@ async function fresh(request) {
     if (res && res.ok && res.type === 'basic') cache.put(request, res.clone());
     return res;
   } catch {
+    /* Offline on a crawlable address (/p/…, /c/…, /shop, see seo.php): the
+       shop's own page, which knows its way from /#/p/…. */
+    if (request.mode === 'navigate') {
+      const u = new URL(request.url);
+      if (/^\/(p|c)\/[a-z0-9-]+\/?$|^\/shop\/?$/.test(u.pathname)) {
+        return Response.redirect(`/#${u.pathname.replace(/\/$/, '')}`, 302);
+      }
+    }
     const hit = await cache.match(request)
       || (request.mode === 'navigate' ? await cache.match('index.html') : null);
     if (hit) return hit;
@@ -75,10 +83,14 @@ async function fresh(request) {
   }
 }
 
+/* Photos keep their names when they are re-cut (2026-10-20: every r-… frame),
+   and the host lets a browser keep them for a week. So a photo this cache
+   does not have yet is asked of the host itself, never the browser's own
+   cache; a new V, with every re-cut, empties this cache. */
 async function fast(request) {
   const cache = await caches.open(V);
   const hit = await cache.match(request);
-  const net = fetch(request).then((res) => {
+  const net = fetch(request, hit ? undefined : { cache: 'no-cache' }).then((res) => {
     if (res && res.ok && res.type === 'basic') cache.put(request, res.clone());
     return res;
   }).catch(() => null);

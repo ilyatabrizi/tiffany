@@ -81,7 +81,7 @@ adm('state')
 key = re.search(r'[A-Z2-9]{4}(?:-[A-Z2-9]{4}){3}', open(os.path.join(DATA, 'SETUP-KEY.txt')).read()).group(0)
 assert adm('setup', key=key, name='آمیر وندا', email='ceo@tiffany.test', password='ceo-pass-123')['ok']
 adm('settings_save', store_open=True)
-BAG = json.dumps({'bag': [{'id': 'leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1},
+BAG = json.dumps({'bag': [{'id': 'oiled-leather-jacket', 'size': 'M', 'colour': '#111111', 'qty': 1},
                           {'id': 'cotton-cap', 'size': 'OS', 'colour': '#C2185B', 'qty': 2}],
                   'profile': {'name': 'سارا محمدی', 'phone': '09121112233', 'email': ''},
                   'address': {'line': 'خیابان ولیعصر، کوچه‌ی ۳، پلاک ۱۲', 'city': 'تهران', 'postal': ''}},

@@ -25,7 +25,19 @@ const TF_ROLES    = ['ceo', 'admin'];
 const TF_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const TF_CATS     = ['knit', 'tee', 'top', 'hoodie', 'vest', 'shirt', 'trousers', 'skirts',
                      'jacket', 'cardigan', 'accessories', 'shoes'];
-const TF_COLS     = ['', 'aw27'];
+/* The Autumn / Winter 2027 collections, one per photo set (js/data.js has their names). */
+const TF_COLS     = ['',
+                     'aw27-pink-mohair',
+                     'aw27-pink-fleece',
+                     'aw27-black-leather',
+                     'aw27-denim-red',
+                     'aw27-aubergine',
+                     'aw27-brown-leather',
+                     'aw27-grey-pink',
+                     'aw27-grey-red',
+                     'aw27-olive-brown',
+                     'aw27-chocolate-wool',
+                     'aw27-olive-khaki'];
 /* Letter sizes, then trouser waist (34–42) and shoe sizes (37–40), then one size. */
 const TF_SIZES    = ['XS', 'S', 'M', 'L', 'XL', '34', '36', '37', '38', '39', '40', '42', 'OS'];
 const TF_FITS     = ['small', 'true', 'relaxed'];
@@ -305,6 +317,92 @@ SQL);
     }
     if ($version < 5) {
         tf_migrate_5($db);
+    }
+    if ($version < 6) {
+        tf_migrate_6($db);
+    }
+    if ($version < 7) {
+        tf_migrate_7($db);
+    }
+}
+
+/* 2026-10-20: the season, one collection («aw27») until now, is eleven, one
+   per photo set. Each piece the studio's import put in «aw27» moves to its
+   set; nothing else about it changes (price, stock, sizes, photos, shown or
+   hidden: whatever the panel has made of it stays). A piece not on this list
+   leaves «aw27», which no longer exists, for no collection. */
+const TF_COLS_2026_10 = [
+    'aw27-pink-mohair' => ['white-leather-bag', 'pastel-cotton-cap', 'mohair-top', 'mohair-trousers', 'buttoned-wool-knit', 'wool-scarf', 'white-jeans'],
+    'aw27-pink-fleece' => ['silk-satin-bandana', 'fleece-sweatshirt', 'fleece-trousers', 'faux-fur-coat', 'wool-teddy-coat'],
+    'aw27-black-leather' => ['oiled-leather-jacket', 'wool-underknit', 'cotton-cap', 'chocolate-jeans', 'cotton-foulard', 'oiled-leather-trench', 'white-collar-underknit', 'avishu-top', 'avishu-trousers', 'karl-lagerfeld-bag', 'cotton-turtleneck'],
+    'aw27-denim-red' => ['denim-jacket', 'dark-jeans', 'high-neck-wool-knit', 'patchwork-bandana', 'gabardine-trench', 'ribbed-knit', 'cotton-shirt', 'red-bandana', 'waterproof-sneakers'],
+    'aw27-aubergine' => ['short-fur-jacket', 'pure-wool-underknit', 'plain-shirt', 'green-cream-jeans', 'print-bandana', 'striped-wool-knit', 'collared-sweatshirt', 'sweat-trousers'],
+    'aw27-brown-leather' => ['brown-paisley-bandana', 'waterproof-leather-bomber', 'two-tone-wool-knit', 'baseball-cap', 'waterproof-leather-jacket', 'two-tone-stripe-knit', 'light-ripped-jeans'],
+    'aw27-grey-pink' => ['logo-cap', 'patterned-wool-knit', 'avishu-vest', 'avishu-trousers-grey', 'black-white-bandana', 'striped-pink-knit', 'bomber-jacket', 'dors-trousers'],
+    'aw27-grey-red' => ['cotton-shirt-white', 'white-wool-knit', 'light-wide-jeans', 'hooded-fur-jacket', 'cotton-trousers', 'dors-sweatshirt', 'oversize-coat'],
+    'aw27-olive-brown' => ['marc-jacobs-bag', 'waxed-trench', 'avishu-sweatshirt', 'avishu-trousers-olive', 'floral-bandana', 'fine-wool-knit', 'waxed-trousers', 'zara-bag'],
+    'aw27-chocolate-wool' => ['gabardine-trousers', 'pure-wool-cardigan', 'turtleneck', 'satin-paisley-bandana', 'pure-wool-jacket', 'trench-skirt', 'four-colour-bandana'],
+    'aw27-olive-khaki' => ['canvas-cap', 'cream-wool-knit', 'waxed-vest', 'grey-jeans', 'short-trench'],
+];
+
+function tf_migrate_7(PDO $db): void
+{
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        if ((int) $db->query('PRAGMA user_version')->fetchColumn() < 7) {
+            $to = [];
+            foreach (TF_COLS_2026_10 as $col => $ids) {
+                foreach ($ids as $id) {
+                    $to[$id] = $col;
+                }
+            }
+            $set = $db->prepare('UPDATE products SET data = ?, updated_at = ? WHERE id = ?');
+            $now = time();
+            foreach ($db->query('SELECT id, data FROM products')->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $d = json_decode((string) $r['data'], true);
+                if (!is_array($d)) {
+                    continue;
+                }
+                $was = $d;
+                if (($d['col'] ?? '') === 'aw27') {
+                    $d['col'] = $to[$r['id']] ?? '';
+                }
+                /* The second crop of this knit showed the bag more than the
+                   knit; it goes, unless the panel has changed the photos. */
+                if ($r['id'] === 'white-wool-knit'
+                    && ($d['images'] ?? null) === ['assets/img/r-white-wool-knit', 'assets/img/r-white-wool-knit-2']) {
+                    $d['images'] = ['assets/img/r-white-wool-knit'];
+                }
+                if ($d !== $was) {
+                    $set->execute([json_encode($d, JSON_UNESCAPED_UNICODE), $now, $r['id']]);
+                }
+            }
+            $db->exec('PRAGMA user_version = 7');
+        }
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
+}
+
+/** 2026-10-20: a story can carry one link (a button on the story: a page of
+    the shop or any https address, with its own words). */
+function tf_migrate_6(PDO $db): void
+{
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        if ((int) $db->query('PRAGMA user_version')->fetchColumn() < 6) {
+            $have = array_column($db->query('PRAGMA table_info(stories)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+            if (!in_array('link', $have, true)) {
+                $db->exec("ALTER TABLE stories ADD COLUMN link TEXT NOT NULL DEFAULT ''");
+            }
+            $db->exec('PRAGMA user_version = 6');
+        }
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
     }
 }
 

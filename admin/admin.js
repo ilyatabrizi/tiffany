@@ -14,6 +14,7 @@
 
    Every value from the server goes through esc() before it touches HTML. */
 import { canRecord, record, clock } from '../js/recorder.js';
+import { LOOK_DEFS } from '../js/looks-data.js';
 
 /* ---------------------------------------------------------------- basics */
 const $ = (s, r = document) => r.querySelector(s);
@@ -51,7 +52,19 @@ const CATS = [['knit', 'بافت'], ['tee', 'تیشرت'], ['top', 'تاپ'], ['
   ['vest', 'وست'], ['shirt', 'شومیز'], ['trousers', 'شلوار'], ['skirts', 'دامن'], ['jacket', 'کاپشن'],
   ['cardigan', 'ژاکت'], ['accessories', 'اکسسوری'], ['shoes', 'کفش']];
 const CAT = Object.fromEntries(CATS);
-const COLS = [['', 'بدون کالکشن'], ['aw27', 'Autumn / Winter 2027']];
+const COLS = [['', 'بدون کالکشن'],
+  ['aw27-pink-mohair', 'Pink Mohair'],
+  ['aw27-pink-fleece', 'Pink Fleece'],
+  ['aw27-black-leather', 'Black Leather'],
+  ['aw27-denim-red', 'Denim & Red'],
+  ['aw27-aubergine', 'Aubergine'],
+  ['aw27-brown-leather', 'Brown Leather'],
+  ['aw27-grey-pink', 'Grey & Pink'],
+  ['aw27-grey-red', 'Grey & Red'],
+  ['aw27-olive-brown', 'Olive & Brown'],
+  ['aw27-chocolate-wool', 'Chocolate Wool'],
+  ['aw27-olive-khaki', 'Olive & Khaki']];
+const COL_NAME = Object.fromEntries(COLS);
 /* letter sizes, then trouser waist and shoe sizes (same list as TF_SIZES) */
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', '34', '36', '37', '38', '39', '40', '42'];
 const FITS = [['true', 'اندازه‌ی معمول'], ['small', 'کوچیک‌تر از معمول'], ['relaxed', 'گشاد']];
@@ -104,6 +117,7 @@ const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌ا
   team_add: 'عضو تیم اضافه کرد', team_edit: 'عضو تیم رو ویرایش کرد', team_delete: 'عضو تیم رو حذف کرد',
   story_add: 'استوری گذاشت', story_edit: 'استوری رو ویرایش کرد', story_repost: 'استوری رو دوباره منتشر کرد',
   story_end: 'استوری رو از سایت برداشت', story_delete: 'استوری رو حذف کرد',
+  look_save: 'استوری کمپین رو ویرایش کرد', look_reset: 'استوری کمپین رو به حالت اول برگردوند',
   ticket_reply: 'به تیکت جواب داد', ticket_close: 'تیکت رو بست', ticket_open: 'تیکت رو دوباره باز کرد',
   sms_template: 'شماره‌ی قالب پیامک رو عوض کرد',
   order_paid: 'پرداخت کارت‌به‌کارت سفارش رو تأیید کرد', order_pay_odd: 'پرداختی فرستاد که باید بررسی بشه',
@@ -1327,7 +1341,7 @@ async function viewTraffic(_, q, signal) {
   if (signal.aborted) return;
   const label = (k) => {
     const [kind, id] = k.split(':');
-    if (kind === 'c') return `کالکشن ${({ aw27: 'Autumn / Winter 2027' })[id] || id}`;
+    if (kind === 'c') return `کالکشن ${COL_NAME[id] || (id === 'aw27' ? 'Autumn / Winter 2027' : id)}`;
     return PAGES[kind] || k;
   };
   main.innerHTML = `
@@ -1448,6 +1462,92 @@ async function pickProducts(chosen, max, onDone) {
 }
 
 /* ============================================================= stories */
+/* A story's button: none, one piece, one collection, or any https address
+   (Instagram, WhatsApp, another site), with its own words. The shop shows it
+   white under the story's text; the server refuses anything that is not a
+   shop page or an http(s) address. */
+const LK = [['', 'بدون دکمه'], ['p', 'رفتن به یه محصول'], ['c', 'رفتن به یه کالکشن'],
+  ['url', 'باز کردن یه آدرس (اینستاگرام، واتساپ، سایت دیگه)']];
+const lkKind = (u) => (!u ? '' : u.startsWith('#/p/') ? 'p' : u.startsWith('#/c/') ? 'c' : 'url');
+
+/** Draws the button control into box and returns what it holds. onPick, when
+    given, is called to choose the piece (a sheet has to reopen itself after
+    the product list, which takes the sheet's place). */
+let lkSeq = 0;
+function wireLink(box, init, onPick) {
+  const k = { kind: lkKind(init?.url), url: init?.url || '', label: { fa: '', en: '', tr: '', ...(init?.label || {}) } };
+  /* The new-story form and an edit sheet can be on screen together: each
+     control gets its own id, so a label never points at the other one. */
+  const sel = `lkKind${++lkSeq}`;
+  box.innerHTML = `<div class="field" data-field="link"><label for="${sel}">دکمه‌ی روی استوری (اختیاری)</label>
+      <select class="input" id="${sel}" data-lk-kind>${LK.map(([v, l]) => `<option value="${v}" ${k.kind === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <div class="lk-body"></div><div class="msg"></div></div>`;
+  const body = box.querySelector('.lk-body');
+  const paint = () => {
+    const by = Object.fromEntries((S.products || []).map((p) => [p.id, p]));
+    const words = `<div class="field" style="margin:12px 0 0"><label>متن روی دکمه</label>
+        <input class="input" data-lw="fa" maxlength="30" value="${esc(k.label.fa)}"
+          placeholder="${k.kind === 'p' ? 'مثلاً: خرید همین مدل' : k.kind === 'c' ? 'مثلاً: دیدن کالکشن' : 'مثلاً: پیج اینستاگرام'}">
+        <p class="hint" style="margin:6px 0 0">خالی بمونه، روی دکمه نوشته می‌شه «ببین».</p></div>
+      <details class="more"><summary>متن دکمه به انگلیسی و ترکی${icon('chevD', 18)}</summary><div class="in"><div class="row2">
+        <div class="field"><label>انگلیسی</label><input class="input ltr-in" data-lw="en" maxlength="30" value="${esc(k.label.en)}"></div>
+        <div class="field"><label>ترکی</label><input class="input ltr-in" data-lw="tr" maxlength="30" value="${esc(k.label.tr)}"></div></div></div></details>`;
+    if (k.kind === 'p') {
+      const id = k.url.slice(4);
+      body.innerHTML = `<div class="st-items" style="margin-top:10px">${id ? `<span class="chip on">${esc(by[id]?.name.fa || id)}</span>` : ''}</div>
+        <button class="btn line s" type="button" data-lk-pick>${icon('plus', 18)}${id ? 'عوض کردن محصول' : 'انتخاب محصول'}</button>${words}`;
+    } else if (k.kind === 'c') {
+      body.innerHTML = `<select class="input" data-lk-col style="margin-top:10px" aria-label="کالکشن">
+          <option value="">یه کالکشن انتخاب کن</option>
+          ${COLS.filter(([v]) => v).map(([v, l]) => `<option value="${v}" ${k.url === `#/c/${v}` ? 'selected' : ''}>${esc(l)}</option>`).join('')}
+        </select>${words}`;
+    } else if (k.kind === 'url') {
+      body.innerHTML = `<input class="input ltr-in" type="url" inputmode="url" data-lk-url maxlength="300" style="margin-top:10px"
+          placeholder="https://instagram.com/tiffanyiran" aria-label="آدرس" value="${esc(k.url.startsWith('#/') ? '' : k.url)}">${words}`;
+    } else body.innerHTML = '';
+  };
+  box.querySelector('[data-lk-kind]').addEventListener('change', (e) => {
+    if (e.target.value !== k.kind) { k.kind = e.target.value; k.url = ''; }
+    paint();
+  });
+  body.addEventListener('input', (e) => {
+    if (e.target.dataset.lw) k.label[e.target.dataset.lw] = e.target.value;
+    if (e.target.matches('[data-lk-url]')) k.url = e.target.value.trim();
+  });
+  body.addEventListener('change', (e) => {
+    if (e.target.matches('[data-lk-col]')) k.url = e.target.value ? `#/c/${e.target.value}` : '';
+  });
+  body.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-lk-pick]')) return;
+    const cur = k.url.startsWith('#/p/') ? [k.url.slice(4)] : [];
+    if (onPick) { onPick(k, cur); return; }
+    pickProducts(cur, 1, (ids) => { if (ids[0]) k.url = `#/p/${ids[0]}`; paint(); });
+  });
+  paint();
+  return {
+    /** {} for no button; throws, with the words to show, when half filled in. */
+    get() {
+      if (!k.kind) return {};
+      if (!k.url) {
+        throw new Error(k.kind === 'p' ? 'برای دکمه یه محصول انتخاب کن.' : k.kind === 'c' ? 'برای دکمه یه کالکشن انتخاب کن.'
+          : 'آدرس دکمه رو بنویس.');
+      }
+      if (k.kind === 'url' && !/^https?:\/\/[^\s"'<>`]+\.[^\s"'<>`]+$/i.test(k.url)) {
+        throw new Error('آدرس باید کامل باشه و با https:// شروع بشه؛ مثلاً https://instagram.com/tiffanyiran');
+      }
+      return { url: k.url, label: { fa: k.label.fa.trim(), en: k.label.en.trim(), tr: k.label.tr.trim() } };
+    },
+    state: () => ({ url: k.url, label: { ...k.label } }),
+  };
+}
+const linkErr = (form, err) => {
+  const f = form.querySelector('[data-field="link"]');
+  f?.classList.add('err');
+  const m = f?.querySelector('.msg');
+  if (m) m.textContent = err.message;
+  f?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+};
+
 /* A story is a photo or a video, up for 24 hours on the shop's home page
    (the strip and the hero's «استوری‌ها»), ahead of the campaign looks.
    Pieces can be tagged on it, like the looks. After 24 hours it moves to the
@@ -1496,12 +1596,14 @@ function videoCover(file) {
 async function viewStories(_, q, signal) {
   setTitle('استوری‌ها');
   const d = await api('stories');
+  if (!S.products) S.products = (await api('products')).products;
   if (signal.aborted) return;
+  const LE = d.looks || {};
   const card = (st, live) => `<div class="st-card" data-sid="${st.id}">
     <div class="st-ph">${storyThumb(st)}${st.kind === 'video' ? '<span class="pill hidden-p st-k">ویدیو</span>' : ''}</div>
     <div class="st-body">
       <div class="t">${esc(st.caption.fa || 'بدون متن')}</div>
-      <div class="s">${live ? `${icon('clock', 14)} ${esc(left(st.expires_at))}` : esc(ago(st.expires_at))} · ${num(st.items.length)} محصول${st.by ? ` · ${esc(st.by)}` : ''}</div>
+      <div class="s">${live ? `${icon('clock', 14)} ${esc(left(st.expires_at))}` : esc(ago(st.expires_at))} · ${num(st.items.length)} محصول${st.link?.url ? ' · دکمه' : ''}${st.by ? ` · ${esc(st.by)}` : ''}</div>
       <div class="st-acts">
         <button class="btn line s" type="button" data-st="edit">ویرایش</button>
         ${live ? '<button class="btn line s" type="button" data-st="end">برداشتن از سایت</button>'
@@ -1526,12 +1628,24 @@ async function viewStories(_, q, signal) {
       <div class="field" data-field="items"><label>محصول‌های توی استوری (اختیاری، تا ۶ تا)</label>
         <div class="st-items" id="stItems"></div>
         <button class="btn line s" type="button" id="stAddItems">${icon('plus', 18)}انتخاب محصول</button><div class="msg"></div></div>
+      <div id="stLinkBox"></div>
       <div class="bar st-bar" id="stBar" hidden><i></i></div>
       <button class="btn block" type="submit" id="stGo" disabled>انتشار برای ۲۴ ساعت</button>
     </form>
     <section class="sec"><div class="sec-head"><h2>الان توی سایت</h2><span class="tiny">${num(d.live.length)} استوری</span></div>
       ${d.live.length ? `<div class="st-grid">${d.live.map((x) => card(x, true)).join('')}</div>`
-    : '<p class="tiny">الان استوری‌ای توی سایت نیست؛ فقط لوک‌های کمپین نشون داده می‌شن.</p>'}</section>
+    : '<p class="tiny">الان استوری‌ای توی سایت نیست؛ فقط استوری‌های کمپین (پایین) نشون داده می‌شن.</p>'}</section>
+    <section class="sec"><div class="sec-head"><h2>استوری‌های کمپین</h2><span class="tiny">همیشه توی سایت، بعد از استوری‌های ۲۴ ساعته</span></div>
+      <p class="hint" style="margin-top:-4px">عکس‌های کالکشن. برای هرکدوم می‌تونی عنوان و متن رو عوض کنی، محصول‌هاش رو انتخاب کنی، دکمه بذاری یا مخفیش کنی.</p>
+      <div class="st-grid">${LOOK_DEFS.map((def) => {
+    const e = LE[def.id] || {};
+    const n = (Array.isArray(e.items) ? e.items : def.items).length;
+    return `<div class="st-card" data-lid="${esc(def.id)}">
+        <div class="st-ph"><img src="../assets/img/${esc(def.img)}-720.webp" alt="" loading="lazy">${e.hidden ? '<span class="pill hidden-p st-k">مخفی</span>' : ''}</div>
+        <div class="st-body"><div class="t">${esc(e.title?.fa || def.t[0])}</div>
+          <div class="s">${num(n)} محصول${e.link ? ' · دکمه' : ''}${Object.keys(e).length ? ' · تغییر داده شده' : ''}</div>
+          <div class="st-acts"><button class="btn line s" type="button" data-look-edit>ویرایش</button></div></div></div>`;
+  }).join('')}</div></section>
     <section class="sec"><div class="sec-head"><h2>آرشیو</h2><span class="tiny">بعد از ۲۴ ساعت این‌جا میان</span></div>
       ${d.archive.length ? `<div class="st-grid">${d.archive.map((x) => card(x, false)).join('')}</div>` : '<p class="tiny">هنوز خالیه.</p>'}</section>`;
 
@@ -1549,6 +1663,7 @@ async function viewStories(_, q, signal) {
     if (b) { items = items.filter((x) => x !== b.dataset.rmi); paintItems(); }
   });
   $('#stAddItems').addEventListener('click', () => pickProducts(items, 6, (ids) => { items = ids; paintItems(); }));
+  const link = wireLink($('#stLinkBox'), null);
   $('#stPick').addEventListener('click', () => $('#stFile').click());
   $('#stFile').addEventListener('change', async (e) => {
     const f = e.target.files[0];
@@ -1575,9 +1690,13 @@ async function viewStories(_, q, signal) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!file) return;
+    showErrors(form, null);
+    let lk;
+    try { lk = link.get(); } catch (err) { linkErr(form, err); return; }
     const fd = new FormData(form);
     fd.append('a', 'story_add');
     fd.append('items', JSON.stringify(items));
+    fd.append('link', JSON.stringify(lk));
     fd.append('media', file, file.name || 'story');
     if (cover) {
       fd.append('poster', cover.blob, 'cover.jpg');
@@ -1600,6 +1719,12 @@ async function viewStories(_, q, signal) {
   });
 
   main.addEventListener('click', async (e) => {
+    const le = e.target.closest('[data-look-edit]');
+    if (le) {
+      const def = LOOK_DEFS.find((x) => x.id === le.closest('[data-lid]').dataset.lid);
+      if (def) lookSheet(def, LE[def.id] || null);
+      return;
+    }
     const b = e.target.closest('[data-st]');
     if (!b) return;
     const id = Number(b.closest('[data-sid]').dataset.sid);
@@ -1628,6 +1753,7 @@ async function viewStories(_, q, signal) {
 
 function storySheet(st) {
   let items = [...st.items];
+  let link = null;
   openSheet(`<h2>ویرایش استوری</h2>
     <form id="stEd" novalidate>
       ${field('caption_fa', 'متن روی استوری', `<input class="input" name="fa" maxlength="140" value="${esc(st.caption.fa)}">`)}
@@ -1635,26 +1761,124 @@ function storySheet(st) {
         <div class="field"><label>ترکی</label><input class="input ltr-in" name="tr" maxlength="140" value="${esc(st.caption.tr)}"></div></div>
       <div class="field" data-field="items"><label>محصول‌ها</label><div class="st-items" id="edItems"></div>
         <button class="btn line s" type="button" id="edPick">${icon('plus', 18)}انتخاب محصول</button><div class="msg"></div></div>
+      <div id="edLinkBox"></div>
       <button class="btn block" type="submit">ذخیره</button>
     </form>`, async (sheet, close) => {
     if (!S.products) S.products = (await api('products')).products;
     const by = Object.fromEntries(S.products.map((p) => [p.id, p]));
     const paint = () => { sheet.querySelector('#edItems').innerHTML = items.map((id) => `<span class="chip on">${esc(by[id]?.name.fa || id)}</span>`).join(''); };
     paint();
-    sheet.querySelector('#edPick').addEventListener('click', () => {
-      const form = sheet.querySelector('#stEd');
-      const keep = { fa: form.fa.value, en: form.en.value, tr: form.tr.value };
-      pickProducts(items, 6, (ids) => { items = ids; storySheet({ ...st, items, caption: keep }); });
+    const form = sheet.querySelector('#stEd');
+    const keep = () => ({ fa: form.fa.value, en: form.en.value, tr: form.tr.value });
+    link = wireLink(sheet.querySelector('#edLinkBox'), st.link, (k, cur) => {
+      const caption = keep();
+      pickProducts(cur, 1, (ids) => storySheet({ ...st, items, caption,
+        link: { url: ids[0] ? `#/p/${ids[0]}` : k.url, label: { ...k.label } } }));
     });
-    sheet.querySelector('#stEd').addEventListener('submit', async (e) => {
+    sheet.querySelector('#edPick').addEventListener('click', () => {
+      const caption = keep();
+      const lk = link.state();
+      pickProducts(items, 6, (ids) => { items = ids; storySheet({ ...st, items, caption, link: lk }); });
+    });
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
+      showErrors(f, null);
+      let lk;
+      try { lk = link.get(); } catch (err) { linkErr(f, err); return; }
       try {
-        await api('story_edit', { id: st.id, caption: { fa: f.fa.value, en: f.en.value, tr: f.tr.value }, items });
+        await api('story_edit', { id: st.id, caption: { fa: f.fa.value, en: f.en.value, tr: f.tr.value }, items, link: lk });
         toast('ذخیره شد');
         close();
         route();
       } catch (err) { showErrors(f, err); }
+    });
+  });
+}
+
+/* The studio's outfit stories (js/looks-data.js). What is saved here is laid
+   over the story on the shop; «برگردوندن به حالت اول» drops it. Fields left as
+   they came are not saved, so a later change in the code still shows. */
+function lookSheet(def, edits, draft) {
+  const e = draft || edits || {};
+  const t = e.title || { fa: def.t[0], en: def.t[1], tr: def.t[2] };
+  const c = e.caption || { fa: '', en: '', tr: '' };
+  let items = Array.isArray(e.items) ? [...e.items] : [...def.items];
+  let link = null;
+  const input = (name, v, ltr = false, max = 60, ph = '') => `<input class="input${ltr ? ' ltr-in' : ''}" name="${name}" maxlength="${max}"
+    value="${esc(v || '')}"${ph ? ` placeholder="${esc(ph)}"` : ''}>`;
+  openSheet(`<h2>استوری کمپین</h2>
+    <form id="lkEd" novalidate>
+      <div class="lk-head"><img src="../assets/img/${esc(def.img)}-720.webp" alt="">
+        <p class="hint">این استوری همیشه توی سایته. هر چیزی این‌جا عوض کنی، همون لحظه توی سایت عوض می‌شه.</p></div>
+      ${field('title', 'عنوان', input('tfa', t.fa))}
+      <details class="more"><summary>عنوان به انگلیسی و ترکی${icon('chevD', 18)}</summary><div class="in"><div class="row2">
+        <div class="field"><label>انگلیسی</label>${input('ten', t.en, true)}</div>
+        <div class="field"><label>ترکی</label>${input('ttr', t.tr, true)}</div></div></div></details>
+      ${field('caption', 'متن زیر عنوان (اختیاری)', input('cfa', c.fa, false, 140, 'کالکشن جدید پاییز و زمستون.'))}
+      <details class="more"><summary>متن به انگلیسی و ترکی${icon('chevD', 18)}</summary><div class="in"><div class="row2">
+        <div class="field"><label>انگلیسی</label>${input('cen', c.en, true, 140)}</div>
+        <div class="field"><label>ترکی</label>${input('ctr', c.tr, true, 140)}</div></div></div></details>
+      <div class="field" data-field="items"><label>محصول‌های این استوری (تا ۸ تا)</label><div class="st-items" id="lkItems"></div>
+        <button class="btn line s" type="button" id="lkPick">${icon('plus', 18)}انتخاب محصول</button><div class="msg"></div></div>
+      <div id="lkLinkBox"></div>
+      <label class="switch" style="margin:6px 0 14px"><span>نمایش توی سایت<br><span class="tiny">خاموش باشه، این استوری توی سایت دیده نمی‌شه.</span></span>
+        <input type="checkbox" name="show" ${e.hidden ? '' : 'checked'}><span class="knob"></span></label>
+      <button class="btn block" type="submit">ذخیره</button>
+      ${edits ? '<button class="btn quiet block" type="button" id="lkReset" style="margin-top:8px">برگردوندن به حالت اول</button>' : ''}
+    </form>`, async (sheet, close) => {
+    if (!S.products) S.products = (await api('products')).products;
+    const by = Object.fromEntries(S.products.map((p) => [p.id, p]));
+    const form = sheet.querySelector('#lkEd');
+    const paint = () => {
+      sheet.querySelector('#lkItems').innerHTML = items.map((id) => `<span class="chip on">${esc(by[id]?.name.fa || id)}</span>`).join('')
+        || '<span class="tiny">هیچ محصولی</span>';
+    };
+    paint();
+    const now = () => ({
+      title: { fa: form.tfa.value, en: form.ten.value, tr: form.ttr.value },
+      caption: { fa: form.cfa.value, en: form.cen.value, tr: form.ctr.value },
+      items, link: link.state(), hidden: !form.show.checked,
+    });
+    link = wireLink(sheet.querySelector('#lkLinkBox'), e.link, (k, cur) => {
+      const d = now();
+      pickProducts(cur, 1, (ids) => lookSheet(def, edits, { ...d,
+        link: { url: ids[0] ? `#/p/${ids[0]}` : k.url, label: { ...k.label } } }));
+    });
+    sheet.querySelector('#lkPick').addEventListener('click', () => {
+      const d = now();
+      pickProducts(items, 8, (ids) => lookSheet(def, edits, { ...d, items: ids }));
+    });
+    sheet.querySelector('#lkReset')?.addEventListener('click', async () => {
+      if (!confirm('همه‌ی تغییرهای این استوری پاک بشه و مثل اول بشه؟')) return;
+      try {
+        await api('look_reset', { id: def.id });
+        toast('به حالت اول برگشت');
+        close();
+        route();
+      } catch { /* toast shown */ }
+    });
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      showErrors(form, null);
+      const look = {};
+      const ti = { fa: form.tfa.value.trim(), en: form.ten.value.trim(), tr: form.ttr.value.trim() };
+      if (!ti.fa) {
+        showErrors(form, new ApiError('invalid', 422, { field: 'title', message: 'عنوان فارسی رو بنویس.' }));
+        return;
+      }
+      if (ti.fa !== def.t[0] || ti.en !== def.t[1] || ti.tr !== def.t[2]) look.title = ti;
+      const ca = { fa: form.cfa.value.trim(), en: form.cen.value.trim(), tr: form.ctr.value.trim() };
+      if (ca.fa || ca.en || ca.tr) look.caption = ca;
+      if (items.join(',') !== def.items.join(',')) look.items = items;
+      try { const lk = link.get(); if (lk.url) look.link = lk; } catch (err) { linkErr(form, err); return; }
+      if (!form.show.checked) look.hidden = true;
+      try {
+        await api('look_save', { id: def.id, look });
+        toast(Object.keys(look).length ? 'ذخیره شد' : 'ذخیره شد؛ مثل حالت اوله');
+        close();
+        route();
+      } catch (err) { if (!showErrors(form, err)) toast(say(err), 'err'); }
     });
   });
 }

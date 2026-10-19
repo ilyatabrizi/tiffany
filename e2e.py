@@ -178,7 +178,12 @@ def run(shots_only=False):
         check('no middot anywhere near a numeral', '\u00b7' not in body)
         check('wordmark drawn', page.locator('.hero-mark').is_visible())
         check('campaign film present', page.locator('.hero video').count() == 1)
-        check('the film is running', page.evaluate(
+        # A Chromium built without H.264 (a bare CI box) cannot play the film
+        # at all; that is the browser, not the site, and it is said so.
+        h264 = page.evaluate("document.createElement('video').canPlayType('video/mp4; codecs=\"avc1.64002A\"') !== ''")
+        if not h264:
+            print('  --   this browser has no H.264: the film checks run in a browser that has it')
+        check('the film is running', not h264 or page.evaluate(
             "(()=>{const v=document.querySelector('.hero video');"
             "return !v.paused && v.currentTime > 0})()"))
         # the poster used to be the only positioned layer, so it painted over a
@@ -187,9 +192,14 @@ def run(shots_only=False):
             "(()=>{const e=document.elementFromPoint(195,300);return e&&e.tagName})()")
             == 'VIDEO')
         check('nothing floats over the film', page.locator('.hero-sound').count() == 0)
-        check('one collection: Autumn / Winter 2027', page.locator('.ccard').count() == 1)
+        check('eleven collections, one per photo set', page.locator('.ccard').count() == 11)
+        check('the film is the 1080p cut, ending before the logo', page.evaluate(
+            "(()=>{const v=document.querySelector('.hero video');"
+            "return v.currentSrc.endsWith('media/hero-3.mp4')})()") and (not h264 or page.evaluate(
+            "(()=>{const v=document.querySelector('.hero video');"
+            "return v.videoWidth === 1080 && v.duration < 19.5})()")))
         check('new-in rail filled', page.locator('.rail-p .card').count() >= 6)
-        check('seven looks', page.locator('.look-tile').count() == 7)
+        check('twenty-two outfit stories', page.locator('.look-tile').count() == 22)
         check('six tabs (Tickets since 2026-10-18)', page.locator('.tab').count() == 6)
         check('home tab lit', page.locator('.tab[data-tab="home"]').get_attribute('class').find('on') >= 0)
         cta = page.locator('.hero-cta .btn').first.bounding_box()
@@ -243,7 +253,7 @@ def run(shots_only=False):
         print('\nshop')
         goto(page, '#/shop')
         total = page.locator('.grid-p .card').count()
-        check('shop lists every piece', total == 28, f'got {total}')
+        check('shop lists every piece', total == 82, f'got {total}')
         CATS = ['همه', 'بافت', 'تیشرت', 'تاپ', 'هودی و سوشرت', 'وست', 'شومیز', 'شلوار',
                 'دامن', 'کاپشن', 'ژاکت', 'اکسسوری', 'کفش']
         chips = page.evaluate("[...document.querySelectorAll('.seg .chip')].map(e=>e.textContent.trim())")
@@ -265,13 +275,13 @@ def run(shots_only=False):
         page.locator('.seg .chip', has_text='شلوار').click()
         page.wait_for_timeout(500)
         trousers = page.locator('.grid-p .card').count()
-        check('trousers filter narrows', trousers == 5, f'{trousers} of {total}')
+        check('trousers filter narrows', trousers == 17, f'{trousers} of {total}')
         check('url carries the filter', 'c=trousers' in page.evaluate('location.hash'))
         page.locator('.seg .chip', has_text='کاپشن').click()
         page.wait_for_timeout(500)
         jackets = page.locator('.grid-p .card').count()
-        check('jackets filter', jackets == 6, f'{jackets}')
-        page.locator('.seg .chip', has_text='دامن').click()
+        check('jackets filter', jackets == 15, f'{jackets}')
+        page.locator('.seg .chip', has_text='تیشرت').click()
         page.wait_for_timeout(500)
         soon_txt = page.inner_text('.empty') if page.locator('.empty').count() else ''
         check('an unstocked category says coming soon', 'به‌زودی' in soon_txt, soon_txt[:60])
@@ -282,17 +292,20 @@ def run(shots_only=False):
         page.wait_for_timeout(600)
         check('filter sheet opens', page.locator('.sheet-root.open').count() == 1)
         shot(page, '06-shop-filter')
-        page.locator('.sheet [data-fset="col"][data-val="aw27"]').click()
+        check('the sheet offers all eleven collections',
+              page.locator('.sheet [data-fset="col"]').count() == 12)
+        page.locator('.sheet [data-fset="col"][data-val="aw27-denim-red"]').click()
         page.wait_for_timeout(600)
-        check('collection filter applied', 'col=aw27' in page.evaluate('location.hash'))
+        check('collection filter applied', 'col=aw27-denim-red' in page.evaluate('location.hash'))
         aw = page.locator('.grid-p .card').count()
-        check('collection trousers only', aw == 5, f'{aw}')
+        check('collection trousers only (the dark jeans)', aw == 1, f'{aw}')
 
         goto(page, '#/shop')
         check('filters cleared', page.locator('.grid-p .card').count() == total)
 
         # --------------------------------------------------------- product
         print('\nproduct')
+        goto(page, '#/shop?c=jacket')
         page.locator('.grid-p .card-open').first.click()
         page.wait_for_timeout(800)
         check('on a product page', page.evaluate('location.hash').startswith('#/p/'))
@@ -419,7 +432,7 @@ def run(shots_only=False):
         page.evaluate('document.querySelector(\'[data-act="look"]\').click()')
         page.wait_for_timeout(900)
         check('viewer opens', page.locator('#viewer.open').count() == 1)
-        check('seven slides', page.locator('.viewer-slide').count() == 7)
+        check('twenty-two slides', page.locator('.viewer-slide').count() == 22)
         # scrollLeft in an RTL track is signed differently per engine; the
         # viewer probes it rather than assuming. Prove paging still lands.
         page.evaluate("""(() => {
@@ -440,12 +453,12 @@ def run(shots_only=False):
 
         # ----------------------------------------------------- collections
         print('\ncollection')
-        goto(page, '#/c/aw27')
+        goto(page, '#/c/aw27-denim-red')
         check('collection page renders', page.locator('.display').count() == 1)
         check('collection has a way back', page.locator('.pdp-back').is_visible())
         check('tab bar stays on a collection',
               'hide' not in (page.locator('#tabbar').get_attribute('class') or ''))
-        check('its pieces are listed', page.locator('.grid-p .card').count() == 28)
+        check('its pieces are listed', page.locator('.grid-p .card').count() == 9)
         shot(page, '15-collection')
 
         # -------------------------------------------------------- wishlist
@@ -533,7 +546,7 @@ def run(shots_only=False):
             check(f'terms carry «{frag}»', frag in body)
         shot(page, '27-terms')
 
-        goto(page, '#/p/leather-jacket')
+        goto(page, '#/p/oiled-leather-jacket')
         page.evaluate("document.querySelectorAll('.spec details').forEach(d => d.open = true)")
         spec = page.inner_text('.spec')
         check('product page: free delivery in 3 working days', 'ارسال رایگانه' in spec and '۳ روز کاری' in spec)
@@ -567,7 +580,7 @@ def run(shots_only=False):
                    'قطعه —', 'تیراژ کمی دارد', 'ساخته شده در']
         found = []
         for r in ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/aw27', '#/p/leather-jacket', '#/about', '#/contact', '#/terms']:
+                  '#/c/aw27-denim-red', '#/p/oiled-leather-jacket', '#/about', '#/contact', '#/terms']:
             goto(page, r, 600)
             text = page.inner_text('body')
             found += [f'{r}: {t}' for t in REMOVED if t in text]
@@ -576,6 +589,25 @@ def run(shots_only=False):
         check('no «۱۷ قطعه» count', '۱۷ قطعه' not in page.inner_text('body'))
         goto(page, '#/c/nope')
         check('unknown collection handled', page.locator('.empty').count() == 1)
+        goto(page, '#/c/aw27')
+        check('an old link to the one-collection season opens the shop', page.evaluate('location.hash') == '#/shop'
+              and page.locator('.grid-p .card').count() == 82)
+        goto(page, '#/')
+        page.evaluate("document.querySelector('.ed [data-act]').click()")
+        page.wait_for_timeout(700)
+        check('the editorial «دیدن کالکشن» opens the shop', page.evaluate('location.hash') == '#/shop')
+        broken = page.evaluate("""(async () => {
+            const d = await import('./js/data.js');
+            const ids = new Set(d.COLLECTIONS.map(c => c.id));
+            return [...document.querySelectorAll('[data-act=collection]')].map(b => b.dataset.id).filter(i => !ids.has(i));
+        })()""")
+        goto(page, '#/')
+        broken += page.evaluate("""(async () => {
+            const d = await import('./js/data.js');
+            const ids = new Set(d.COLLECTIONS.map(c => c.id));
+            return [...document.querySelectorAll('[data-act=collection]')].map(b => b.dataset.id).filter(i => !ids.has(i));
+        })()""")
+        check('every collection button on home points at a real collection', not broken, str(broken))
         goto(page, '#/nowhere')
         check('unknown route falls back home', page.locator('.hero').count() == 1)
 
@@ -584,7 +616,7 @@ def run(shots_only=False):
         check('manifest served', bool(manifest) and manifest.get('short_name') == 'TIFFANY')
         sw = page.evaluate("fetch('sw.js').then(r => r.ok)")
         check('service worker served', sw is True)
-        og = page.evaluate("fetch('assets/img/og.jpg').then(r => r.ok)")
+        og = page.evaluate("fetch('assets/img/og-aw27.jpg').then(r => r.ok)")
         check('share card served', og is True)
 
         # A Latin comma or question mark sitting in a Persian sentence is the
@@ -593,8 +625,8 @@ def run(shots_only=False):
         BAD = re.compile(FA + r'\s*[,;?]|[,;?]\s*' + FA)
         leftovers = []
         for r in ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/aw27', '#/p/leather-jacket',
-                  '#/p/karl-lagerfeld-bag', '#/p/cotton-shirt']:
+                  '#/c/aw27-denim-red', '#/p/oiled-leather-jacket',
+                  '#/p/karl-lagerfeld-bag', '#/p/cotton-shirt', '#/p/wool-teddy-coat']:
             goto(page, r, 600)
             for m in BAD.finditer(page.inner_text('#app')):
                 leftovers.append(f'{r}: {m.group(0)!r}')
@@ -622,7 +654,7 @@ def run(shots_only=False):
 
         ARABIC = re.compile(r'[\u0600-\u06FF]')
         ROUTES = ['#/', '#/shop', '#/bag', '#/orders', '#/profile', '#/saved',
-                  '#/c/aw27', '#/p/leather-jacket', '#/p/karl-lagerfeld-bag',
+                  '#/c/aw27-denim-red', '#/c/aw27-olive-khaki', '#/p/oiled-leather-jacket', '#/p/karl-lagerfeld-bag',
                   '#/about', '#/contact', '#/terms', '#/shop?c=shoes']
 
         def switch_to(code):
@@ -651,7 +683,7 @@ def run(shots_only=False):
                 "[...document.querySelectorAll('.card-price')].map(e=>e.textContent).join('|')")
             check(f'{code}: prices in Latin digits', bool(re.search(r'\d' + re.escape(sep) + r'\d{3}', prices))
                   and word in prices and not ARABIC.search(prices), prices[:60])
-            check(f'{code}: the film still runs', page.evaluate(
+            check(f'{code}: the film still runs', not h264 or page.evaluate(
                 "(()=>{const v=document.querySelector('.hero video');"
                 "return v && !v.paused})()"))
             shot(page, f'23-home-{code}')
@@ -679,7 +711,7 @@ def run(shots_only=False):
             page.locator('.sheet [data-act="sheet-close"]').click()
             page.wait_for_timeout(400)
             if code == 'tr':
-                goto(page, '#/c/aw27')
+                goto(page, '#/c/aw27-denim-red')
                 ok_tr = page.evaluate("document.fonts.check('400 15px InterVar', 'ğşİ')")
                 check('tr: Turkish letters have a face', ok_tr)
                 shot(page, '24-collection-tr')
@@ -720,7 +752,10 @@ if __name__ == '__main__':
     run('--shots-only' in sys.argv)
     # A request the browser itself abandons (a reload for a language switch, a
     # clip the engine cannot decode) is not a failure of the site.
-    real = [n for n in noise if 'favicon' not in n.lower() and 'ERR_ABORTED' not in n]
+    # The eNamad seal is drawn by enamad.ir itself; a sandbox without the
+    # internet cannot fetch it, which says nothing about the shop.
+    real = [n for n in noise if 'favicon' not in n.lower() and 'ERR_ABORTED' not in n
+            and not ('trustseal.enamad.ir' in n and 'ERR_BLOCKED_BY_ORB' in n)]
     print(f'\n{ok} checks passed, {len(bad)} failed')
     if bad:
         print('\nFAILURES')

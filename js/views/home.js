@@ -30,8 +30,8 @@ const langSwitch = () => `
 const hero = () => `
 <section class="hero">
   <div class="hero-media full-colour">
-    <img src="media/hero-2-poster.webp" alt="" width="720" height="1280" fetchpriority="high">
-    <video src="media/hero-2.mp4" poster="media/hero-2-poster.webp" muted playsinline
+    <img src="media/hero-3-poster.webp" alt="" width="1080" height="1920" fetchpriority="high">
+    <video src="media/hero-3.mp4" poster="media/hero-3-poster.webp" muted playsinline
            loop preload="metadata" aria-label="${esc(L('فیلم کمپین', 'Campaign film', 'Kampanya filmi'))}"></video>
   </div>
   ${langSwitch()}
@@ -85,7 +85,7 @@ const editorial = () => `
         'Looks for autumn and winter: leather jackets and trench coats, overcoats and raincoats, wool knits, shirts and denim.',
         'Sonbahar ve kış kombinleri: deri montlar ve trençkotlar, paltolar ve yağmurluklar, yün trikolar, gömlekler ve kot.'))}</p>
       <div style="height:16px"></div>
-      <button class="btn btn-line btn-s" data-act="collection" data-id="aw27"
+      <button class="btn btn-line btn-s" data-act="nav" data-to="/shop"
               type="button">${esc(L('دیدن کالکشن', 'See the collection', 'Koleksiyonu gör'))}</button>
     </div>
   </article>

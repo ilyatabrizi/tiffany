@@ -638,6 +638,16 @@ html[data-theme='dark'] .hero::after {
 .vitem img { width: 34px; height: 42px; border-radius: 7px; object-fit: cover; }
 .vitem b { font-size: 12.5px; font-weight: 500; display: block; }
 .vitem span { font-size: 11px; opacity: .75; font-variant-numeric: tabular-nums; }
+/* A story's own button: white, so it reads as the one thing to tap. */
+.vlink {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+  height: 42px; padding: 0 18px; border-radius: 999px;
+  background: #fff; color: #111; font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: transform .3s var(--spring);
+}
+.vlink:active { transform: scale(.96); }
+.vlink-ico { flex: 0 0 auto; }
+html[dir='ltr'] .vlink .chev { transform: scaleX(-1); }
 .viewer-close {
   position: absolute; z-index: 4; top: calc(var(--st) + 12px); inset-inline-end: 12px;
   width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
@@ -1396,10 +1406,76 @@ a.bline { color: var(--ink); width: fit-content; }
 .comp [hidden], .viewer-sound[hidden], .tab-dot[hidden] { display: none !important; }
 
 /* ------------------------------------------------------------- account */
-/* Signed out, the profile's one big call: «ساخت اکانت». */
-.acct-cta { margin: 20px var(--gap) 0; display: grid; justify-items: center; gap: 12px; }
-.acct-big { height: 60px; font-size: 18px; font-weight: 700; gap: 10px; letter-spacing: -.01em; }
-.acct-in { font-size: 13.5px; }
+/* Signed out, the profile's account card: what an account is for, then the
+   two doors side by side, the same size, so neither is a footnote. */
+.acct-box {
+  margin: 18px var(--gap) 0; padding: 18px 16px 16px; border-radius: var(--r-l, 22px);
+  background: var(--paper-2); display: grid; gap: 14px;
+}
+.acct-box h2 { font-size: 18px; letter-spacing: -.01em; }
+.acct-perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.acct-perks li { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
+.acct-perks .ico { flex: 0 0 auto; margin-top: 2px; color: var(--ink); }
+.acct-two { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.acct-two .btn { height: 52px; font-size: 15px; font-weight: 600; }
+
+/* The account sheets: a header, the switch between the two doors, numbered
+   steps, fields with their icons, a password that can be shown. */
+.sheet.auth h2 { font-size: 21px; margin: 0; }
+.auth-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.auth-badge {
+  flex: 0 0 auto; width: 46px; height: 46px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--ink); color: var(--paper);
+}
+.auth-sub { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); }
+.auth-sub .ico { vertical-align: -2px; margin-inline: 4px 2px; color: var(--c-sky); }
+.auth-tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 16px;
+  border-radius: 999px; background: var(--paper-2);
+}
+.auth-tabs button {
+  height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--muted);
+  transition: background .25s var(--ease), color .25s var(--ease), box-shadow .25s var(--ease);
+}
+.auth-tabs button.on { background: var(--paper); color: var(--ink); box-shadow: var(--shadow-s); }
+/* In the dark the sheet is the darkest layer, so the chosen half is lifted
+   above the track instead of sinking below it. */
+html[data-theme='dark'] .auth-tabs button.on { background: #2A2A30; box-shadow: inset 0 0 0 1px var(--line); }
+@media (prefers-color-scheme: dark) {
+  html[data-theme='auto'] .auth-tabs button.on { background: #2A2A30; box-shadow: inset 0 0 0 1px var(--line); }
+}
+.auth-lede { font-size: 13.5px; line-height: 1.75; margin: 0 0 16px !important; color: var(--ink-2); }
+.auth-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.auth-steps li {
+  display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; color: var(--muted);
+  border-top: 3px solid var(--line);
+}
+.auth-steps li b {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; background: var(--paper-2); color: var(--muted);
+}
+.auth-steps li.on, .auth-steps li.done { color: var(--ink); border-top-color: var(--ink); }
+.auth-steps li.on b, .auth-steps li.done b { background: var(--ink); color: var(--paper); }
+.ibox { position: relative; display: flex; align-items: center; }
+.ibox .ibox-ico { position: absolute; inset-inline-start: 14px; color: var(--muted); pointer-events: none; }
+.field .ibox input { padding-inline-start: 44px; }
+.field .ibox input[type='password'], .field .ibox input[name='password'], .field .ibox input[name='current'] { padding-inline-end: 48px; }
+.pw-eye {
+  position: absolute; inset-inline-end: 6px; width: 38px; height: 38px; border-radius: 10px;
+  display: grid; place-items: center; color: var(--muted);
+}
+.pw-eye[aria-pressed='true'] { color: var(--ink); }
+.auth-forgot { display: flex; justify-content: flex-end; margin: -4px 0 12px; }
+.auth-forgot .link-more { font-size: 12.5px; }
+.auth-go { height: 52px; font-size: 15.5px; font-weight: 600; }
+.auth-go.busy { opacity: .6; }
+.auth-switch { margin: 14px 0 0; text-align: center; font-size: 13.5px; color: var(--muted); }
+.auth-switch .link-more { display: inline-flex; font-weight: 600; color: var(--ink); margin-inline-start: 4px; }
+.auth-privacy {
+  display: flex; gap: 8px; align-items: flex-start; margin: 18px 0 0; padding-top: 14px;
+  border-top: 1px solid var(--line-soft); font-size: 11.5px; line-height: 1.7; color: var(--muted);
+}
+.auth-privacy .ico { flex: 0 0 auto; margin-top: 2px; }
 .acct-card {
   margin: 18px var(--gap) 0; padding: 15px 16px; border-radius: var(--r-m);
   background: var(--paper-2); display: grid; gap: 12px;

@@ -1,5 +1,5 @@
 /* One collection: the frame it was shot in, the story, then the pieces. */
-import { COLLECTIONS, getCollection, inCollection, LOOKS } from '../data.js';
+import { COLLECTIONS, getCollection, getProduct, inCollection, LOOKS } from '../data.js';
 import { icon } from '../icons.js';
 import { esc, num } from '../util.js';
 import { shot, bigShot, productCard, collectionCard, empty } from '../ui.js';
@@ -12,7 +12,8 @@ export default {
 
   meta(parts) {
     const c = getCollection(parts[1]);
-    return { title: c ? c.name : L('کالکشن', 'Collection', 'Koleksiyon') };
+    return { title: c ? `${c.name} — ${L('کالکشن پاییز و زمستون ۲۰۲۷', 'Autumn / Winter 2027 collection', 'Sonbahar / Kış 2027 koleksiyonu')}`
+      : L('کالکشن', 'Collection', 'Koleksiyon') };
   },
 
   render(parts) {
@@ -22,8 +23,11 @@ export default {
         L('شاید کامل فروش رفته باشه.', 'It may have sold through.', 'Belki tamamen satılmıştır.'),
         `<button class="btn btn-line btn-s" data-act="nav" data-to="/shop" type="button">${esc(L('دیدن همه', 'Shop everything', 'Hepsini gör'))}</button>`);
     }
-    const items = inCollection(c.id);
     const looks = LOOKS.filter((l) => l.col === c.id);
+    /* Its own pieces, then every other piece worn in its stories (a shirt
+       shot in three sets belongs to one collection but shows in all three). */
+    const items = [...new Set([...inCollection(c.id), ...looks.flatMap((l) => l.items.map(getProduct))])]
+      .filter(Boolean);
     const others = COLLECTIONS.filter((x) => x.id !== c.id);
 
     return `

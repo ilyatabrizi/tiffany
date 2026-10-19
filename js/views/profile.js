@@ -202,15 +202,27 @@ export default {
       <div style="flex:1;min-width:0">
         <h1 class="serif" style="font-size:24px">${named ? esc(p.name) : esc(L('خوش اومدی', 'Welcome', 'Hoş geldin'))}</h1>
         <p class="tiny" style="margin:2px 0 0">${named && p.phone ? `<span dir="ltr">${esc(p.phone)}</span>`
-          : esc(L('یه اکانت بساز تا بتونی تیکت بفرستی و جواب تیم رو همین‌جا بگیری.',
-            'Create an account to send tickets and get the team’s answers right here.',
-            'Talep gönderip ekibin yanıtlarını burada almak için bir hesap oluştur.'))}</p>
+          : esc(L('هنوز وارد حسابت نشدی.', 'You are not signed in.', 'Henüz giriş yapmadın.'))}</p>
       </div>
     </header>
-    ${account.loaded ? `<div class="acct-cta">
-      <button class="btn btn-ink btn-block acct-big" data-act="signup" type="button">${icon('user', 21)}${esc(L('ساخت اکانت', 'Create an account', 'Hesap oluştur'))}</button>
-      <button class="link-more acct-in" data-act="signin" type="button">${esc(L('اکانت داری؟ وارد شو', 'Have an account? Sign in', 'Hesabın var mı? Giriş yap'))}</button>
-    </div>` : ''}`;
+    ${account.loaded ? `<section class="acct-box" aria-label="${esc(L('حساب تیفانی', 'TIFFANY account', 'TIFFANY hesabı'))}">
+      <h2>${esc(L('حساب تیفانی', 'Your TIFFANY account', 'TIFFANY hesabın'))}</h2>
+      <ul class="acct-perks">
+        <li>${icon('ticket', 17)}<span>${esc(L('تیکت پشتیبانی بفرست و جواب تیم رو همین‌جا بگیر؛ وقتی جواب بیاد پیامک می‌گیری.',
+          'Send support tickets and read the team’s answers here — with a text when one arrives.',
+          'Destek talebi gönder, ekibin yanıtını burada oku — yanıt gelince SMS alırsın.'))}</span></li>
+        <li>${icon('bag', 17)}<span>${esc(L('موقع خرید، اسم و شماره‌ت خودش پر می‌شه.',
+          'Checkout fills in your name and number.',
+          'Ödemede adın ve numaran kendiliğinden dolar.'))}</span></li>
+        <li>${icon('lock', 17)}<span>${esc(L('فقط با شماره موبایل و رمز خودت؛ شماره یه بار با پیامک تأیید می‌شه.',
+          'Just your mobile number and a password; the number is confirmed once by SMS.',
+          'Yalnızca cep numaran ve şifren; numara bir kez SMS ile doğrulanır.'))}</span></li>
+      </ul>
+      <div class="acct-two">
+        <button class="btn btn-ink" data-act="signin" type="button">${esc(L('ورود', 'Sign in', 'Giriş yap'))}</button>
+        <button class="btn btn-line" data-act="signup" type="button">${esc(L('ساخت حساب', 'Create account', 'Hesap oluştur'))}</button>
+      </div>
+    </section>` : ''}`;
     return `
     <div class="topgap"></div>
     ${headerHtml}

@@ -108,21 +108,21 @@ with sync_playwright() as pw:
 
     print('\nWhatsApp on every product page')
     ctx, page = phone()
-    page.goto(BASE + '/#/p/leather-jacket', wait_until='domcontentloaded')
+    page.goto(BASE + '/#/p/oiled-leather-jacket', wait_until='domcontentloaded')
     ready(page)
     page.wait_for_selector('.wa-ask')
     href = page.get_attribute('.wa-ask', 'href')
     text = urllib.parse.parse_qs(urllib.parse.urlparse(href).query).get('text', [''])[0]
     check('«استعلام محصول» is on the product page', 'استعلام محصول' in page.inner_text('.wa-ask'))
     check('…and opens WhatsApp with 0935 211 8977', href.startswith('https://wa.me/989352118977?text='), href[:60])
-    check('…with the piece and its link already written', 'کاپشن چرم' in text and '#/p/leather-jacket' in text, text)
+    check('…with the piece and its own page already written', 'کاپشن چرم' in text and text.rstrip().endswith('/p/oiled-leather-jacket'), text)
     check('…in a new tab', page.get_attribute('.wa-ask', 'target') == '_blank')
     ids = [p['id'] for p in requests.get(BASE + '/api/catalog.php').json()['products']]
     seen = 0
     for pid in ids:
         page.goto(f'{BASE}/#/p/{pid}')
         page.wait_for_selector('.wa-ask')
-        seen += pid in page.get_attribute('.wa-ask', 'href') or f'%23%2Fp%2F{pid}' in page.get_attribute('.wa-ask', 'href')
+        seen += urllib.parse.parse_qs(urllib.parse.urlparse(page.get_attribute('.wa-ask', 'href')).query)['text'][0].rstrip().endswith(f'/p/{pid}')
     check(f'…on every piece in the catalogue ({len(ids)}), each naming its own link', seen == len(ids), f'{seen}/{len(ids)}')
     shot(page, '01-whatsapp')
 
@@ -139,6 +139,17 @@ with sync_playwright() as pw:
 
     print('\nsigning up with the SMS code')
     page.click('[data-tk="signup"]')
+    page.wait_for_selector('.auth-tabs')
+    check('the sign-up sheet: two tabs, «ساخت حساب» chosen, step 1 of 2 lit',
+          page.inner_text('.auth-tabs [aria-selected="true"]').strip() == 'ساخت حساب'
+          and page.locator('.auth-steps li').count() == 2 and page.locator('.auth-steps li.on').count() == 1
+          and 'اطلاعات تو' in page.inner_text('.auth-steps li.on'))
+    check('…the password can be shown and hidden', page.locator('#ac-password').get_attribute('type') == 'password')
+    page.click('.pw-eye')
+    check('…(shown)', page.locator('#ac-password').get_attribute('type') == 'text')
+    page.click('.pw-eye')
+    check('…the sheet fits the phone', overflow(page) <= 0)
+    shot(page, '02b-signup-sheet')
     page.fill('#ac-name', 'مریم احمدی')
     page.fill('#ac-phone', '۰۹۱۲ ۱۱۱ ۲۲۳۳')
     page.fill('#ac-password', '123')
@@ -149,6 +160,8 @@ with sync_playwright() as pw:
     page.fill('#ac-password', 'tiffany-1')
     page.click('#acForm [type=submit]')
     page.wait_for_selector('#ac-code')
+    check('…then step 2 of 2: the code', 'کد پیامکی' in page.inner_text('.auth-steps li.on')
+          and page.locator('.auth-steps li.done').count() == 1)
     check('the code is texted to the number typed in Persian digits', code_for('09121112233') is not None)
     check('the code box fills from the SMS (one-time-code)', page.get_attribute('#ac-code', 'autocomplete') == 'one-time-code')
     check('resend waits a minute', page.locator('#acResend').is_disabled())
@@ -157,9 +170,9 @@ with sync_playwright() as pw:
     page.click('#acCode [type=submit]')
     page.wait_for_selector('[data-field="code"].err')
     check('a wrong code says so', 'درست نیست' in page.inner_text('[data-field="code"] .field-msg'))
-    page.fill('#ac-code', code_for('09121112233'))       # five digits submit by themselves
+    page.fill('#ac-code', code_for('09121112233'))       # six digits submit by themselves
     page.wait_for_selector('.tk-new', timeout=8000)
-    check('five digits sign up and sign in: the tickets list opens', page.locator('.tk-new').is_visible())
+    check('six digits sign up and sign in: the tickets list opens', page.locator('.tk-new').is_visible())
     st = page.evaluate("JSON.parse(localStorage.getItem('tiffany.v1'))")
     check('checkout will be filled with the account name and number', st['profile']['name'] == 'مریم احمدی'
           and st['profile']['phone'] == '09121112233', str(st['profile']))
@@ -270,12 +283,24 @@ with sync_playwright() as pw:
           and 'تأییدشده' in page.inner_text('.phead'))
     page.click('[data-act="account"]')
     page.click('#acOut')
-    page.wait_for_selector('.acct-big')
-    check('signed out: a big «ساخت اکانت» where «اضافه کن» was', page.inner_text('.acct-big').strip() == 'ساخت اکانت'
-          and page.locator('.phead .btn').count() == 0
-          and page.evaluate("parseFloat(getComputedStyle(document.querySelector('.acct-big')).fontSize)") >= 18)
+    page.wait_for_selector('.acct-box')
+    two = page.eval_on_selector_all('.acct-two .btn', 'e => e.map(x => x.textContent.trim())')
+    check('signed out: what an account is for, then «ورود» and «ساخت حساب» side by side',
+          two == ['ورود', 'ساخت حساب'] and page.locator('.acct-perks li').count() == 3
+          and page.locator('.phead .btn').count() == 0, str(two))
     shot(page, '09b-profile-signed-out')
-    page.click('.acct-cta [data-act="signin"]')
+    page.click('.acct-two [data-act="signup"]')
+    page.wait_for_selector('.auth-tabs')
+    check('«ساخت حساب» opens the sign-up tab', page.inner_text('.auth-tabs [aria-selected="true"]').strip() == 'ساخت حساب')
+    page.click('.auth-tabs [data-go="signin"]')
+    page.wait_for_selector('.auth-forgot')
+    check('…and the tab switches to sign in', page.inner_text('.auth-tabs [aria-selected="true"]').strip() == 'ورود'
+          and page.locator('#ac-name').count() == 0)
+    page.keyboard.press('Escape')
+    page.wait_for_timeout(500)
+    page.click('.acct-two [data-act="signin"]')
+    page.wait_for_selector('.auth-forgot')
+    shot(page, '09c-signin-sheet')
     page.click('[data-go="reset"]')
     page.fill('#ac-phone', '09121112233')
     page.click('#acForm [type=submit]')
@@ -300,13 +325,26 @@ with sync_playwright() as pw:
     pp.wait_for_selector('.item.pick')
     pp.click('.item.pick >> nth=0')
     pp.click('#pkok')
+    pp.select_option('#stLinkBox [data-lk-kind]', 'url')
+    pp.fill('#stLinkBox [data-lk-url]', 'instagram.com/tiffanyiran')
     pp.click('#stGo')
-    pp.wait_for_selector('.st-card', timeout=10000)
-    check('a photo story goes up, with time left', 'ساعت مونده' in pp.inner_text('.st-card'))
+    pp.wait_for_selector('#stLinkBox [data-field="link"].err')
+    check('a half-written address is caught in the panel, before anything is sent',
+          'https://' in pp.inner_text('#stLinkBox .msg') and not requests.get(BASE + '/api/catalog.php').json()['stories'])
+    pp.select_option('#stLinkBox [data-lk-kind]', 'c')
+    pp.select_option('#stLinkBox [data-lk-col]', 'aw27-denim-red')
+    pp.fill('#stLinkBox [data-lw="fa"]', 'دیدن کالکشن')
+    pp.click('#stGo')
+    pp.wait_for_selector('.st-card[data-sid]', timeout=10000)
+    check('a photo story goes up, with time left and its button', 'ساعت مونده' in pp.inner_text('.st-card[data-sid]')
+          and 'دکمه' in pp.inner_text('.st-card[data-sid]'))
+    live = requests.get(BASE + '/api/catalog.php').json()['stories']
+    check('…the button points at the collection, with its words', live[0]['link'] == {
+        'url': '#/c/aw27-denim-red', 'label': {'fa': 'دیدن کالکشن', 'en': '', 'tr': ''}}, str(live[0].get('link')))
     pp.set_input_files('#stFile', 'tests/story-vp8.webm')
     pp.wait_for_selector('#stGo:not([disabled])', timeout=10000)
     pp.click('#stGo')
-    pp.wait_for_function("document.querySelectorAll('.st-card').length === 2", timeout=10000)
+    pp.wait_for_function("document.querySelectorAll('.st-card[data-sid]').length === 2", timeout=10000)
     live = requests.get(BASE + '/api/catalog.php').json()['stories']
     check('a video story too, with a cover made in the browser', [s['kind'] for s in live] == ['video', 'image']
           and live[0]['poster'] and live[0]['w'] == 360 and live[0]['h'] == 640, str(live)[:200])
@@ -321,7 +359,7 @@ with sync_playwright() as pw:
     ready(page)
     page.locator('.looks-strip').scroll_into_view_if_needed()
     tiles = page.eval_on_selector_all('.look-tile', 'e => e.map(x => x.className)')
-    check('the shop: the two stories first, ringed, then the seven looks', len(tiles) == 9
+    check('the shop: the two stories first, ringed, then the twenty-two outfit stories', len(tiles) == 24
           and all('unseen' in t for t in tiles[:2]) and not any('live' in t for t in tiles[2:]), str(tiles))
     shot(page, '11-strip')
     page.click('.look-tile >> nth=1')
@@ -329,6 +367,8 @@ with sync_playwright() as pw:
     check('the photo story opens with its caption and the piece', 'رسید جدید پاییزه' in page.inner_text('.viewer-slide >> nth=1')
           and page.locator('.viewer-slide >> nth=1').locator('.vitem').count() == 1)
     shot(page, '12-viewer')
+    btn = page.locator('.viewer-slide >> nth=1').locator('.vlink')
+    check('…and its button, in the words the panel wrote', btn.count() == 1 and btn.inner_text().strip() == 'دیدن کالکشن')
     page.evaluate("document.querySelector('#viewerTrack').scrollLeft = 0")
     page.wait_for_function("(() => { const v = document.querySelector('.viewer-slide video'); return v && !v.paused })()", timeout=8000)
     check('the video story plays (muted) when it is on screen', page.evaluate("document.querySelector('.viewer-slide video').muted"))
@@ -337,13 +377,67 @@ with sync_playwright() as pw:
     page.click('.viewer-close')
     tiles = page.eval_on_selector_all('.look-tile', 'e => e.map(x => x.className)')
     check('watched stories lose their ring', not any('unseen' in t for t in tiles), str(tiles[:2]))
+    page.click('.look-tile >> nth=1')
+    page.wait_for_selector('.viewer.open')
+    page.locator('.viewer-slide >> nth=1').locator('.vlink').click()
+    page.wait_for_function("location.hash === '#/c/aw27-denim-red'", timeout=5000)
+    check('the button takes the visitor to the collection, the stories closed',
+          page.locator('#viewer.open').count() == 0 and page.locator('.grid-p .card').count() == 9)
+
+    print('\ncampaign stories, changed from the panel')
+    pp.on('dialog', lambda d: d.accept())
+    pp.click('[data-lid="r2"] [data-look-edit]')
+    pp.wait_for_selector('#lkEd')
+    check('the editor starts from the story as written', pp.input_value('#lkEd [name="tfa"]') != ''
+          and pp.locator('#lkItems .chip').count() >= 1)
+    pp.fill('#lkEd [name="tfa"]', 'ست جین روی جین')
+    pp.fill('#lkEd [name="cfa"]', 'همه‌ی تیکه‌ها توی شعبه‌ها هست.')
+    pp.select_option('#lkLinkBox [data-lk-kind]', 'url')
+    pp.fill('#lkLinkBox [data-lk-url]', 'https://instagram.com/tiffanyiran')
+    pp.fill('#lkLinkBox [data-lw="fa"]', 'اینستاگرام')
+    pp.click('#lkEd [type=submit]')
+    pp.wait_for_selector('#lkEd', state='detached')
+    pp.wait_for_selector('[data-lid="r2"]')
+    check('saved: the card says it was changed and has a button', 'تغییر داده شده' in pp.inner_text('[data-lid="r2"]')
+          and 'دکمه' in pp.inner_text('[data-lid="r2"]') and 'ست جین روی جین' in pp.inner_text('[data-lid="r2"]'))
+    pp.click('[data-lid="r3"] [data-look-edit]')
+    pp.wait_for_selector('#lkEd')
+    pp.click('#lkEd .switch')
+    pp.click('#lkEd [type=submit]')
+    pp.wait_for_selector('#lkEd', state='detached')
+    looks = requests.get(BASE + '/api/catalog.php').json()['looks']
+    check('the shop gets both changes', looks.get('r2', {}).get('title', {}).get('fa') == 'ست جین روی جین'
+          and looks.get('r2', {}).get('link', {}).get('url') == 'https://instagram.com/tiffanyiran'
+          and looks.get('r3') == {'hidden': True} and 'items' not in looks['r2'], str(looks)[:300])
+    page.goto(BASE + '/#/')
+    page.reload()
+    ready(page)
+    labels = page.eval_on_selector_all('.look-tile', 'e => e.map(x => x.getAttribute("aria-label"))')
+    check('the hidden one is off the strip (2 live + 21), the renamed one carries its new title',
+          len(labels) == 23 and 'ست جین روی جین' in labels, str(labels[:4]))
+    page.click(f'.look-tile >> nth={labels.index("ست جین روی جین")}')
+    page.wait_for_selector('.viewer.open')
+    a = page.locator('.viewer-slide >> nth=' + str(labels.index('ست جین روی جین'))).locator('a.vlink')
+    check('…and its button opens Instagram in a new tab, nothing passed along',
+          a.count() == 1 and a.get_attribute('href') == 'https://instagram.com/tiffanyiran'
+          and a.get_attribute('target') == '_blank' and a.get_attribute('rel') == 'noopener noreferrer'
+          and a.inner_text().strip() == 'اینستاگرام')
+    shot(page, '12b-campaign-link')
+    page.keyboard.press('Escape')
+    for lid in ('r2', 'r3'):
+        pp.click(f'[data-lid="{lid}"] [data-look-edit]')
+        pp.wait_for_selector('#lkReset')
+        pp.click('#lkReset')
+        pp.wait_for_selector('#lkEd', state='detached')
+        pp.wait_for_selector(f'[data-lid="{lid}"]')
+    check('«برگردوندن به حالت اول» undoes both', requests.get(BASE + '/api/catalog.php').json()['looks'] == {})
     sql('UPDATE stories SET expires_at = ?', int(time.time()) - 1)
     page.reload()
     ready(page)
     check('after 24 hours they are gone from the shop', page.locator('.look-tile.live').count() == 0
-          and page.locator('.look-tile').count() == 7)
+          and page.locator('.look-tile').count() == 22)
     pp.reload()
-    pp.wait_for_selector('.st-card')
+    pp.wait_for_selector('.st-card[data-sid]')
     check('…and wait in the panel archive, ready to go up again', 'دوباره، ۲۴ ساعت' in pp.inner_text('main'))
 
     print('\nnothing broke')

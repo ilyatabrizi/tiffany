@@ -2,6 +2,7 @@
  {
   "id": "r1",
   "img": "r-look-1",
+  "col": "aw27-pink-mohair",
   "title": [
    "کپ و رویه موهر",
    "Cap and mohair top",
@@ -18,6 +19,7 @@
  {
   "id": "r2",
   "img": "r-look-2",
+  "col": "aw27-pink-mohair",
   "title": [
    "بافت دکمه‌دار و جین سفید",
    "Buttoned knit, white jeans",
@@ -34,6 +36,7 @@
  {
   "id": "r3",
   "img": "r-look-3",
+  "col": "aw27-pink-fleece",
   "title": [
    "کت پوست مصنوعی و ست سوشرت",
    "Faux fur coat, sweatshirt set",
@@ -50,6 +53,7 @@
  {
   "id": "r4",
   "img": "r-look-4",
+  "col": "aw27-pink-fleece",
   "title": [
    "کت تدی و ست سوشرت",
    "Teddy coat, sweatshirt set",
@@ -66,6 +70,7 @@
  {
   "id": "r5",
   "img": "r-look-5",
+  "col": "aw27-black-leather",
   "title": [
    "کاپشن چرم روغنی",
    "Oiled leather jacket",
@@ -83,6 +88,7 @@
  {
   "id": "r6",
   "img": "r-look-6",
+  "col": "aw27-black-leather",
   "title": [
    "بارونی چرم و ست اویشو",
    "Leather trench, Avishu set",
@@ -102,6 +108,7 @@
  {
   "id": "r7",
   "img": "r-look-7",
+  "col": "aw27-denim-red",
   "title": [
    "کت و شلوار جین",
    "Denim on denim",
@@ -118,6 +125,7 @@
  {
   "id": "r8",
   "img": "r-look-8",
+  "col": "aw27-denim-red",
   "title": [
    "بارانی گاباردین",
    "Gabardine trench",
@@ -135,6 +143,7 @@
  {
   "id": "r9",
   "img": "r-look-9",
+  "col": "aw27-aubergine",
   "title": [
    "کت پوست کوتاه و جین کرم",
    "Short-pile fur jacket, cream jeans",
@@ -151,6 +160,7 @@
  {
   "id": "r10",
   "img": "r-look-10",
+  "col": "aw27-aubergine",
   "title": [
    "ست سوشرت بادمجانی",
    "Aubergine sweatshirt set",
@@ -167,6 +177,7 @@
  {
   "id": "r11",
   "img": "r-look-11",
+  "col": "aw27-brown-leather",
   "title": [
    "کاپشن چرم واترپروف",
    "Waterproof leather jacket",
@@ -183,6 +194,7 @@
  {
   "id": "r12",
   "img": "r-look-12",
+  "col": "aw27-brown-leather",
   "title": [
    "کت چرم و جین روشن",
    "Leather jacket, light jeans",
@@ -200,6 +212,7 @@
  {
   "id": "r13",
   "img": "r-look-13",
+  "col": "aw27-grey-pink",
   "title": [
    "وست و شلوار اویشو",
    "Avishu vest and trousers",
@@ -218,6 +231,7 @@
  {
   "id": "r14",
   "img": "r-look-14",
+  "col": "aw27-grey-pink",
   "title": [
    "بامبر و شلوار دورس",
    "Bomber, dors trousers",
@@ -237,6 +251,7 @@
  {
   "id": "r15",
   "img": "r-look-15",
+  "col": "aw27-grey-red",
   "title": [
    "کت پوست کوتاه کلاه‌دار",
    "Hooded short-pile fur jacket",
@@ -255,6 +270,7 @@
  {
   "id": "r16",
   "img": "r-look-16",
+  "col": "aw27-grey-red",
   "title": [
    "پالتو اورسایز و دورس",
    "Oversize coat, crew sweatshirt",
@@ -271,6 +287,7 @@
  {
   "id": "r17",
   "img": "r-look-17",
+  "col": "aw27-olive-brown",
   "title": [
    "بارانی شمعی و ست اویشو",
    "Waxed trench, Avishu set",
@@ -287,6 +304,7 @@
  {
   "id": "r18",
   "img": "r-look-18",
+  "col": "aw27-olive-brown",
   "title": [
    "پالتو اورسایز و بافت نازک",
    "Oversize coat, fine knit",
@@ -305,6 +323,7 @@
  {
   "id": "r19",
   "img": "r-look-19",
+  "col": "aw27-chocolate-wool",
   "title": [
    "رویه پشم خالص و یقه‌اسکی",
    "Pure wool cardigan, turtleneck",
@@ -322,6 +341,7 @@
  {
   "id": "r20",
   "img": "r-look-20",
+  "col": "aw27-chocolate-wool",
   "title": [
    "کت پشم خالص و دامن ترنچ",
    "Pure wool jacket, trench skirt",
@@ -338,6 +358,7 @@
  {
   "id": "r21",
   "img": "r-look-21",
+  "col": "aw27-olive-khaki",
   "title": [
    "وست شمعی و جین طوسی",
    "Waxed vest, grey jeans",
@@ -354,6 +375,7 @@
  {
   "id": "r22",
   "img": "r-look-22",
+  "col": "aw27-olive-khaki",
   "title": [
    "بارانی کوتاه و جین سبز",
    "Short trench, green jeans",

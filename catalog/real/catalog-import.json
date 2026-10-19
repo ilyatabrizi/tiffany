@@ -7,7 +7,7 @@
    "tr": "Beyaz deri çanta"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 12990000,
   "images": [
    "assets/img/r-white-leather-bag",
@@ -58,7 +58,7 @@
    "tr": "Pamuklu şapka, beyaz ve pastel pembe"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 3990000,
   "images": [
    "assets/img/r-pastel-cotton-cap",
@@ -115,7 +115,7 @@
    "tr": "Tiftik-pamuk üst"
   },
   "cat": "cardigan",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 15490000,
   "images": [
    "assets/img/r-mohair-top",
@@ -166,7 +166,7 @@
    "tr": "Tiftik-pamuk pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 9990000,
   "images": [
    "assets/img/r-mohair-trousers",
@@ -219,7 +219,7 @@
    "tr": "Düğmeli yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 14990000,
   "images": [
    "assets/img/r-buttoned-wool-knit",
@@ -276,7 +276,7 @@
    "tr": "Yün atkı"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 3490000,
   "images": [
    "assets/img/r-wool-scarf",
@@ -333,7 +333,7 @@
    "tr": "Beyaz kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-pink-mohair",
   "price": 10990000,
   "images": [
    "assets/img/r-white-jeans",
@@ -386,7 +386,7 @@
    "tr": "İpek saten bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-pink-fleece",
   "price": 2990000,
   "images": [
    "assets/img/r-silk-satin-bandana",
@@ -437,7 +437,7 @@
    "tr": "İçi polarlı sweatshirt"
   },
   "cat": "hoodie",
-  "col": "aw27",
+  "col": "aw27-pink-fleece",
   "price": 13990000,
   "images": [
    "assets/img/r-fleece-sweatshirt",
@@ -502,7 +502,7 @@
    "tr": "İçi polarlı pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-pink-fleece",
   "price": 12990000,
   "images": [
    "assets/img/r-fleece-trousers",
@@ -567,7 +567,7 @@
    "tr": "Suni kürk ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-pink-fleece",
   "price": 24990000,
   "images": [
    "assets/img/r-faux-fur-coat",
@@ -627,7 +627,7 @@
    "tr": "Yün teddy ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-pink-fleece",
   "price": 19490000,
   "images": [
    "assets/img/r-wool-teddy-coat",
@@ -705,7 +705,7 @@
    "tr": "Yağlı deri mont"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 23990000,
   "images": [
    "assets/img/r-oiled-leather-jacket",
@@ -758,7 +758,7 @@
    "tr": "Çizgili yün içlik triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 12490000,
   "images": [
    "assets/img/r-wool-underknit",
@@ -815,7 +815,7 @@
    "tr": "Pamuklu şapka"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 3490000,
   "images": [
    "assets/img/r-cotton-cap",
@@ -890,7 +890,7 @@
    "tr": "Çikolata rengi kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 8590000,
   "images": [
    "assets/img/r-chocolate-jeans",
@@ -943,7 +943,7 @@
    "tr": "Pamuklu fular"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 1990000,
   "images": [
    "assets/img/r-cotton-foulard",
@@ -1000,7 +1000,7 @@
    "tr": "Yağlı deri trençkot"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 34990000,
   "images": [
    "assets/img/r-oiled-leather-trench",
@@ -1053,7 +1053,7 @@
    "tr": "Beyaz yakalı içlik triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 7590000,
   "images": [
    "assets/img/r-white-collar-underknit"
@@ -1121,7 +1121,7 @@
    "tr": "Avishu üst"
   },
   "cat": "hoodie",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 16990000,
   "images": [
    "assets/img/r-avishu-top",
@@ -1181,7 +1181,7 @@
    "tr": "Avishu pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 15490000,
   "images": [
    "assets/img/r-avishu-trousers"
@@ -1240,7 +1240,7 @@
    "tr": "KARL LAGERFELD çanta"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 7290000,
   "images": [
    "assets/img/r-karl-lagerfeld-bag",
@@ -1291,7 +1291,7 @@
    "tr": "Pamuklu balıkçı yaka"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-black-leather",
   "price": 4490000,
   "images": [
    "assets/img/r-cotton-turtleneck",
@@ -1350,7 +1350,7 @@
    "tr": "Kot ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 15490000,
   "images": [
    "assets/img/r-denim-jacket",
@@ -1403,7 +1403,7 @@
    "tr": "Koyu kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 13490000,
   "images": [
    "assets/img/r-dark-jeans"
@@ -1457,7 +1457,7 @@
    "tr": "Dik yaka yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 8490000,
   "images": [
    "assets/img/r-high-neck-wool-knit"
@@ -1531,7 +1531,7 @@
    "tr": "Pamuklu patchwork bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 1990000,
   "images": [
    "assets/img/r-patchwork-bandana",
@@ -1582,7 +1582,7 @@
    "tr": "Pamuklu gabardin trençkot"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 34990000,
   "images": [
    "assets/img/r-gabardine-trench"
@@ -1634,7 +1634,7 @@
    "tr": "Fitilli triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 12490000,
   "images": [
    "assets/img/r-ribbed-knit",
@@ -1691,7 +1691,7 @@
    "tr": "Pamuklu gömlek"
   },
   "cat": "shirt",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 7990000,
   "images": [
    "assets/img/r-cotton-shirt",
@@ -1770,7 +1770,7 @@
    "tr": "Kırmızı pamuklu bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 1990000,
   "images": [
    "assets/img/r-red-bandana",
@@ -1821,7 +1821,7 @@
    "tr": "Bilekli spor ayakkabı"
   },
   "cat": "shoes",
-  "col": "aw27",
+  "col": "aw27-denim-red",
   "price": 12990000,
   "images": [
    "assets/img/r-waterproof-sneakers",
@@ -1888,7 +1888,7 @@
    "tr": "Kısa tüylü kürk ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 17890000,
   "images": [
    "assets/img/r-short-fur-jacket",
@@ -1947,7 +1947,7 @@
    "tr": "Saf yün içlik triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 12490000,
   "images": [
    "assets/img/r-pure-wool-underknit",
@@ -2010,7 +2010,7 @@
    "tr": "Düz gömlek"
   },
   "cat": "shirt",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 7990000,
   "images": [
    "assets/img/r-plain-shirt"
@@ -2081,7 +2081,7 @@
    "tr": "Yeşil ve krem kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 13490000,
   "images": [
    "assets/img/r-green-cream-jeans",
@@ -2142,7 +2142,7 @@
    "tr": "Çiçekli bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 2990000,
   "images": [
    "assets/img/r-print-bandana",
@@ -2193,7 +2193,7 @@
    "tr": "Çizgili yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 9490000,
   "images": [
    "assets/img/r-striped-wool-knit",
@@ -2250,7 +2250,7 @@
    "tr": "Sweatshirt"
   },
   "cat": "hoodie",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 22490000,
   "images": [
    "assets/img/r-collared-sweatshirt"
@@ -2315,7 +2315,7 @@
    "tr": "Sweatshirt takımı pantolonu"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-aubergine",
   "price": 15490000,
   "images": [
    "assets/img/r-sweat-trousers"
@@ -2380,7 +2380,7 @@
    "tr": "Kahverengi bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 1990000,
   "images": [
    "assets/img/r-brown-paisley-bandana"
@@ -2430,7 +2430,7 @@
    "tr": "Su geçirmez deri mont"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 27990000,
   "images": [
    "assets/img/r-waterproof-leather-bomber",
@@ -2483,7 +2483,7 @@
    "tr": "İki renkli yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 12990000,
   "images": [
    "assets/img/r-two-tone-wool-knit"
@@ -2545,7 +2545,7 @@
    "tr": "Beyzbol şapkası"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 3490000,
   "images": [
    "assets/img/r-baseball-cap",
@@ -2620,7 +2620,7 @@
    "tr": "Su geçirmez deri ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 23990000,
   "images": [
    "assets/img/r-waterproof-leather-jacket",
@@ -2673,7 +2673,7 @@
    "tr": "İki renkli çizgili yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 8990000,
   "images": [
    "assets/img/r-two-tone-stripe-knit"
@@ -2729,7 +2729,7 @@
    "tr": "Açık kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-brown-leather",
   "price": 7090000,
   "images": [
    "assets/img/r-light-ripped-jeans",
@@ -2784,7 +2784,7 @@
    "tr": "Logolu şapka"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 3490000,
   "images": [
    "assets/img/r-logo-cap"
@@ -2840,7 +2840,7 @@
    "tr": "Desenli saf yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 13990000,
   "images": [
    "assets/img/r-patterned-wool-knit",
@@ -2903,7 +2903,7 @@
    "tr": "Avishu yelek"
   },
   "cat": "vest",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 15990000,
   "images": [
    "assets/img/r-avishu-vest",
@@ -2957,7 +2957,7 @@
    "tr": "Koyu gri Avishu pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 15490000,
   "images": [
    "assets/img/r-avishu-trousers-grey",
@@ -3011,7 +3011,7 @@
    "tr": "Siyah-beyaz bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 1990000,
   "images": [
    "assets/img/r-black-white-bandana"
@@ -3061,7 +3061,7 @@
    "tr": "Pembe çizgili yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 9490000,
   "images": [
    "assets/img/r-striped-pink-knit",
@@ -3118,7 +3118,7 @@
    "tr": "Bomber ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 15490000,
   "images": [
    "assets/img/r-bomber-jacket"
@@ -3176,7 +3176,7 @@
    "tr": "İçi polarlı dors pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-grey-pink",
   "price": 12990000,
   "images": [
    "assets/img/r-dors-trousers",
@@ -3247,7 +3247,7 @@
    "tr": "Pamuklu gömlek"
   },
   "cat": "shirt",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 7990000,
   "images": [
    "assets/img/r-cotton-shirt-white"
@@ -3324,11 +3324,10 @@
    "tr": "Beyaz yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 11490000,
   "images": [
-   "assets/img/r-white-wool-knit",
-   "assets/img/r-white-wool-knit-2"
+   "assets/img/r-white-wool-knit"
   ],
   "sizes": [
    "OS"
@@ -3375,7 +3374,7 @@
    "tr": "Bol kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 8990000,
   "images": [
    "assets/img/r-light-wide-jeans"
@@ -3429,7 +3428,7 @@
    "tr": "Kapüşonlu kısa tüylü kürk ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 21090000,
   "images": [
    "assets/img/r-hooded-fur-jacket",
@@ -3486,7 +3485,7 @@
    "tr": "Pamuklu pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 12990000,
   "images": [
    "assets/img/r-cotton-trousers"
@@ -3538,7 +3537,7 @@
    "tr": "Bisiklet yaka sweatshirt (dors)"
   },
   "cat": "hoodie",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 13990000,
   "images": [
    "assets/img/r-dors-sweatshirt"
@@ -3602,7 +3601,7 @@
    "tr": "Oversize palto"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-grey-red",
   "price": 41990000,
   "images": [
    "assets/img/r-oversize-coat",
@@ -3661,7 +3660,7 @@
    "tr": "MARC JACOBS çanta"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 12990000,
   "images": [
    "assets/img/r-marc-jacobs-bag",
@@ -3712,7 +3711,7 @@
    "tr": "Mumlu trençkot"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 34990000,
   "images": [
    "assets/img/r-waxed-trench",
@@ -3765,7 +3764,7 @@
    "tr": "Avishu sweatshirt"
   },
   "cat": "hoodie",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 16990000,
   "images": [
    "assets/img/r-avishu-sweatshirt"
@@ -3818,7 +3817,7 @@
    "tr": "Zeytin yeşili Avishu pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 15490000,
   "images": [
    "assets/img/r-avishu-trousers-olive"
@@ -3871,7 +3870,7 @@
    "tr": "Çiçekli pamuklu bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 1990000,
   "images": [
    "assets/img/r-floral-bandana"
@@ -3921,7 +3920,7 @@
    "tr": "İnce yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 9490000,
   "images": [
    "assets/img/r-fine-wool-knit",
@@ -3978,7 +3977,7 @@
    "tr": "Su geçirmez mumlu pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 12990000,
   "images": [
    "assets/img/r-waxed-trousers"
@@ -4037,7 +4036,7 @@
    "tr": "Zara çanta"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-olive-brown",
   "price": 12990000,
   "images": [
    "assets/img/r-zara-bag",
@@ -4088,7 +4087,7 @@
    "tr": "Gabardin pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 15490000,
   "images": [
    "assets/img/r-gabardine-trousers"
@@ -4147,7 +4146,7 @@
    "tr": "Saf yün hırka"
   },
   "cat": "cardigan",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 27990000,
   "images": [
    "assets/img/r-pure-wool-cardigan",
@@ -4200,7 +4199,7 @@
    "tr": "Balıkçı yaka"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 9690000,
   "images": [
    "assets/img/r-turtleneck"
@@ -4256,7 +4255,7 @@
    "tr": "Saten bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 2990000,
   "images": [
    "assets/img/r-satin-paisley-bandana",
@@ -4307,7 +4306,7 @@
    "tr": "Saf yün ceket"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 18990000,
   "images": [
    "assets/img/r-pure-wool-jacket",
@@ -4358,7 +4357,7 @@
    "tr": "Trençkot kumaşı etek"
   },
   "cat": "skirts",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 15990000,
   "images": [
    "assets/img/r-trench-skirt"
@@ -4416,7 +4415,7 @@
    "tr": "Bandana"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-chocolate-wool",
   "price": 1690000,
   "images": [
    "assets/img/r-four-colour-bandana"
@@ -4484,7 +4483,7 @@
    "tr": "Kanvas şapka"
   },
   "cat": "accessories",
-  "col": "aw27",
+  "col": "aw27-olive-khaki",
   "price": 3490000,
   "images": [
    "assets/img/r-canvas-cap",
@@ -4541,7 +4540,7 @@
    "tr": "Krem yün triko"
   },
   "cat": "knit",
-  "col": "aw27",
+  "col": "aw27-olive-khaki",
   "price": 12490000,
   "images": [
    "assets/img/r-cream-wool-knit",
@@ -4592,7 +4591,7 @@
    "tr": "Mumlu yelek"
   },
   "cat": "vest",
-  "col": "aw27",
+  "col": "aw27-olive-khaki",
   "price": 22990000,
   "images": [
    "assets/img/r-waxed-vest",
@@ -4651,7 +4650,7 @@
    "tr": "Gri kot pantolon"
   },
   "cat": "trousers",
-  "col": "aw27",
+  "col": "aw27-olive-khaki",
   "price": 10990000,
   "images": [
    "assets/img/r-grey-jeans"
@@ -4705,7 +4704,7 @@
    "tr": "Kısa yakalı trençkot"
   },
   "cat": "jacket",
-  "col": "aw27",
+  "col": "aw27-olive-khaki",
   "price": 25990000,
   "images": [
    "assets/img/r-short-trench"

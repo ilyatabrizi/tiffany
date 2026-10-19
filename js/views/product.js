@@ -38,7 +38,7 @@ const isOut = (p, s) => p.soldout.includes(s);
 /** The studio's WhatsApp chat, opened with a first line naming the piece and
     its link, so the team knows at once what is being asked about. */
 const waAsk = (p) => {
-  const url = `${location.origin}${location.pathname}#/p/${p.id}`;
+  const url = `${location.origin}/p/${p.id}`;      // the piece's own page (seo.php), which opens it here
   const text = L(`سلام، برای استعلام این محصول پیام می‌دم:\n${p.name}\n${url}`,
     `Hello, I would like to ask about this piece:\n${p.name}\n${url}`,
     `Merhaba, bu ürün hakkında bilgi almak istiyorum:\n${p.name}\n${url}`);

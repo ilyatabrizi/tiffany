@@ -14,11 +14,14 @@ import { L } from './i18n.js';
 const base = (name) => (name.includes('/') ? name : `assets/img/${name}`);
 /** One file of a frame: imgSrc('p-rib-tee', 480) or imgSrc('uploads/p/…', 480). */
 export const imgSrc = (name, w) => `${base(name)}-${w}.webp`;
-export const shot = (name, sizes, widths = [480, 960]) =>
+/* The studio's own frames from the full-size originals (r-…) are also made
+   at 1440, for product pages and stories on dense phone screens. */
+const LARGE = /(?:^|assets\/img\/)r-[a-z0-9-]+$/;
+export const shot = (name, sizes, widths = LARGE.test(name) ? [480, 960, 1440] : [480, 960]) =>
   `srcset="${widths.map((w) => `${base(name)}-${w}.webp ${w}w`).join(', ')}"
    src="${base(name)}-${widths[0]}.webp" sizes="${sizes}"`;
 
-export const bigShot = (name, sizes) => shot(name, sizes, [720, 1080]);
+export const bigShot = (name, sizes) => shot(name, sizes, LARGE.test(name) ? [720, 1080, 1440] : [720, 1080]);
 
 /* ----------------------------------------------------------------- cards */
 /* The wish button is a sibling of the card button, never a child: nested

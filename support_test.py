@@ -472,6 +472,91 @@ check('a story past its 24 hours is gone from the shop by itself', s2['id'] not 
 code, r = adm('story_edit', id=s1['id'], caption={'fa': 'تخفیف پاییزه', 'en': 'Autumn offer', 'tr': ''}, items=['alphabet-tee'])
 check('caption and pieces can be changed', r['story']['caption'] == {'fa': 'تخفیف پاییزه', 'en': 'Autumn offer', 'tr': ''}
       and r['story']['items'] == ['alphabet-tee'], str(r))
+check('a story starts with no link', s1.get('link') == [] and r['story']['link'] == [], str(r['story'].get('link')))
+
+print('\nstory links (2026-10-20)')
+check('the database is on version 7, stories carry a link',
+      db('PRAGMA user_version')[0][0] == 7 and 'link' in {c[1] for c in db('PRAGMA table_info(stories)')})
+code, r = ceo.multi('story_add', {'items': '[]', 'link': json.dumps({'url': f'#/p/{real[0]}', 'label': {'fa': 'ببینش'}})},
+                    [('media', ('l.jpg', b.getvalue(), 'image/jpeg'))])
+s3 = r.get('story', {})
+check('a new story can point at a piece', code == 200 and s3['link'] == {'url': f'#/p/{real[0]}', 'label': {'fa': 'ببینش', 'en': '', 'tr': ''}}, str(r)[:300])
+cat = requests.get(f'{BASE}/api/catalog.php').json()
+check('…and the shop gets the link', next(s for s in cat['stories'] if s['id'] == s3['id'])['link']['url'] == f'#/p/{real[0]}')
+for wrong in ['javascript:alert(1)', 'data:text/html,hi', 'tiffanybv.com', '#/p/../admin', '#/admin', 'https://a.b/"onload="x',
+            'ftp://files.example.com/a', 'https://' + 'a' * 300 + '.com']:
+    code, r = adm('story_edit', id=s3['id'], caption={'fa': ''}, items=[], link={'url': wrong, 'label': {'fa': 'x'}})
+    check(f'a bad link is refused: {wrong[:30]}', code == 422 and r.get('field') == 'link', str(r)[:200])
+check('…and the story keeps its old link', adm('stories')[1]['live'][0]['link']['url'] == f'#/p/{real[0]}')
+code, r = adm('story_edit', id=s3['id'], caption={'fa': ''}, items=[],
+              link={'url': 'https://instagram.com/tiffanyiran', 'label': {'fa': 'اینستاگرام', 'en': 'Instagram'}})
+check('an outside address with its words', code == 200 and r['story']['link']['url'] == 'https://instagram.com/tiffanyiran'
+      and r['story']['link']['label']['en'] == 'Instagram', str(r)[:300])
+for good in ['#/c/aw27-denim-red', '#/shop', '#/shop?cat=knit', 'http://example.com/a?b=1&c=2']:
+    code, r = adm('story_edit', id=s3['id'], caption={'fa': ''}, items=[], link={'url': good})
+    check(f'a good link is kept: {good}', code == 200 and r['story']['link']['url'] == good, str(r)[:200])
+code, r = adm('story_edit', id=s3['id'], caption={'fa': ''}, items=[], link={'url': ''})
+check('an empty address takes the button off', code == 200 and r['story']['link'] == [])
+db('UPDATE stories SET link = ? WHERE id = ?', '{"url":"javascript:alert(1)","label":{"fa":"x"}}', s3['id'])
+cat = requests.get(f'{BASE}/api/catalog.php').json()
+check('a bad link written straight into the database is never served',
+      next(s for s in cat['stories'] if s['id'] == s3['id'])['link'] == [])
+adm('story_delete', id=s3['id'])
+
+print('\ncampaign stories (the studio\'s outfit stories)')
+check('the panel and the shop start with no changes', adm('stories')[1]['looks'] == {} and cat['looks'] == {})
+code, r = adm('look_save', id='r3', look={'title': {'fa': 'ست جین'}, 'caption': {'fa': 'جین روی جین', 'en': 'Denim on denim'},
+                                         'items': [real[2], 'nope', real[1], real[2]], 'link': {'url': '#/c/aw27-denim-red', 'label': {'fa': 'کالکشن'}}})
+check('a campaign story: new words, pieces (unknown and twice dropped) and a link',
+      code == 200 and r['looks']['r3']['title']['fa'] == 'ست جین' and r['looks']['r3']['items'] == [real[2], real[1]]
+      and r['looks']['r3']['link']['url'] == '#/c/aw27-denim-red' and 'hidden' not in r['looks']['r3'], str(r)[:400])
+cat = requests.get(f'{BASE}/api/catalog.php').json()
+check('…the shop gets it', cat['looks'].get('r3', {}).get('caption', {}).get('en') == 'Denim on denim', str(cat.get('looks'))[:300])
+code, r = adm('look_save', id='r5', look={'hidden': True})
+check('a campaign story can be hidden', code == 200 and r['looks']['r5'] == {'hidden': True} and 'r3' in r['looks'])
+check('nine pieces on one: refused', adm('look_save', id='r6', look={'items': real[:9]})[0] == 422)
+check('a bad link: refused', adm('look_save', id='r6', look={'link': {'url': 'javascript:x'}})[1].get('field') == 'link')
+check('a strange story id: refused', adm('look_save', id='../x', look={'hidden': True})[0] == 400)
+code, r = adm('look_save', id='r5', look={})
+check('saving no changes drops the entry', code == 200 and 'r5' not in r['looks'] and 'r3' in r['looks'])
+code, r = adm('look_reset', id='r3')
+check('back to the original', code == 200 and r['looks'] == {})
+check('campaign stories need the panel', Panel()('look_save', id='r3', look={'hidden': True})[0] == 401)
+check('the panel log names the change', any(l['action'] in ('look_save', 'look_reset') for l in ceo('log')[1]['log']))
+db("UPDATE settings SET v = ? WHERE k = 'looks_edit'", '{"r1":{"hidden":true},"../x":{"hidden":true},"r2":"nope"}')
+cat = requests.get(f'{BASE}/api/catalog.php').json()
+check('a broken entry in the database is dropped, not served', cat['looks'] == {'r1': {'hidden': True}}, str(cat['looks']))
+adm('look_reset', id='r1')
+
+print('\nversion 7: the live pieces move into the eleven collections, nothing else changes')
+tpl, tcat, tsort, tcreated = db('SELECT data, cat, sort, created_at FROM products LIMIT 1')[0]
+def put(pid, **kw):
+    d = {**json.loads(tpl), 'id': pid, **kw}
+    db('INSERT OR REPLACE INTO products (id, data, cat, price, visible, sort, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)',
+       pid, json.dumps(d, ensure_ascii=False), tcat, d['price'], 1, tsort, tcreated, 1700000000)
+put('mohair-top', col='aw27', price=4321000, stock={'OS': 2}, images=['assets/img/r-mohair-top', 'uploads/p/own-photo'])
+put('white-wool-knit', col='aw27', images=['assets/img/r-white-wool-knit', 'assets/img/r-white-wool-knit-2'])
+put('karl-lagerfeld-bag', col='aw27', images=['assets/img/r-karl-lagerfeld-bag', 'assets/img/r-karl-lagerfeld-bag-2'])
+put('panel-own-piece', col='aw27')
+put('demo-piece', col='noir')
+db('PRAGMA user_version = 6')
+by = {p['id']: p for p in requests.get(f'{BASE}/api/catalog.php').json()['products']}
+check('the migration ran once (version 7)', db('PRAGMA user_version')[0][0] == 7)
+check('a piece moves to its set; a price, stock and photo the panel changed stay',
+      by['mohair-top']['col'] == 'aw27-pink-mohair' and by['mohair-top']['price'] == 4321000
+      and by['mohair-top']['images'] == ['assets/img/r-mohair-top', 'uploads/p/own-photo']
+      and json.loads(db("SELECT data FROM products WHERE id = 'mohair-top'")[0][0])['stock'] == {'OS': 2}, str(by['mohair-top'])[:300])
+check('the knit loses only its second crop (the one that showed the bag)',
+      by['white-wool-knit']['images'] == ['assets/img/r-white-wool-knit'] and by['white-wool-knit']['col'] == 'aw27-grey-red')
+check('other photos are left alone', by['karl-lagerfeld-bag']['images'] == ['assets/img/r-karl-lagerfeld-bag', 'assets/img/r-karl-lagerfeld-bag-2']
+      and by['karl-lagerfeld-bag']['col'] == 'aw27-black-leather')
+check('a piece the panel added leaves «aw27» for no collection; another collection is not touched',
+      by['panel-own-piece']['col'] == '' and by['demo-piece']['col'] == 'noir')
+check('…and only the changed pieces are marked as changed', db("SELECT updated_at FROM products WHERE id = 'demo-piece'")[0][0] == 1700000000
+      and db("SELECT updated_at FROM products WHERE id = 'mohair-top'")[0][0] > 1700000000)
+for pid in ['mohair-top', 'white-wool-knit', 'karl-lagerfeld-bag', 'panel-own-piece', 'demo-piece']:
+    db('DELETE FROM products WHERE id = ?', pid)
+
 files = [s2['media'], s2['poster'] + '-540.webp', s2['poster'] + '-1080.webp']
 code, r = adm('story_delete', id=s2['id'])
 check('deleting a story removes its files', code == 200 and not any(os.path.exists(f) for f in files))

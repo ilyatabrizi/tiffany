@@ -5,7 +5,7 @@
    connection still opens the shop with yesterday's catalogue rather than an
    empty one. Nothing here is cached by the service worker — prices must
    never be stale. */
-import { setCatalogue, setStories } from './data.js';
+import { setCatalogue, setStories, setLookEdits } from './data.js';
 import { consented } from './consent.js';
 import { deviceLine, sharpenBrand } from './device.js';
 
@@ -41,6 +41,7 @@ export async function loadCatalogue() {
   if (!data || !Array.isArray(data.products)) return live;
   setCatalogue(data.products);
   setStories(data.stories, live.skew);
+  setLookEdits(data.looks);
   live.loaded = true;
   live.storeOpen = Boolean(data.settings?.store_open) && live.fresh;
   live.deliveryDays = Number(data.settings?.delivery_days) || 3;

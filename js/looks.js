@@ -54,9 +54,19 @@ const slide = (l) => {
             <span><b>${esc(p.name)}</b><span>${toman(p.price)}</span></span>
           </button>`).join('')}
       </div>` : ''}
+      ${l.link ? linkBtn(l.link) : ''}
     </div>
   </section>`;
 };
+
+/** The story's own button: a page of the shop opens in place, an address
+    outside it in a new tab. */
+function linkBtn(k) {
+  const words = esc(k.label || L('ببین', 'Open', 'Aç'));
+  return k.url.startsWith('#/')
+    ? `<button class="vlink" data-vlink="${esc(k.url.slice(1))}" type="button">${words}${icon('chevL', 15, 'vlink-ico chev')}</button>`
+    : `<a class="vlink" href="${esc(k.url)}" target="_blank" rel="noopener noreferrer">${words}${icon('out', 15, 'vlink-ico')}</a>`;
+}
 
 export function openLooks(index = 0) {
   const v = $('#viewer');
@@ -166,4 +176,10 @@ export const isLooksOpen = () => $('#viewer')?.classList.contains('open');
 export function looksItemTo(id) {
   closeLooks();
   go('/p/' + id);
+}
+
+/** A story's button that points inside the shop. */
+export function looksLinkTo(path) {
+  closeLooks();
+  go(path);
 }

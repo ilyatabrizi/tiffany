@@ -301,7 +301,66 @@ stories, and the p2-5 film in the hero.
 - **Hero:** `media/hero-2.mp4` is p2-5 at 720×1280, silent, H.264, 2.2MB, cut at
   20.8 s so the black logo card at the end does not flash behind the wordmark on
   every loop. Poster `media/hero-2-poster.webp`. The studio's file stays local
-  (`catalog/real/src/`, in `.gitignore`).
+  (`catalog/real/src/`, in `.gitignore`). *(Replaced on 2026-10-20 by `hero-3`, below.)*
+
+## Sharper photos, the full film, eleven collections, story buttons, accounts, SEO — 2026-10-20
+
+- **Photos.** Every crop takes at least 40% of a portrait original's width (27% of the
+  landscape one), about 1,870 of its pixels, so no file is ever an enlargement; the tight
+  crops were the soft ones. Each frame is now also made at 1440 wide (pieces 1440×1800,
+  stories 1440×2560, collection covers and the editorial too), lightly sharpened after the
+  reduction (`UnsharpMask 0.8 / 55 / 2`, WebP quality 84). `js/ui.js` offers 480/960/1440
+  for every `r-…` frame. 519 files, all from the full-resolution `DSC*.JPG` originals.
+- **Film.** `media/hero-3.mp4` is the studio's p2-5 at 1080×1920, H.264 High, ~3 Mbit/s,
+  silent, 19.47 s: cut on the last frame before the logo starts to fade in (19.53 s), so the
+  loop never shows it. Poster `media/hero-3-poster.webp` (1080×1920). `hero-2` is gone.
+- **Collections.** One per photo set: Pink Mohair, Pink Fleece, Black Leather, Denim & Red,
+  Aubergine, Brown Leather, Grey & Pink, Grey & Red, Olive & Brown, Chocolate Wool, Olive &
+  Khaki (`js/data.js` COLLECTIONS, `api/lib/boot.php` TF_COLS, the panel's COLS,
+  `api/lib/site.php`). A piece belongs to the set it was first shot in; a collection page
+  also shows every piece worn in its stories. Old `#/c/aw27` links open the shop.
+- **The live database is not re-imported.** Database v7 (`tf_migrate_7`, map
+  `TF_COLS_2026_10`) moves each piece from «aw27» to its set and drops the knit's second
+  crop, and changes nothing else, so prices, stock, hidden pieces and photos changed in the
+  panel stay as they are. A piece added in the panel leaves «aw27» for no collection.
+  `catalog/real/catalog-import.json` carries the eleven collections for a fresh install;
+  the copy in `tiffany-data/` on the host stays the one already imported.
+- **Photos re-cut under the same names** reach phones that already had them: the service
+  worker is `tiffany-fa-v14` (a new cache), and a photo it does not hold yet is asked of the
+  host, never of the browser's week-long cache.
+- **Stories with a button.** A panel story can carry one button: a piece, a collection, or
+  any http(s) address (Instagram, WhatsApp…), with its own words (empty: «ببین»). The server
+  accepts only `#/p/…`, `#/c/…`, `#/shop…` or a real http(s) address (`tf_link_clean`);
+  outside addresses open in a new tab with `noopener noreferrer`. Database v6 adds
+  `stories.link`.
+- **Campaign stories from the panel.** The 22 outfit stories (now `js/looks-data.js`, shared
+  by shop and panel) can be retitled, captioned, given other pieces (up to 8), a button, or
+  hidden — «استوری‌ها» → «استوری‌های کمپین» → «ویرایش». Only the changes are stored
+  (setting `looks_edit`, actions `look_save` / `look_reset`); «برگردوندن به حالت اول» drops them.
+- **Sign in / create account.** One sheet with two tabs (ورود / ساخت حساب), an icon in every
+  field, show/hide on passwords, sign-up and password reset in two numbered steps (your
+  details → the 6-digit code), and a line on what the number is used for. Signed out, the
+  profile says what an account is for and offers both buttons side by side.
+- **SEO and AI answers (GEO).** Real addresses beside the hash routes: `/p/<id>`, `/c/<id>`,
+  `/shop` (`seo.php`, through `.htaccess`) — each is `index.html` with its own title,
+  description, canonical, share card, schema.org `Product` (price in rials, free delivery
+  in 1–3 days) or `CollectionPage`, breadcrumbs, and the facts written in the page for a
+  reader without JavaScript; in a browser the shop opens the same page, and the first step
+  inside it returns to the shop's own `/#/…` addresses (`js/router.js`; plain `#/…` links on
+  such a page are taken over in `js/app.js`, because its `<base href="/">` would otherwise
+  load them as a new page). Product words are put into the page as text: a `$1` in a name
+  stays `$1`. `/sitemap.xml` (every
+  address with its photos), `/llms.txt` (the shop in plain words for AI assistants),
+  `robots.txt` (search and AI crawlers welcome, `/api/` and `/admin/` closed). `index.html`
+  carries the brand, website and four shops as schema.org data and the new share card
+  `assets/img/og-aw27.jpg` (1200×630).
+- **Tests.** `seo_test.py` (31: every piece page, collections, sitemap, llms.txt, robots,
+  site.php against `js/data.js`/`js/config.js` through Node, a browser landing on `/p/…`),
+  run against `php -S … tests/router.php`, which reads the rewrite rules from `.htaccess`.
+  The other suites now run on the real catalogue: api 142, admin 38, popups 56, e2e 183,
+  qa 33, support 144 (story buttons, campaign edits, v6), support_e2e 79, pay 105, pay_e2e 28.
+  The container's Chromium has no H.264, so e2e says so and leaves the film checks to a
+  browser that has one.
 
 ## Full review: bugs, security, rush and traffic — 2026-10-16
 

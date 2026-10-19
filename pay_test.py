@@ -104,7 +104,7 @@ code, _ = ceo('setup', key=k, name='مدیر تست', email='ceo@tiffany.test', 
 check('CEO account made', code == 200)
 code, r = ceo('settings_save', store_open=True)
 check('store open', r['settings']['store_open'] is True)
-check('database is on version 5', db('PRAGMA user_version')[0][0] == 5)
+check('database is on version 7', db('PRAGMA user_version')[0][0] == 7)
 cols = {c[1] for c in db('PRAGMA table_info(orders)')}
 check('orders carry the payment columns', {'pay_state', 'pay_ref', 'pay_amount', 'pay_url', 'pay_mode', 'paid', 'paid_at'} <= cols)
 r = requests.get(f'{BASE}/api/pay.php?a=state').json()
