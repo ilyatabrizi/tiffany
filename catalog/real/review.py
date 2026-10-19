@@ -22,9 +22,9 @@ looks = json.loads((S / 'draft' / 'looks.json').read_text())
 CATS = {'knit': 'بافت', 'hoodie': 'هودی و سوشرت', 'vest': 'وست', 'shirt': 'شومیز', 'trousers': 'شلوار',
         'skirts': 'دامن', 'jacket': 'کاپشن', 'cardigan': 'ژاکت', 'accessories': 'اکسسوری', 'shoes': 'کفش'}
 FLAG = {
- 'cotton-shirt': 'C19 writes this shirt\'s price as ۹۹۰۰۰۰. See question 1.',
- 'waterproof-leather-bomber': 'C12 gives no sizes for this jacket. See question 2.',
- 'wool-teddy-coat': 'Colour list read as four colours. See question 3.',
+ 'cotton-shirt': 'C19 writes this shirt\'s price as ۹۹۰۰۰۰. Your answer: ۷٬۹۹۰٬۰۰۰.',
+ 'waterproof-leather-bomber': 'C12 gives no sizes. Your answer: S, M, L.',
+ 'wool-teddy-coat': 'Your answer: five colours.',
  'striped-wool-knit': 'C11 writes «کرم زرشکی ابی سرمه». I read it as two two-tone colourways.',
  'mohair-trousers': 'C2 writes the sizes as «۰s.m.l». I read it as S, M, L.',
  'high-neck-wool-knit': 'C8 gives no size. Set to one size, like the other knits.',
