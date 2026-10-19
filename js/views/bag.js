@@ -146,8 +146,8 @@ let opening = false;
 /* What the customer reads above the form, for the way they pay. */
 const payLede = (pay) => (pay === 'c2c'
   ? L(`بعد از ثبت، می‌ری صفحه‌ی پرداخت «تأیید شد»: مبلغ رو از اپ بانکت کارت‌به‌کارت می‌کنی و «واریز کردم» رو می‌زنی. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
-    `Next you go to the «تأیید شد» payment page: transfer the amount from your bank app and tap «واریز کردم». Delivery is free and takes ${live.deliveryDays} working days at most.`,
-    `Sonra «تأیید شد» ödeme sayfasına geçersin: tutarı banka uygulamandan havale edip «واریز کردم»a dokunursun. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
+    `Next you go to the Tayid Shod payment page: transfer the amount from your bank app and tap «واریز کردم». Delivery is free and takes ${live.deliveryDays} working days at most.`,
+    `Sonra Tayid Shod ödeme sayfasına geçersin: tutarı banka uygulamandan havale edip «واریز کردم»a dokunursun. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
   : L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
     `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
     `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`));
