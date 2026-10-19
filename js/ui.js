@@ -292,6 +292,14 @@ export const alphaSig = () => `
     </span>
   </a>`;
 
+/* The eNamad trust seal (enamad.ir, id 8204368, 2026-10-19), exactly as eNamad
+   issued it: the link and the image must send this site as their referrer
+   (referrerpolicy='origin'), which is how eNamad knows the seal is on the
+   domain it was issued for. Shown in the home and profile footers; a copy
+   also sits in index.html for eNamad's own check of the page source. */
+export const ENAMAD = "<a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8204368&Code=MyWqhJeDAb9IPWV6tYOaD9baFIfc2CHY'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8204368&Code=MyWqhJeDAb9IPWV6tYOaD9baFIfc2CHY' alt='' style='cursor:pointer' code='MyWqhJeDAb9IPWV6tYOaD9baFIfc2CHY'></a>";
+export const trustSeal = () => `<div class="trust" aria-label="${esc(L('نماد اعتماد الکترونیکی', 'eNamad trust seal', 'eNamad güven damgası'))}">${ENAMAD}</div>`;
+
 export const moreLink = (to, label = L('همه', 'See all', 'Tümü')) =>
   `<button class="link-more" data-act="nav" data-to="${to}" type="button">
      ${esc(label)}${icon('arrow', 14)}</button>`;

@@ -7,7 +7,7 @@ import { icon } from '../icons.js';
 import { esc, num, typed } from '../util.js';
 import { state, patch, bagCount } from '../store.js';
 import {
-  openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig,
+  openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig, trustSeal,
 } from '../ui.js';
 import { standalone } from '../install.js';
 import { consent } from '../consent.js';
@@ -285,6 +285,7 @@ export default {
     <div class="footer">
       <div class="footer-mark"></div>
       <p><span dir="ltr">${BRAND.full}</span> — ${esc(BRAND.country)}</p>
+      ${trustSeal()}
       <div class="footer-rule"></div>
       ${alphaSig()}
       <p class="footer-legal" dir="ltr">© ${new Date().getFullYear()} ${BRAND.full}</p>

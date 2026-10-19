@@ -4,7 +4,7 @@ import { COLLECTIONS, storyList, newIn } from '../data.js';
 import { icon } from '../icons.js';
 import { esc } from '../util.js';
 import {
-  collectionCard, productCard, lookTile, secHead, moreLink, shot, alphaSig,
+  collectionCard, productCard, lookTile, secHead, moreLink, shot, alphaSig, trustSeal,
 } from '../ui.js';
 import { mountHero } from '../hero.js';
 import { L, LANGS, ORDER, lang, setLang } from '../i18n.js';
@@ -109,6 +109,7 @@ const footer = () => `
     <a href="#/contact">${esc(L('شعبه‌ها و تماس', 'Stores & contact', 'Mağazalar ve iletişim'))}</a>
     <a href="#/terms">${esc(L('قوانین و شرایط', 'Terms & policies', 'Koşullar ve politikalar'))}</a>
   </nav>
+  ${trustSeal()}
 
   <div class="footer-rule"></div>
   ${alphaSig()}

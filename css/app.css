@@ -1033,6 +1033,10 @@ html[data-colour='always'] .order-thumbs img { filter: none; }
   margin: 32px auto 26px; max-width: 300px;
 }
 .footer-legal { font-size: 11.5px; color: var(--faint); margin: 18px 0 0; }
+/* the eNamad seal: as issued, on its own white tile so it reads in dark mode too */
+.trust { display: flex; justify-content: center; margin-top: 22px; }
+.trust a { display: inline-block; padding: 6px; border-radius: 12px; background: #fff; line-height: 0; }
+.trust img { display: block; max-width: 110px; height: auto; }
 
 /* ------------------------------------------------- the agency signature */
 /* Alpha's lockup ships as white letterforms plus two yellow bars on
