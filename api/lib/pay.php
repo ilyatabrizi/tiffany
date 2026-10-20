@@ -480,6 +480,7 @@ function tz_public(array $o): array
             && $o['status'] !== 'cancelled' && in_array($state, TZ_PAGE, true) && $o['pay_url'] !== '',
         'pay_amount' => (int) $o['pay_amount'], 'total' => (int) $o['total'],
         'subtotal' => (int) $o['subtotal'], 'shipping' => (int) $o['shipping'], 'created_at' => (int) $o['created_at'],
+        'credit' => (int) ($o['credit'] ?? 0), 'cashback' => (int) ($o['cashback'] ?? 0),
         /* The phone (for tracking) but not the address: this link sits inside
            the payment page's «back to the shop» button. */
         'phone' => $o['phone'],

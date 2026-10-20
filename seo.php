@@ -163,7 +163,7 @@ if ($kind === 'p') {
     $soldout = is_array($p['stock'] ?? null) && array_sum(array_map('intval', $p['stock'])) <= 0;
     $desc = $name . ($fab !== '' ? '؛ جنس ' . $fab : '') . '، رنگ: ' . $cols . '، سایز: ' . tf_sizes_fa($p['sizes'])
         . '. قیمت ' . tf_toman_fa($price) . ($col ? '. از کالکشن ' . $col[0] . ' (' . TF_SEASON_FA . ')' : '')
-        . ' تیفانی؛ ارسال رایگان.';
+        . ' تیفانی؛ ارسال رایگان با پست به سراسر ایران.';
     $images = array_map('product_img', $p['images']);
     $ldp = [
         '@context' => 'https://schema.org', '@type' => 'Product',
@@ -212,7 +212,7 @@ if ($kind === 'p') {
         . ($col ? '<li>کالکشن: <a href="/c/' . h($p['col']) . '">' . h($col[0]) . '</a> (' . h(TF_SEASON_FA) . ')</li>' : '')
         . '</ul>'
         . ($note !== '' ? '<p>' . h($note) . '</p>' : '')
-        . '<p>ارسال رایگان، حداکثر سه روز کاری. استعلام از واتساپ: <span dir="ltr">' . h(TF_WHATSAPP) . '</span></p>'
+        . '<p>ارسال رایگان با پست به سراسر ایران، حداکثر سه روز کاری. استعلام از واتساپ: <span dir="ltr">' . h(TF_WHATSAPP) . '</span></p>'
         . '</article>';
     seo_shell(200, [
         'title' => $name . ' | ' . TF_BRAND, 'desc' => $desc, 'canonical' => $url, 'ogtype' => 'product',
@@ -231,7 +231,7 @@ if ($kind === 'c') {
     $url = TF_SITE . '/c/' . $id;
     $title = $col[0] . ' — کالکشن ' . TF_SEASON_FA . ' | ' . TF_BRAND;
     $desc = 'کالکشن ' . $col[0] . ' تیفانی (' . TF_SEASON_FA . '): ' . $col[2] . ' ' . tf_fa_num((string) count($own))
-        . ' محصول، ارسال رایگان.';
+        . ' محصول، ارسال رایگان با پست به سراسر ایران.';
     $ldc = ['@context' => 'https://schema.org', '@type' => 'CollectionPage', 'name' => $col[0] . ' — ' . TF_BRAND,
         'description' => $desc, 'url' => $url, 'image' => abs_img($col[1]), 'inLanguage' => 'fa',
         'isPartOf' => ['@type' => 'WebSite', 'name' => TF_BRAND, 'url' => TF_SITE], 'mainEntity' => item_list($own)];
@@ -254,7 +254,7 @@ if ($kind === 'shop') {
     $all = array_values(array_filter(tf_products(true), static fn ($p) => !empty($p['images'])));
     $url = TF_SITE . '/shop';
     $desc = 'همه‌ی محصول‌های تیفانی (' . TF_SEASON_FA . '): کاپشن و بارونی چرم، پالتو، بافت پشمی، شومیز، شلوار جین و اویشو، دامن، کیف، کلاه و باندانا. '
-        . tf_fa_num((string) count($all)) . ' محصول، ارسال رایگان.';
+        . tf_fa_num((string) count($all)) . ' محصول، ارسال رایگان با پست به سراسر ایران.';
     $body = '<article class="ssr" dir="rtl" lang="fa"><nav aria-label="مسیر"><a href="/">TIFFANY</a> › فروشگاه</nav>'
         . '<h1>فروشگاه تیفانی</h1><p>' . h($desc) . '</p><h2>کالکشن‌ها</h2><ul>';
     foreach (TF_COLLECTIONS as $cid => $c) {
@@ -307,10 +307,14 @@ if ($kind === 'sitemap') {
    the collections, every piece with its price, the shops, how to reach us. */
 if ($kind === 'llms') {
     $all = array_values(array_filter(tf_products(true), static fn ($p) => !empty($p['images'])));
+    $cb = tf_cashback_rule();
     $t = "# TIFFANY by Vanda\n\n"
         . "> TIFFANY by Vanda (تیفانی) is an Iranian womenswear brand with a modern, young, city style, founded in 2020 (1399). "
-        . "It has shops in Tehran and Tabriz and sells online at " . TF_SITE . ". Prices are in Iranian toman. Delivery is free and "
-        . "takes at most three working days. The current collection is Autumn / Winter 2027.\n\n"
+        . "It has shops in Tehran and Tabriz and sells online at " . TF_SITE . ". Prices are in Iranian toman. Orders are sent by "
+        . "Iran Post, free to anywhere in Iran, and arrive within three working days at most. "
+        . ($cb['on'] ? 'Orders of ' . number_format($cb['min']) . ' toman or more earn ' . $cb['pct']
+            . '% of the amount paid as TIFFANY credit for later orders (with an account). ' : '')
+        . "The current collection is Autumn / Winter 2027.\n\n"
         . "- Shop: " . TF_SITE . "/shop\n- Instagram: " . TF_INSTAGRAM . "\n- WhatsApp (questions about a piece): " . TF_WHATSAPP
         . "\n- Email: " . TF_EMAIL . "\n\n## Collections (Autumn / Winter 2027)\n\n";
     foreach (TF_COLLECTIONS as $cid => $c) {

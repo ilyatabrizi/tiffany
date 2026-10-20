@@ -92,8 +92,8 @@ def summary(name, res, secs):
 
 def order_body(pid, size, colour, phone, qty=1):
     return {'items': [{'id': pid, 'size': size, 'colour': colour, 'qty': qty}],
-            'name': 'مشتری آزمایشی', 'phone': phone, 'city': 'تبریز',
-            'address': 'خیابان امام، کوچه‌ی ۵، پلاک ۸', 'postal': ''}
+            'name': 'مشتری آزمایشی', 'phone': phone, 'province': 'آذربایجان شرقی', 'city': 'تبریز',
+            'address': 'خیابان امام، کوچه‌ی ۵، پلاک ۸', 'postal': '5166615731'}
 
 
 req('GET', '/api/catalog.php')               # the server makes its database

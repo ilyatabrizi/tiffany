@@ -143,8 +143,8 @@ ceo('product_visible', id='cream-hoodie', visible=True)
 print('\nordering')
 order = {'items': [{'id': 'cream-hoodie', 'size': 'S', 'colour': '#EFE6D8', 'qty': 1},
                    {'id': 'alphabet-tee', 'size': 'M', 'colour': '#A9C9E8', 'qty': 2}],
-         'name': 'مریم احمدی', 'phone': '۰۹۱۲ ۱۲۳ ۴۵۶۷', 'city': 'تبریز',
-         'address': 'خیابان ولیعصر، کوچه‌ی ۳، پلاک ۱۲', 'postal': '5157933511', 'price': 1}
+         'name': 'مریم احمدی', 'phone': '۰۹۱۲ ۱۲۳ ۴۵۶۷', 'province': 'آذربایجان شرقی', 'city': 'تبریز',
+         'address': 'خیابان ولیعصر، کوچه‌ی ۳، پلاک ۱۲', 'postal': '۵۱۵۷۹-۳۳۵۱۱', 'price': 1}
 shop = requests.Session()
 r = shop.post(f'{BASE}/api/order.php', json=order)
 check('closed store takes no orders', r.status_code == 403 and r.json()['error'] == 'closed')
@@ -160,6 +160,18 @@ code, r = ceo('product', id='cream-hoodie')
 check('stock went down', r['product']['stock'] == {'S': 1, 'M': 0, 'L': 1}, str(r['product']['stock']))
 r = shop.post(f'{BASE}/api/order.php', json={**order, 'phone': '12345'})
 check('a bad phone is refused', r.status_code == 422 and r.json()['field'] == 'phone')
+# what Iran Post needs on the parcel, each one refused on its own
+for why, wrong, field in [
+        ('a first name alone', {'name': 'مریم'}, 'name'),
+        ('no province', {'province': ''}, 'province'),
+        ('a province that is not one of the 31', {'province': 'تهران بزرگ'}, 'province'),
+        ('no city', {'city': ''}, 'city'),
+        ('an address too short for the post office', {'address': 'تبریز'}, 'address'),
+        ('no postal code', {'postal': ''}, 'postal'),
+        ('a postal code of 9 digits', {'postal': '515793351'}, 'postal'),
+        ('a postal code of one repeated digit', {'postal': '1111111111'}, 'postal')]:
+    r = shop.post(f'{BASE}/api/order.php', json={**order, **wrong})
+    check(f'refused: {why}', r.status_code == 422 and r.json().get('field') == field, r.text[:120])
 r = shop.post(f'{BASE}/api/order.php', json={**order, 'items': [{'id': 'nope', 'size': 'M', 'qty': 1}]})
 check('an unknown product is refused', r.status_code == 422)
 r = shop.post(f'{BASE}/api/order.php', json=order, headers={'Origin': 'https://elsewhere.example'})
@@ -182,6 +194,16 @@ t = shop.post(f'{BASE}/api/track.php', json={'phone': '09121234567', 'codes': [o
 check('…and the customer sees it', t['orders'][o['code']]['status'] == 'confirmed')
 code, r = ceo('order_note', code=o['code'], note='تحویل بعد از ساعت ۵')
 check('internal note', r['order']['admin_note'] == 'تحویل بعد از ساعت ۵')
+check('the order keeps the province, and the postal code as 10 Latin digits',
+      r['order']['province'] == 'آذربایجان شرقی' and r['order']['postal'] == '5157933511', str(r['order'].get('postal')))
+code, r = ceo('order_post', code=o['code'], post='12345')
+check('a too-short Iran Post code is refused', code == 422 and r['field'] == 'post')
+code, r = ceo('order_post', code=o['code'], post='۱۲۳۴۵۶۷۸۹۰ ۱۲۳۴۵۶۷۸۹۰ ۱۲۳۴')
+check('the Iran Post tracking code is kept (Persian digits read)', r['order']['post_code'] == '123456789012345678901234')
+t = shop.post(f'{BASE}/api/track.php', json={'phone': '09121234567', 'codes': [o['code']]}).json()
+check('…and the customer sees it', t['orders'][o['code']]['post_code'] == '123456789012345678901234')
+code, r = ceo('order_post', code=o['code'], post='')
+check('…and it can be taken off', r['order']['post_code'] == '')
 r2 = shop.post(f'{BASE}/api/order.php', json={**order, 'items': [order['items'][0]]}).json()
 code, r = ceo('order_status', code=r2['code'], status='cancelled')
 code, r = ceo('product', id='cream-hoodie')

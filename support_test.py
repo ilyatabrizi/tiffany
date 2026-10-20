@@ -475,8 +475,8 @@ check('caption and pieces can be changed', r['story']['caption'] == {'fa': 'تخ
 check('a story starts with no link', s1.get('link') == [] and r['story']['link'] == [], str(r['story'].get('link')))
 
 print('\nstory links (2026-10-20)')
-check('the database is on version 7, stories carry a link',
-      db('PRAGMA user_version')[0][0] == 7 and 'link' in {c[1] for c in db('PRAGMA table_info(stories)')})
+check('the database is on version 8, stories carry a link',
+      db('PRAGMA user_version')[0][0] == 8 and 'link' in {c[1] for c in db('PRAGMA table_info(stories)')})
 code, r = ceo.multi('story_add', {'items': '[]', 'link': json.dumps({'url': f'#/p/{real[0]}', 'label': {'fa': 'ببینش'}})},
                     [('media', ('l.jpg', b.getvalue(), 'image/jpeg'))])
 s3 = r.get('story', {})
@@ -541,7 +541,7 @@ put('panel-own-piece', col='aw27')
 put('demo-piece', col='noir')
 db('PRAGMA user_version = 6')
 by = {p['id']: p for p in requests.get(f'{BASE}/api/catalog.php').json()['products']}
-check('the migration ran once (version 7)', db('PRAGMA user_version')[0][0] == 7)
+check('the migrations ran from 6 again (now version 8)', db('PRAGMA user_version')[0][0] == 8)
 check('a piece moves to its set; a price, stock and photo the panel changed stay',
       by['mohair-top']['col'] == 'aw27-pink-mohair' and by['mohair-top']['price'] == 4321000
       and by['mohair-top']['images'] == ['assets/img/r-mohair-top', 'uploads/p/own-photo']

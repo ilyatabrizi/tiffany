@@ -11,6 +11,7 @@ import { esc, num, typed } from './util.js';
 import { state, patch } from './store.js';
 import { openSheet, closeSheet, toast } from './ui.js';
 import { L, isFa } from './i18n.js';
+import { live } from './live.js';
 
 export const account = {
   loaded: false,
@@ -19,7 +20,19 @@ export const account = {
   otp: false,          // can the shop text a code right now?
   unread: 0,           // tickets with an answer not yet opened
   caps: { file: 5 * 1048576, files: 6 },
+  /* Cashback credit: spendable now, on the way (orders not yet delivered),
+     and the orders behind it. */
+  credit: { balance: 0, pending: 0, orders: [] },
 };
+
+const NO_CREDIT = () => ({ balance: 0, pending: 0, orders: [] });
+/** Keep the credit an answer carries (signed out: none). */
+export function takeCredit(c) {
+  account.credit = c && typeof c === 'object'
+    ? { balance: Math.max(0, Number(c.balance) || 0), pending: Math.max(0, Number(c.pending) || 0),
+      orders: Array.isArray(c.orders) ? c.orders : [] }
+    : NO_CREDIT();
+}
 
 const changed = () => document.dispatchEvent(new CustomEvent('account:changed'));
 
@@ -32,11 +45,13 @@ function settle(status, j) {
   if (status >= 200 && status < 300 && j.ok) {
     if (j.csrf) account.csrf = j.csrf;
     if ('unread' in j) account.unread = Number(j.unread) || 0;
+    if ('credit' in j) takeCredit(j.credit);
     return j;
   }
   if (status === 401 && j.error === 'signin' && account.user) {
     account.user = null;
     account.csrf = '';
+    takeCredit(null);
     changed();
   }
   throw new ApiError(j.error || 'server', status, j);
@@ -336,16 +351,27 @@ function codeStep(sheet, { phone, purpose, extra = '', submit, back }) {
   });
 }
 
-export function signUpSheet({ then } = {}) {
+/** What an account is for; with the cashback on, that too. */
+function signUpLede() {
+  const cb = live.cashback;
+  if (!cb?.on || !(cb.pct > 0)) {
+    return L('با یه حساب، تیکت می‌فرستی و جواب تیم رو همین‌جا می‌گیری، و موقع خرید اسم و شماره‌ت خودش پر می‌شه.',
+      'With an account you can send tickets and get the team’s answers here, and checkout fills in your name and number.',
+      'Bir hesapla talep gönderip ekibin yanıtlarını burada alırsın; ödeme sırasında adın ve numaran kendiliğinden dolar.');
+  }
+  const min = `${num(cb.min)} ${L('تومان', 'Toman', 'Toman')}`;
+  return L(`با یه حساب، از خریدهای ${min} به بالا ${num(cb.pct)}٪ اعتبار برگشتی می‌گیری، تیکت می‌فرستی و جواب تیم رو همین‌جا می‌گیری، و موقع خرید اسم و شماره‌ت خودش پر می‌شه.`,
+    `With an account, orders of ${min} or more give ${cb.pct}% back as credit, you can send tickets and get the team’s answers here, and checkout fills in your name and number.`,
+    `Bir hesapla ${min} ve üzeri siparişlerde %${cb.pct} kredi kazanırsın, talep gönderip ekibin yanıtlarını burada alırsın ve ödemede adın ile numaran kendiliğinden dolar.`);
+}
+
+export function signUpSheet({ then, calm = false } = {}) {
   openSheet(`
     ${head(L('حساب تیفانی', 'Your TIFFANY account', 'TIFFANY hesabın'))}
     ${tabs('signup')}
     <div id="acBody">
       ${account.otp ? `${steps(1, [L('اطلاعات تو', 'Your details', 'Bilgilerin'), L('کد پیامکی', 'SMS code', 'SMS kodu')])}
-      <p class="lede auth-lede">${esc(L(
-    'با یه حساب، تیکت می‌فرستی و جواب تیم رو همین‌جا می‌گیری، و موقع خرید اسم و شماره‌ت خودش پر می‌شه.',
-    'With an account you can send tickets and get the team’s answers here, and checkout fills in your name and number.',
-    'Bir hesapla talep gönderip ekibin yanıtlarını burada alırsın; ödeme sırasında adın ve numaran kendiliğinden dolar.'))}</p>
+      <p class="lede auth-lede">${esc(signUpLede())}</p>
       <form id="acForm" novalidate>
         ${field('name', L('اسم و فامیل', 'Full name', 'Ad soyad'), nameIn(state.profile.name))}
         ${field('phone', L('شماره موبایل', 'Mobile number', 'Cep numarası'), phoneIn(state.profile.phone),
@@ -361,6 +387,7 @@ export function signUpSheet({ then } = {}) {
   {
     label: L('ساخت حساب', 'Create an account', 'Hesap oluştur'),
     cls: 'auth',
+    calm,
     onMount(sheet) {
       wire(sheet, then);
       const form = sheet.querySelector('#acForm');
@@ -432,7 +459,7 @@ export function resetSheet({ then } = {}) {
 }
 
 /** Signed in: the name, a new password, and signing out. */
-export function accountSheet() {
+export function accountSheet({ calm = false } = {}) {
   const u = account.user;
   if (!u) { signInSheet(); return; }
   let renamed = false;
@@ -459,6 +486,7 @@ export function accountSheet() {
   {
     label: L('حساب من', 'My account', 'Hesabım'),
     cls: 'auth',
+    calm,
     /* The profile header shows the name: redraw it once the sheet is gone. */
     onClose() { if (renamed) setTimeout(() => document.dispatchEvent(new CustomEvent('view:refresh')), 0); },
     onMount(sheet) {
@@ -491,6 +519,7 @@ export async function signOut() {
   account.user = null;
   account.csrf = '';
   account.unread = 0;
+  takeCredit(null);
   closeSheet();
   toast(L('از حسابت خارج شدی', 'Signed out', 'Çıkış yapıldı'), 'check');
   changed();

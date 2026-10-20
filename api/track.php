@@ -18,11 +18,12 @@ if ($phone === '' || !$codes) {
     tf_json(['ok' => true, 'orders' => new stdClass()]);
 }
 $marks = implode(',', array_fill(0, count($codes), '?'));
-$st = db()->prepare("SELECT code, status, updated_at, pay, pay_state, paid FROM orders WHERE phone = ? AND code IN ($marks)");
+$st = db()->prepare("SELECT code, status, updated_at, pay, pay_state, paid, post_code FROM orders WHERE phone = ? AND code IN ($marks)");
 $st->execute(array_merge([$phone], $codes));
 $out = [];
 foreach ($st->fetchAll() as $r) {
     $out[$r['code']] = ['status' => $r['status'], 'updated_at' => (int) $r['updated_at'],
-        'pay' => $r['pay'], 'pay_state' => $r['pay_state'], 'paid' => (int) $r['paid'] === 1];
+        'pay' => $r['pay'], 'pay_state' => $r['pay_state'], 'paid' => (int) $r['paid'] === 1,
+        'post_code' => (string) $r['post_code']];
 }
 tf_json(['ok' => true, 'orders' => $out ?: new stdClass()]);

@@ -73,7 +73,10 @@ const BADGES = [['', 'بدون برچسب'], ['new', 'جدید'], ['campaign', '
 const STATUS = { new: 'جدید', confirmed: 'تأیید شده', shipped: 'ارسال شده', delivered: 'تحویل شده', cancelled: 'لغو شده' };
 const STEP = { new: 1, confirmed: 2, shipped: 3, delivered: 4, cancelled: 0 };
 const NEXT = { new: ['confirmed', 'تأیید سفارش'], confirmed: ['shipped', 'ارسال شد'], shipped: ['delivered', 'تحویل شد'] };
-const PAY = { card: 'کارت موقع تحویل', c2c: 'کارت‌به‌کارت («تأیید شد»)', online: 'پرداخت آنلاین' };
+const PAY = { card: 'کارت موقع تحویل', c2c: 'کارت‌به‌کارت («تأیید شد»)', credit: 'اعتبار تیفانی (کش‌بک)', online: 'پرداخت آنلاین' };
+/* What an order's cashback is doing, by its status (api/lib/shop.php). */
+const cbState = (o) => (o.status === 'delivered' ? 'به حساب مشتری اضافه شد'
+  : o.status === 'cancelled' ? 'باطل شد (سفارش لغو شد)' : 'بعد از تحویل به حساب مشتری اضافه می‌شه');
 /* Card-to-card («تأیید شد»): where an order's payment stands. [short, the
    long line on the order sheet, pill colour] */
 const PSTATE = {
@@ -109,8 +112,10 @@ const PCT = new Intl.NumberFormat('fa-IR', { style: 'percent', maximumFractionDi
 const ACTIONS = { login: 'وارد پنل شد', setup: 'پنل رو راه‌اندازی کرد', recover: 'رمز رو با کلید بازیابی کرد',
   password: 'رمزش رو عوض کرد', product_add: 'محصول اضافه کرد', product_edit: 'محصول رو ویرایش کرد',
   product_show: 'محصول رو نمایش داد', product_hide: 'محصول رو مخفی کرد', product_delete: 'محصول رو حذف کرد',
-  order_status: 'وضعیت سفارش رو عوض کرد', order_note: 'یادداشت سفارش نوشت',
+  order_status: 'وضعیت سفارش رو عوض کرد', order_note: 'یادداشت سفارش نوشت', order_post: 'کد رهگیری پست ثبت کرد',
   store_open: 'فروش آنلاین رو روشن کرد', store_close: 'فروش آنلاین رو خاموش کرد',
+  cashback_on: 'کش‌بک رو روشن کرد', cashback_off: 'کش‌بک رو خاموش کرد',
+  cashback_pct: 'درصد کش‌بک رو عوض کرد', cashback_min: 'حداقل مبلغ کش‌بک رو عوض کرد',
   catalog_import: 'کاتالوگ جدید رو یک‌جا وارد کرد',
   sms_on: 'پیامک‌ها رو روشن کرد', sms_off: 'پیامک‌ها رو خاموش کرد',
   sms_owner: 'شماره‌ی خبر سفارش جدید رو عوض کرد', sms_test: 'پیامک آزمایشی فرستاد',
@@ -151,6 +156,7 @@ const P = {
   ticket: '<path d="M4 7.4A1.4 1.4 0 0 1 5.4 6h13.2A1.4 1.4 0 0 1 20 7.4v2.4a2.2 2.2 0 0 0 0 4.4v2.4a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 16.6v-2.4a2.2 2.2 0 0 0 0-4.4z"/><path d="M14.4 6.6v1.8M14.4 11.1v1.8M14.4 15.6v1.8"/>',
   story: '<rect x="6.4" y="3" width="11.2" height="18" rx="2.6"/><path d="M10.4 9.2v5.6l4.6-2.8z"/>',
   mic: '<rect x="9" y="3.6" width="6" height="10.4" rx="3"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0M12 17.8v2.8"/>',
+  copy: '<rect x="8.4" y="8.4" width="11.6" height="11.6" rx="2.2"/><path d="M15.6 8.4V5.4A1.4 1.4 0 0 0 14.2 4H5.4A1.4 1.4 0 0 0 4 5.4v8.8a1.4 1.4 0 0 0 1.4 1.4h3"/>',
   clip: '<path d="M19.6 11.4 12.3 18.7a4.6 4.6 0 0 1-6.5-6.5l7.7-7.7a3.1 3.1 0 0 1 4.4 4.4l-7.6 7.6a1.5 1.5 0 0 1-2.2-2.2l6.9-6.9"/>',
   doc: '<path d="M7 3.6h6.8l4.2 4.2v11.2a1.4 1.4 0 0 1-1.4 1.4H7a1.4 1.4 0 0 1-1.4-1.4V5A1.4 1.4 0 0 1 7 3.6z"/><path d="M13.6 3.8v4.2h4.2M9 12.4h6M9 15.8h6"/>',
   play: '<path d="M8.4 5.6v12.8L18.6 12z" fill="currentColor"/>',
@@ -823,7 +829,8 @@ async function viewOrders(_, q, signal) {
 }
 
 function exportCsv(orders) {
-  const head = ['کد', 'تاریخ', 'وضعیت', 'اسم', 'موبایل', 'شهر', 'آدرس', 'کد پستی', 'اقلام', 'مبلغ کل (تومان)', 'پرداخت'];
+  const head = ['کد', 'تاریخ', 'وضعیت', 'اسم', 'موبایل', 'استان', 'شهر', 'آدرس', 'کد پستی', 'اقلام', 'مبلغ پرداختی (تومان)', 'پرداخت',
+    'اعتبار خرج‌شده (تومان)', 'اعتبار برگشتی (تومان)', 'کد رهگیری پست', 'یادداشت مشتری'];
   /* A cell that starts like a formula (=, +, -, @) is text, not a formula:
      a customer's name must never run in someone's Excel. */
   const cell = (v) => {
@@ -835,9 +842,10 @@ function exportCsv(orders) {
      leading zero stays. */
   const phone = (s) => String(s || '').replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3');
   const rows = orders.map((o) => [o.code, D_TIME.format(new Date(o.created_at * 1000)), STATUS[o.status], o.name,
-    phone(o.phone), o.city, o.address, o.postal,
+    phone(o.phone), o.province, o.city, o.address, o.postal,
     o.items.map((i) => `${i.name} (${i.size}${i.colour_name ? `، ${i.colour_name}` : ''}) ×${i.qty}`).join(' | '),
-    o.total, (PAY[o.pay] || o.pay) + (o.pay === 'c2c' && PSTATE[o.pay_state] ? ` — ${PSTATE[o.pay_state][0]}` : '')].map(cell).join(','));
+    o.total, (PAY[o.pay] || o.pay) + (o.pay === 'c2c' && PSTATE[o.pay_state] ? ` — ${PSTATE[o.pay_state][0]}` : ''),
+    o.credit || 0, o.cashback || 0, o.post_code || '', o.note || ''].map(cell).join(','));
   const blob = new Blob(['﻿' + [head.map(cell).join(','), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -865,14 +873,18 @@ async function openOrder(code, onChange) {
     ${o.status !== 'cancelled' && o.status !== 'delivered' ? `<div class="actions">
       ${next ? `<button class="btn" type="button" data-to="${next[0]}">${next[1]}</button>` : ''}
       <button class="btn danger" type="button" data-to="cancelled">لغو سفارش</button></div>` : ''}
+    ${o.status === 'delivered' ? `<div class="actions">
+      <button class="btn line danger-t" type="button" data-to="cancelled">مرجوع شد (لغو سفارش)</button></div>` : ''}
     <p class="label" style="margin-top:16px">مشتری</p>
     <dl class="kv">
       <div><dt>اسم</dt><dd>${esc(o.name)}</dd></div>
       <div><dt>موبایل</dt><dd><a class="callme" href="tel:${esc(o.phone)}">${icon('phone', 15)}<span class="ltr">${esc(o.phone)}</span></a></dd></div>
+      ${o.province ? `<div><dt>استان</dt><dd>${esc(o.province)}</dd></div>` : ''}
       <div><dt>شهر</dt><dd>${esc(o.city)}</dd></div>
       <div><dt>آدرس</dt><dd style="max-width:70%">${esc(o.address)}</dd></div>
       ${o.postal ? `<div><dt>کد پستی</dt><dd><span class="ltr">${esc(o.postal)}</span></dd></div>` : ''}
     </dl>
+    <button class="btn line s" type="button" id="copyLabel" style="margin-top:8px">${icon('copy', 16)}کپی برای برچسب پست</button>
     <p class="label" style="margin-top:16px">اقلام</p>
     <div class="lines">${o.items.map((i) => `<div class="oline">
       <img class="thumb s" src="${esc(img(i.img))}" alt="" loading="lazy">
@@ -881,12 +893,18 @@ async function openOrder(code, onChange) {
       <div style="white-space:nowrap">${esc(compact(i.line))}</div></div>`).join('')}</div>
     <dl class="kv">
       <div><dt>جمع</dt><dd>${esc(toman(o.subtotal))}</dd></div>
-      <div><dt>ارسال</dt><dd>${o.shipping ? esc(toman(o.shipping)) : 'رایگان'}</dd></div>
-      <div class="big"><dt>مبلغ کل</dt><dd>${esc(toman(o.total))}</dd></div>
+      <div><dt>ارسال</dt><dd>${o.shipping ? esc(toman(o.shipping)) : 'رایگان (پست)'}</dd></div>
+      ${o.credit ? `<div><dt>اعتبار مشتری</dt><dd>−${esc(toman(o.credit))}</dd></div>` : ''}
+      <div class="big"><dt>${o.credit ? 'مبلغ پرداختی' : 'مبلغ کل'}</dt><dd>${esc(toman(o.total))}</dd></div>
       <div><dt>پرداخت</dt><dd>${esc(PAY[o.pay] || o.pay)}</dd></div>
+      ${o.cashback ? `<div><dt>اعتبار برگشتی</dt><dd>${esc(toman(o.cashback))}<br><span class="tiny">${esc(cbState(o))}</span></dd></div>` : ''}
     </dl>
     ${payPart(o)}
     ${o.note ? `<p class="label" style="margin-top:16px">یادداشت مشتری</p><p style="margin:0">${esc(o.note)}</p>` : ''}
+    ${o.status !== 'cancelled' && o.status !== 'new' ? `<form id="postForm" style="margin-top:16px">${field('post', 'کد رهگیری پست',
+    `<input class="input ltr-in" id="f-post" name="post" inputmode="numeric" autocomplete="off" maxlength="40" value="${esc(o.post_code || '')}" placeholder="۲۴ رقم روی رسید پست">`,
+    'بعد از تحویل بسته به پست بزنش؛ مشتری توی «سفارش‌ها»ی سایت می‌بینه و توی سایت رهگیری پست دنبالش می‌کنه.')}
+      <button class="btn line s" type="submit">ذخیره‌ی کد رهگیری</button></form>` : ''}
     <form id="noteForm" style="margin-top:16px">${field('note', 'یادداشت داخلی (فقط تیم می‌بینه)',
     `<textarea class="input" id="f-note" name="note" rows="2">${esc(o.admin_note)}</textarea>`)}
       <button class="btn line s" type="submit">ذخیره‌ی یادداشت</button></form>
@@ -897,9 +915,16 @@ async function openOrder(code, onChange) {
       sheet.querySelectorAll('[data-to]').forEach((b) => b.addEventListener('click', async () => {
         const to = b.dataset.to;
         const unpaid = o.pay === 'c2c' && !o.paid;
-        if (to === 'cancelled' && !confirm(o.pay === 'c2c' && o.paid
-          ? 'این سفارش کارت‌به‌کارت پرداخت شده. لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن، ولی پول رو باید خودت به مشتری برگردونی.'
-          : 'این سفارش لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن و دیگه نمی‌شه برش گردوند.')) return;
+        /* What else a cancellation does: credit spent on it goes back to the
+           customer's account, and its cashback is removed. */
+        const credits = [o.credit ? `اعتبار ${toman(o.credit)}ی که مشتری روش خرج کرده به حسابش برمی‌گرده.` : '',
+          o.cashback ? `اعتبار برگشتی ${toman(o.cashback)}ش${o.status === 'delivered' ? ' از حساب مشتری کم می‌شه' : ' حذف می‌شه'}.` : '']
+          .filter(Boolean).join(' ');
+        if (to === 'cancelled' && !confirm((o.status === 'delivered'
+          ? 'این سفارش تحویل شده. به‌عنوان مرجوعی لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن و دیگه نمی‌شه برش گردوند. پول رو اگه لازمه خودت به مشتری برمی‌گردونی.'
+          : o.pay === 'c2c' && o.paid
+            ? 'این سفارش کارت‌به‌کارت پرداخت شده. لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن، ولی پول رو باید خودت به مشتری برگردونی.'
+            : 'این سفارش لغو بشه؟ قطعه‌هاش به موجودی برمی‌گردن و دیگه نمی‌شه برش گردوند.') + (credits ? `\n\n${credits}` : ''))) return;
         if (to !== 'cancelled' && unpaid && !confirm('پرداخت کارت‌به‌کارت این سفارش هنوز تأیید نشده. با این حال جلو بره؟')) return;
         b.disabled = true;
         try {
@@ -926,6 +951,26 @@ async function openOrder(code, onChange) {
           await navigator.clipboard.writeText(o.pay_url);
           toast('لینک پرداخت کپی شد؛ برای مشتری بفرست.');
         } catch { prompt('لینک پرداخت:', o.pay_url); }
+      });
+      sheet.querySelector('#copyLabel')?.addEventListener('click', async () => {
+        /* What goes on the parcel, in the order the post office writes it. */
+        const label = [`گیرنده: ${o.name}`, `موبایل: ${o.phone}`,
+          `نشانی: ${[o.province, o.city, o.address].filter(Boolean).join('، ')}`,
+          o.postal ? `کد پستی: ${o.postal}` : '', `سفارش: ${o.code}`].filter(Boolean).join('\n');
+        try {
+          await navigator.clipboard.writeText(label);
+          toast('مشخصات گیرنده کپی شد');
+        } catch { prompt('مشخصات گیرنده:', label); }
+      });
+      sheet.querySelector('#postForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          o = (await api('order_post', { code: o.code, post: e.target.post.value })).order;
+          toast(o.post_code ? 'کد رهگیری ذخیره شد؛ مشتری می‌بینه' : 'کد رهگیری برداشته شد');
+          changed = true;
+          sheet.innerHTML = `<div class="grab"></div>${render()}`;
+          bind();
+        } catch (err) { showErrors(e.target, err); }
       });
       sheet.querySelector('#noteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1323,7 +1368,8 @@ async function viewCustomer([phone], q, signal) {
     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div><h2 style="margin:0;font-size:19px">${esc(name)}</h2><p class="tiny" style="margin:2px 0 0">${esc(o[0]?.city || '')}${o.length ? ` · مشتری از ${esc(D_SHORT.format(new Date(o[o.length - 1].created_at * 1000)))}` : ''}</p></div>
       <a class="btn line s" href="tel:${esc(phone)}">${icon('phone', 16)}<span class="ltr">${esc(phone)}</span></a></div>
-      <div class="tiles" style="margin-top:12px">${tile('سفارش‌ها', num(o.length))}${money ? tile('جمع خرید', `${esc(compact(spent))} <small>تومان</small>`, '', toman(spent)) : ''}</div>
+      <div class="tiles" style="margin-top:12px">${tile('سفارش‌ها', num(o.length))}${money ? tile('جمع خرید', `${esc(compact(spent))} <small>تومان</small>`, '', toman(spent)) : ''}${d.account ? tile('اعتبار تیفانی', `${esc(compact(d.account.balance))} <small>تومان</small>`, d.account.pending ? `${compact(d.account.pending)} در راه` : '', toman(d.account.balance)) : ''}</div>
+      <p class="tiny" style="margin:10px 0 0">${d.account ? `حساب کاربری داره، از ${esc(D_SHORT.format(new Date(d.account.since * 1000)))}.` : 'با این شماره حساب کاربری ساخته نشده.'}</p>
       ${o[0] ? `<p class="tiny" style="margin:12px 0 0">آخرین آدرس: ${esc(o[0].address)}</p>` : ''}</div>
     <div class="sec"><div class="sec-head"><h2>سفارش‌ها</h2></div><div class="list">${o.map(orderItem).join('')}</div></div>`;
   main.addEventListener('click', (e) => {
@@ -2291,6 +2337,8 @@ async function viewSettings(_, q, signal) {
     : `<p style="margin:0">${open ? 'روشنه؛ سفارش‌های سایت این‌جا میان.' : 'خاموشه؛ فقط مدیرعامل می‌تونه روشنش کنه.'}</p>`}
       </div>
 
+      ${cashbackCard(st.settings.cashback, ceo)}
+
       ${ceo && st.pay ? payCard(st.pay) : ''}
 
       ${ceo ? smsCard(st.sms) : ''}
@@ -2330,6 +2378,7 @@ async function viewSettings(_, q, signal) {
     </div>${sig()}`;
 
   $('#bye').addEventListener('click', logout);
+  if (ceo) wireCashback();
   if (ceo) wireSms(st.sms, signal);
   if (ceo && st.pay) wirePay(st.pay, signal);
   $('#store')?.addEventListener('change', async (e) => {
@@ -2357,6 +2406,57 @@ async function viewSettings(_, q, signal) {
     main.querySelectorAll('[data-user]').forEach((b) => b.addEventListener('click', () =>
       memberSheet(team.team.find((u) => u.id === Number(b.dataset.user)), team.me)));
   }
+}
+
+/* Cashback: on or off, the percentage, and the order total it starts at. */
+function cashbackCard(cb, ceo) {
+  cb = cb || { on: false, pct: 6, min: 5000000 };
+  const rule = `سفارش‌های ${toman(cb.min)} به بالا، ${num(cb.pct)}٪ مبلغ پرداختی`;
+  return `<div class="card">
+    <div class="sec-head"><h2>اعتبار برگشتی (کش‌بک)</h2></div>
+    ${ceo ? `<label class="switch"><span><b id="cbWord">${cb.on ? 'روشنه' : 'خاموشه'}</b><br>
+      <span class="tiny" id="cbRule">${esc(rule)}، به‌صورت اعتبار به حساب مشتری‌ای که با حسابش خرید کرده برمی‌گرده. بعد از «تحویل شد» به حسابش اضافه می‌شه و توی خرید بعدی، داخل سبد خرید، از جمع سفارش کم می‌شه.
+      خاموشش کنی، اعتبار تازه داده نمی‌شه ولی اعتبارهای قبلی قابل استفاده می‌مونن.</span></span>
+      <input type="checkbox" id="cbOn" ${cb.on ? 'checked' : ''}><span class="knob"></span></label>
+    <form id="cbForm" novalidate style="margin-top:12px">
+      <div class="row2">
+        ${field('cb_pct', 'درصد اعتبار', `<input class="input ltr-in" id="f-cb_pct" name="cb_pct" inputmode="numeric" value="${esc(String(cb.pct))}">`)}
+        ${field('cb_min', 'از سفارش‌های (تومان)', `<input class="input ltr-in" id="f-cb_min" name="cb_min" inputmode="numeric" value="${esc(String(cb.min))}">`)}
+      </div>
+      <button class="btn line s" type="submit">ذخیره</button>
+    </form>` : `<p style="margin:0">${cb.on ? `روشنه: ${esc(rule)}.` : 'خاموشه.'}</p>`}
+  </div>`;
+}
+
+function wireCashback() {
+  const sw = $('#cbOn');
+  const form = $('#cbForm');
+  if (!sw || !form) return;
+  const show = (cb) => {
+    $('#cbWord').textContent = cb.on ? 'روشنه' : 'خاموشه';
+    const r = $('#cbRule');
+    r.textContent = r.textContent.replace(/^سفارش‌های .*? مبلغ پرداختی/, `سفارش‌های ${toman(cb.min)} به بالا، ${num(cb.pct)}٪ مبلغ پرداختی`);
+  };
+  sw.addEventListener('change', async () => {
+    const want = sw.checked;
+    try {
+      const r = await api('settings_save', { cb_on: want });
+      show(r.settings.cashback);
+      toast(want ? 'کش‌بک روشن شد' : 'کش‌بک خاموش شد');
+    } catch { sw.checked = !want; }
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(form));
+    showErrors(form, null);
+    try {
+      const r = await api('settings_save', { cb_pct: d.cb_pct, cb_min: d.cb_min });
+      show(r.settings.cashback);
+      form.cb_pct.value = r.settings.cashback.pct;
+      form.cb_min.value = r.settings.cashback.min;
+      toast('ذخیره شد');
+    } catch (err) { showErrors(form, err); }
+  });
 }
 
 function memberSheet(u, me) {

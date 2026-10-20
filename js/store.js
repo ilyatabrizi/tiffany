@@ -9,7 +9,7 @@ const EMPTY = {
   orders: [],         // { code, placed, items, total, address, status }
   profile: { name: '', phone: '', email: '' },
   fit: { bust: '', waist: '', hip: '', height: '' },
-  address: { line: '', city: '', postal: '' },
+  address: { line: '', city: '', province: '', postal: '' },
   prefs: { colour: 'touch', theme: 'auto' },
   seen: { looks: false, stories: [] },   // stories: the panel's ones already watched
 };

@@ -39,6 +39,10 @@ DirectoryIndex index.html
   RewriteRule ^shop/?$ seo.php?k=shop [L]
   RewriteRule ^sitemap\.xml$ seo.php?k=sitemap [L]
   RewriteRule ^llms\.txt$ seo.php?k=llms [L]
+
+  # tiffanybv.com/join — the address in the QR codes: the shop, with the
+  # create-account sheet open (js/app.js). NE keeps the # as it is.
+  RewriteRule ^join/?$ /#/join [R=302,NE,L]
 </IfModule>
 
 # -------------------------------------------------------------- caching

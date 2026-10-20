@@ -403,10 +403,32 @@ def run(shots_only=False):
         page.wait_for_timeout(700)
         check('checkout sheet opens', page.locator('#coForm').count() == 1)
         shot(page, '11-checkout')
-        page.fill('#coName', 'وندا تبریزی')
+        check('checkout says: free Iran Post delivery, anywhere in Iran',
+              'ارسال با پست، رایگان به سراسر ایران' in page.inner_text('#coForm .post-note'))
+        check('31 provinces to pick from', page.locator('#coProvince option:not([disabled])').count() == 31)
+        page.fill('#coName', 'وندا')
         page.fill('#coPhone', '۰۹۱۲۰۰۰۰۰۰۰')
         page.fill('#coLine', 'خیابان ولیعصر، پلاک ۱۲، واحد ۴')
         page.fill('#coCity', 'تهران')
+        page.locator('#coForm button[type="submit"]').click()
+        page.wait_for_timeout(500)
+        check('a first name alone is stopped on the phone, before sending',
+              page.evaluate("document.activeElement.id") == 'coName'
+              and page.get_attribute('#coName', 'aria-invalid') == 'true'
+              and page.evaluate('location.hash') == '#/bag')
+        page.fill('#coName', 'وندا تبریزی')
+        page.locator('#coForm button[type="submit"]').click()
+        page.wait_for_timeout(500)
+        check('…then the province', page.evaluate("document.activeElement.id") == 'coProvince'
+              and page.get_attribute('#coName', 'aria-invalid') is None)
+        page.select_option('#coProvince', 'تهران')
+        page.fill('#coPostal', '۱۹۶۶۹')
+        page.locator('#coForm button[type="submit"]').click()
+        page.wait_for_timeout(500)
+        check('…then a postal code without its 10 digits', page.evaluate("document.activeElement.id") == 'coPostal'
+              and page.evaluate('location.hash') == '#/bag')
+        page.fill('#coPostal', '۱۹۶۶۹-۱۴۱۱۱')
+        page.fill('#coNote', 'زنگ واحد ۴ خرابه')
         page.locator('#coForm button[type="submit"]').click()
         page.wait_for_timeout(1400)
         check('landed on orders', page.evaluate('location.hash') == '#/orders')
@@ -542,14 +564,14 @@ def run(shots_only=False):
 
         goto(page, '#/terms')
         body = page.inner_text('#app')
-        for frag in ['ارسال همه‌ی سفارش‌ها رایگانه', '۳ روز کاری', '۷ روز', 'حریم خصوصی']:
+        for frag in ['با پست ایران فرستاده می‌شن و ارسال به همه‌ی شهرهای ایران رایگانه', 'کد پستی ۱۰ رقمی', 'tracking.post.ir', '۳ روز کاری', '۷ روز', 'حریم خصوصی']:
             check(f'terms carry «{frag}»', frag in body)
         shot(page, '27-terms')
 
         goto(page, '#/p/oiled-leather-jacket')
         page.evaluate("document.querySelectorAll('.spec details').forEach(d => d.open = true)")
         spec = page.inner_text('.spec')
-        check('product page: free delivery in 3 working days', 'ارسال رایگانه' in spec and '۳ روز کاری' in spec)
+        check('product page: free Iran Post delivery, 3 working days', 'ارسال با پست، رایگان به سراسر ایران' in spec and '۳ روز کاری' in spec)
         check('product page: no old threshold', '۳٬۵۰۰٬۰۰۰' not in spec)
         check('product page links the terms', page.locator('.spec a[href="#/terms"]').count() == 1)
         check('colour rule is on touch', page.evaluate(

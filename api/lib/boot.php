@@ -324,6 +324,42 @@ SQL);
     if ($version < 7) {
         tf_migrate_7($db);
     }
+    if ($version < 8) {
+        tf_migrate_8($db);
+    }
+}
+
+/** 2026-10-20: cashback, and delivery by Iran Post. Each order remembers the account that placed it
+    (0: no account), the credit it spent and the cashback it earns. A balance
+    is never stored: it is read off the orders and their status every time
+    (api/lib/shop.php tf_credit), so a cancelled or delivered order moves it
+    by itself. */
+function tf_migrate_8(PDO $db): void
+{
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        if ((int) $db->query('PRAGMA user_version')->fetchColumn() < 8) {
+            $have = array_column($db->query('PRAGMA table_info(orders)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+            foreach (['customer_id', 'credit', 'cashback'] as $name) {
+                if (!in_array($name, $have, true)) {
+                    $db->exec("ALTER TABLE orders ADD COLUMN $name INTEGER NOT NULL DEFAULT 0");
+                }
+            }
+            /* Iran Post: the province of the address, and the parcel's
+               tracking code once the team has posted it. */
+            foreach (['province', 'post_code'] as $name) {
+                if (!in_array($name, $have, true)) {
+                    $db->exec("ALTER TABLE orders ADD COLUMN $name TEXT NOT NULL DEFAULT ''");
+                }
+            }
+            $db->exec('CREATE INDEX IF NOT EXISTS orders_customer ON orders(customer_id)');
+            $db->exec('PRAGMA user_version = 8');
+        }
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
 }
 
 /* 2026-10-20: the season, one collection («aw27») until now, is eleven, one
@@ -625,6 +661,18 @@ function tf_public_settings(): array
         'store_open' => setting('store_open', '0') === '1',
         'shipping' => 0,
         'delivery_days' => 3,
+        'cashback' => tf_cashback_rule(),
+    ];
+}
+
+/** The cashback offer (Settings in the panel): on, what share of the amount
+    paid comes back as credit, and the order total from which it applies. */
+function tf_cashback_rule(): array
+{
+    return [
+        'on' => setting('cb_on', '1') === '1',
+        'pct' => max(0, min(50, (int) setting('cb_pct', '6'))),
+        'min' => max(0, (int) setting('cb_min', '5000000')),
     ];
 }
 
@@ -1130,8 +1178,16 @@ function tf_product(string $id): ?array
 
 /* --------------------------------------------------------------- orders */
 /* card: by card on delivery. c2c: card-to-card at checkout through «تأیید شد»
-   (api/lib/pay.php). online: reserved for a bank gateway. */
-const TF_PAY = ['card', 'c2c', 'online'];
+   (api/lib/pay.php). credit: the customer's cashback credit covered all of it.
+   online: reserved for a bank gateway. */
+const TF_PAY = ['card', 'c2c', 'credit', 'online'];
+
+/* Orders go by Iran Post, free, anywhere in Iran: the 31 provinces, as the
+   post office writes them (the shop shows them in its own language). */
+const TF_PROVINCES = ['آذربایجان شرقی', 'آذربایجان غربی', 'اردبیل', 'اصفهان', 'البرز', 'ایلام', 'بوشهر', 'تهران',
+    'چهارمحال و بختیاری', 'خراسان جنوبی', 'خراسان رضوی', 'خراسان شمالی', 'خوزستان', 'زنجان', 'سمنان',
+    'سیستان و بلوچستان', 'فارس', 'قزوین', 'قم', 'کردستان', 'کرمان', 'کرمانشاه', 'کهگیلویه و بویراحمد',
+    'گلستان', 'گیلان', 'لرستان', 'مازندران', 'مرکزی', 'هرمزگان', 'همدان', 'یزد'];
 
 function tf_order_public(array $o): array
 {
@@ -1140,6 +1196,7 @@ function tf_order_public(array $o): array
         'status' => $o['status'],
         'name' => $o['name'],
         'phone' => $o['phone'],
+        'province' => (string) ($o['province'] ?? ''),
         'city' => $o['city'],
         'address' => $o['address'],
         'postal' => $o['postal'],
@@ -1154,7 +1211,11 @@ function tf_order_public(array $o): array
         'items' => json_decode((string) $o['items'], true) ?: [],
         'subtotal' => (int) $o['subtotal'],
         'shipping' => (int) $o['shipping'],
-        'total' => (int) $o['total'],
+        'credit' => (int) ($o['credit'] ?? 0),        // cashback credit spent on it
+        'total' => (int) $o['total'],                 // what is left to pay: subtotal + shipping − credit
+        'cashback' => (int) ($o['cashback'] ?? 0),    // what it earns, once delivered
+        'customer_id' => (int) ($o['customer_id'] ?? 0),
+        'post_code' => (string) ($o['post_code'] ?? ''),   // Iran Post tracking code
         'note' => $o['note'],
         'admin_note' => $o['admin_note'],
         'created_at' => (int) $o['created_at'],

@@ -1,7 +1,8 @@
 <?php
 /* /api/account.php — a customer's account. POST JSON {"a": "<action>", ...}.
 
-     state    who is signed in, whether sign-up codes can be sent, unread answers
+     state    who is signed in, whether sign-up codes can be sent, unread answers,
+              the cashback credit (balance, on the way, the orders behind it)
      otp      text a code: purpose signup (number not registered yet) or reset
      signup   phone + code + name + password → account, signed in
      login    phone + password
@@ -25,7 +26,7 @@ $a = (string) ($in['a'] ?? '');
 function me_out(array $c): array
 {
     return ['ok' => true, 'user' => tf_customer_public($c), 'csrf' => $_SESSION['csrf'] ?? '',
-        'unread' => unread_answers((int) $c['id'])];
+        'unread' => unread_answers((int) $c['id']), 'credit' => tf_credit_public((int) $c['id'])];
 }
 
 function unread_answers(int $cid): int
@@ -68,6 +69,7 @@ switch ($a) {
         tf_json(['ok' => true, 'user' => $c ? tf_customer_public($c) : null,
             'csrf' => $c ? ($_SESSION['csrf'] ?? '') : '', 'otp' => tf_otp_ready(),
             'unread' => $c ? unread_answers((int) $c['id']) : 0,
+            'credit' => $c ? tf_credit_public((int) $c['id']) : null,
             'caps' => ['file' => tf_upload_cap(TF_FILE_CAP), 'files' => TF_FILES_PER_MSG]]);
 
     case 'otp':

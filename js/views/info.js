@@ -11,6 +11,7 @@ import { icon } from '../icons.js';
 import { esc, num, ltr } from '../util.js';
 import { shot } from '../ui.js';
 import { L, isFa } from '../i18n.js';
+import { cbOn, pctText, minText } from '../credit.js';
 
 const DAYS = BRAND.deliveryDays;
 const DAYS_FA = '۳';
@@ -93,7 +94,7 @@ export const about = {
       <div class="facts">
         <div class="fact"><b>${L('۱۳۹۹', '2020', '2020')}</b><span>${esc(L('شروع کار', 'Founded', 'Kuruluş'))}</span></div>
         <div class="fact"><b>${num(STORES.length)}</b><span>${esc(L('شعبه', 'Stores', 'Mağaza'))}</span></div>
-        <div class="fact"><b>${esc(L('رایگان', 'Free', 'Ücretsiz'))}</b><span>${esc(L('ارسال', 'Delivery', 'Teslimat'))}</span></div>
+        <div class="fact"><b>${esc(L('رایگان', 'Free', 'Ücretsiz'))}</b><span>${esc(L('ارسال به سراسر ایران', 'Delivery across Iran', 'İran geneline teslimat'))}</span></div>
       </div>
     </article>
 
@@ -139,10 +140,18 @@ const SECTIONS = () => [
   {
     h: L('ارسال', 'Delivery', 'Teslimat'),
     p: [
-      L('ارسال همه‌ی سفارش‌ها رایگانه.', 'Delivery is free on every order.', 'Tüm siparişlerde teslimat ücretsiz.'),
+      L('همه‌ی سفارش‌ها با پست ایران فرستاده می‌شن و ارسال به همه‌ی شهرهای ایران رایگانه.',
+        'Every order travels by Iran Post, and delivery is free to every city in Iran.',
+        'Tüm siparişler İran Postası ile gönderilir; İran’ın her şehrine teslimat ücretsizdir.'),
       L(`سفارشت نهایتاً ظرف ${DAYS_FA} روز کاری به دستت می‌رسه. جمعه‌ها و تعطیلی‌های رسمی جزو روز کاری حساب نمی‌شن.`,
         `Your order reaches you within ${DAYS} working days at most. Fridays and public holidays are not working days.`,
         `Siparişin en geç ${DAYS} iş günü içinde sana ulaşır. Cuma ve resmî tatiller iş gününden sayılmaz.`),
+      L('برای ارسال، اسم و فامیل، شماره موبایل، استان و شهر، آدرس کامل و کد پستی ۱۰ رقمی لازمه؛ درست واردشون کن تا بسته بی‌معطلی برسه.',
+        'The post office needs your first and last name, mobile number, province and city, full address and 10-digit postal code — enter them carefully so the parcel is not held up.',
+        'Postane için ad soyad, cep numarası, il ve şehir, açık adres ve 10 haneli posta kodu gerekir; paketin gecikmemesi için doğru gir.'),
+      L('وقتی بسته رو تحویل پست دادیم، کد رهگیری پست توی «سفارش‌ها» میاد و می‌تونی توی سایت رهگیری پست (tracking.post.ir) دنبالش کنی.',
+        'Once the parcel is with Iran Post, its tracking code appears under Orders and you can follow it on tracking.post.ir.',
+        'Paket İran Postası’na verildiğinde takip kodu «Siparişler»de görünür; tracking.post.ir’de takip edebilirsin.'),
     ],
   },
   {
@@ -174,6 +183,34 @@ const SECTIONS = () => [
         'Kartla havale tutarı, havalen siparişinle tam eşleşsin diye sipariş toplamından birkaç toman (1.000’den az) fazladır.'),
     ],
   },
+  /* The cashback, with the numbers the back office has set (2026-10-20). */
+  ...(cbOn() ? [{
+    id: 'cashback',
+    h: L('اعتبار برگشتی (کش‌بک)', 'Cashback credit', 'Kredi iadesi'),
+    p: [
+      L(`هر سفارشی که جمعش ${minText()} یا بیشتر باشه، ${pctText()} مبلغی که پرداخت می‌کنی رو به‌صورت اعتبار تیفانی به حسابت برمی‌گردونه.`,
+        `Every order of ${minText()} or more gives ${pctText()} of the amount you pay back to your account as TIFFANY credit.`,
+        `${minText()} ve üzeri her siparişte, ödediğin tutarın ${pctText()} kadarı TIFFANY kredisi olarak hesabına eklenir.`),
+      L('برای گرفتن اعتبار باید موقع ثبت سفارش وارد حسابت باشی.',
+        'To get it, be signed in to your account when you place the order.',
+        'Krediyi almak için siparişi verirken hesabına giriş yapmış olmalısın.'),
+      L('اعتبار بعد از تحویل سفارش به حسابت اضافه می‌شه؛ تا اون موقع توی پروفایل «در راه» نوشته می‌شه.',
+        'The credit is added once the order is delivered; until then your profile shows it as on its way.',
+        'Kredi, sipariş teslim edilince hesabına eklenir; o zamana kadar profilinde yolda olarak görünür.'),
+      L('توی خرید بعدی، داخل سبد خرید «استفاده از اعتبار تیفانی» رو روشن بذار تا اعتبارت از جمع سفارش کم بشه و فقط باقیش رو پرداخت کنی. اگه اعتبارت کل مبلغ رو بپوشونه، پرداخت دیگه‌ای لازم نیست.',
+        'On your next order, keep «Use my TIFFANY credit» on in the bag: the credit comes off the total and you pay only the rest. If it covers everything, there is nothing more to pay.',
+        'Sonraki siparişinde sepetteki «TIFFANY kredimi kullan» seçeneğini açık bırak: kredin toplamdan düşer, yalnızca kalanını ödersin. Kredin tutarın tamamını karşılıyorsa başka ödeme gerekmez.'),
+      L('اعتبار روی مبلغی حساب می‌شه که واقعاً پرداخت می‌کنی؛ بخشی که با اعتبار پرداخت شده، اعتبار تازه نمی‌گیره.',
+        'Cashback is worked out on what you actually pay; the part paid with credit earns no new credit.',
+        'Kredi, gerçekten ödediğin tutar üzerinden hesaplanır; krediyle ödenen kısım yeni kredi kazandırmaz.'),
+      L('اگه سفارشی لغو یا مرجوع بشه، اعتبار برگشتیش حذف می‌شه، و اعتباری که روش خرج کرده بودی به حسابت برمی‌گرده.',
+        'If an order is cancelled or returned, its cashback is removed, and any credit you spent on it comes back to your account.',
+        'Bir sipariş iptal edilir ya da iade edilirse kredisi silinir; o siparişte harcadığın kredi hesabına geri döner.'),
+      L('اعتبار تیفانی فقط برای خرید از سایت تیفانیه و قابل برداشت نقدی یا انتقال به حساب دیگه نیست.',
+        'TIFFANY credit is for orders on the TIFFANY site only; it cannot be withdrawn as cash or moved to another account.',
+        'TIFFANY kredisi yalnızca TIFFANY sitesindeki siparişler içindir; nakit olarak çekilemez ve başka bir hesaba aktarılamaz.'),
+    ],
+  }] : []),
   {
     h: L('حریم خصوصی', 'Privacy', 'Gizlilik'),
     p: [
@@ -210,7 +247,7 @@ export const terms = {
     ${head(BRAND.full, L('قوانین و شرایط', 'Terms & policies', 'Koşullar ve politikalar'))}
     <article class="info terms">
       ${SECTIONS().map((s) => `
-        <section>
+        <section${s.id ? ` id="${s.id}"` : ''}>
           <h2>${esc(s.h)}</h2>
           <ul>${s.p.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
         </section>`).join('')}

@@ -23,6 +23,8 @@ import {
 import { isLooksOpen } from '../looks.js';
 import { lineOpt, totals } from './bag.js';
 import { L } from '../i18n.js';
+import { provinceName, POST_TRACKING } from '../post.js';
+import { live } from '../live.js';
 
 /* minutes after placing → the stage it reaches */
 const STAGES = [
@@ -30,10 +32,12 @@ const STAGES = [
     note: L('سفارشت رسید دستمون و به‌زودی بررسیش می‌کنیم.', 'We have it and will look at it shortly.', 'Siparişin bize ulaştı, kısa süre içinde bakacağız.') },
   { at: 2, name: L('داریم آماده‌ش می‌کنیم', 'Preparing', 'Hazırlanıyor'),
     note: L('از انبار جمعش کردیم و داریم بسته‌بندیش می‌کنیم.', 'Picked and being wrapped at the studio.', 'Atölyede toplandı, paketleniyor.') },
-  { at: 10, name: L('دست پیک', 'With the courier', 'Kuryede'),
-    note: L('دادیمش دست پیک و راه افتاد.', 'Handed over and on the road.', 'Kuryeye teslim edildi, yolda.') },
-  { at: 30, name: L('توی راه', 'Out for delivery', 'Dağıtımda'),
-    note: L('پیک قبل از رسیدن بهت زنگ می‌زنه.', 'The courier will call before arriving.', 'Kurye gelmeden önce seni arayacak.') },
+  { at: 10, name: L('تحویل پست شد', 'With Iran Post', 'İran Postası’nda'),
+    note: L('بسته رو تحویل پست دادیم؛ کد رهگیریش همین‌جا میاد.', 'Handed to Iran Post — its tracking code shows up here.',
+      'Koli İran Postası’na verildi; takip kodu burada görünür.') },
+  { at: 30, name: L('توی راه', 'On its way', 'Yolda'),
+    note: L('پست، رایگان و به سراسر ایران می‌رسونه.', 'Iran Post delivers it free, anywhere in Iran.',
+      'İran Postası ücretsiz, İran’ın her yerine getirir.') },
   { at: 120, name: L('تحویل شد', 'Delivered', 'Teslim edildi'),
     note: L('تا ۷ روز می‌تونی عوضش کنی.', 'Exchanges are open for 7 days.', '7 gün içinde değişim yapabilirsin.') },
 ];
@@ -65,8 +69,14 @@ function pieceOf(l) {
 }
 const linePrice = (l, p) => (l.price ? l.price : p.price) * l.qty;
 
+/* The promise is in working days: Fridays do not count (the terms say so;
+   public holidays are not known here, so this stays «حدوداً»). */
 const ETA = (order) => {
-  const d = new Date(order.placed + 3 * 86400000);
+  const d = new Date(order.placed);
+  for (let n = live.deliveryDays || 3; n > 0;) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 5) n -= 1;
+  }
   return `${fullDate(d)}${COMMA}${relDay(d)}`;
 };
 
@@ -94,9 +104,26 @@ function orderCard(o) {
     <span class="order-foot">
       <span>${esc(L(`${fullDate(placed)}، ساعت ${timeOf(placed)}`,
         `${fullDate(placed)}, ${timeOf(placed)}`, `${fullDate(placed)}, ${timeOf(placed)}`))}</span>
-      <span>${toman(o.total)}</span>
+      <span>${o.pay === 'credit' ? esc(L('با اعتبار', 'Paid with credit', 'Krediyle ödendi')) : toman(o.total)}</span>
     </span>
   </button>`;
+}
+
+/** What an order's cashback is doing: on its way, in the account, or gone. */
+function cashbackOf(o) {
+  const cb = Number(o.cashback) || 0;
+  if (!o.server || cb <= 0) return '';
+  const [head, note] = cancelled(o)
+    ? [L(`${toman(cb)} اعتبار برگشتی`, `${toman(cb)} cashback`, `${toman(cb)} kredi`),
+      L('سفارش لغو شد، پس این اعتبار به حسابت اضافه نمی‌شه.', 'The order was cancelled, so this credit is not added.',
+        'Sipariş iptal edildi; bu kredi eklenmez.')]
+    : o.status === 'delivered'
+      ? [L(`${toman(cb)} اعتبار به حسابت اضافه شد`, `${toman(cb)} credit added to your account`, `${toman(cb)} kredi hesabına eklendi`),
+        L('توی خرید بعدی، داخل سبد ازش استفاده کن.', 'Use it in the bag on your next order.', 'Sonraki siparişinde sepette kullan.')]
+      : [L(`${toman(cb)} اعتبار برگشتی`, `${toman(cb)} cashback`, `${toman(cb)} kredi`),
+        L('بعد از تحویل سفارش به حسابت اضافه می‌شه.', 'Added to your account once the order is delivered.',
+          'Sipariş teslim edilince hesabına eklenir.')];
+  return `<p class="cbline">${icon('gift', 16)}<span><b>${esc(head)}</b> ${esc(note)}</span></p>`;
 }
 
 function trackSheet(o, { sample = false } = {}) {
@@ -119,6 +146,7 @@ function trackSheet(o, { sample = false } = {}) {
           : esc(L(`حدوداً ${ETA(o)} می‌رسه.`, `Estimated delivery ${ETA(o)}.`, `Tahmini teslimat: ${ETA(o)}.`))}</p>
 
     ${sample ? '' : payBox(o)}
+    ${sample ? '' : postBox(o)}
 
     ${cancelled(o) || preview ? '' : `<div class="track" style="--accent:var(--c-cherry)">
       ${STAGES.map((s, i) => `
@@ -140,15 +168,49 @@ function trackSheet(o, { sample = false } = {}) {
             <span class="line-price">${toman(linePrice(l, p))}</span></div>
         </div>
       </div>`).join('')}
-    ${totals(o.subtotal, o.shipping)}` : ''}
+    ${totals(o.subtotal, o.shipping, Number(o.credit) || 0)}
+    ${cashbackOf(o)}` : ''}
 
     ${!sample && o.address?.line ? `
     <p class="eyebrow" style="margin:16px 0 6px">${esc(L('می‌فرستیم به', 'Delivering to', 'Teslimat adresi'))}</p>
-    <p class="lede" style="margin:0">${esc(o.address.line)}${COMMA}${esc(o.address.city)}</p>` : ''}
+    <p class="lede" style="margin:0">${esc([o.address.line, o.address.city, provinceName(o.address.province)]
+    .filter(Boolean).join(COMMA))}${o.address.postal ? `<br><span class="tiny">${esc(L('کد پستی', 'Postal code', 'Posta kodu'))}
+      <span dir="ltr">${esc(o.address.postal)}</span></span>` : ''}</p>` : ''}
 
     <div class="topgap"></div>
     <button class="btn btn-quiet btn-block" data-act="sheet-close" type="button">${esc(L('بستن', 'Close', 'Kapat'))}</button>`,
-  { label: L('پیگیری سفارش', 'Track order', 'Sipariş takibi') });
+  {
+    label: L('پیگیری سفارش', 'Track order', 'Sipariş takibi'),
+    onMount(sheet) {
+      sheet.querySelector('[data-act="post-copy"]')?.addEventListener('click', async (e) => {
+        const code = e.currentTarget.dataset.code;
+        try {
+          await navigator.clipboard.writeText(code);
+          toast(L('کد رهگیری کپی شد', 'Tracking code copied', 'Takip kodu kopyalandı'), 'copy');
+        } catch {
+          toast(code, 'copy', 5000);
+        }
+      });
+    },
+  });
+}
+
+/** Once the team posts the parcel: Iran Post's tracking code, to copy and
+    follow on the post office's own site. */
+function postBox(o) {
+  const code = String(o.postCode || '');
+  if (!o.server || !code || cancelled(o)) return '';
+  return `
+    <div class="post-box">
+      <p class="eyebrow">${icon('truck', 15)}${esc(L('کد رهگیری پست', 'Iran Post tracking code', 'İran Postası takip kodu'))}</p>
+      <b class="post-code" dir="ltr">${esc(code)}</b>
+      <p class="tiny">${esc(L('کد رو کپی کن و توی سایت رهگیری پست بزن.', 'Copy the code and paste it on Iran Post’s tracking site.',
+    'Kodu kopyala ve İran Postası’nın takip sitesine yapıştır.'))}</p>
+      <div class="post-acts">
+        <button class="btn btn-line btn-s" data-act="post-copy" data-code="${esc(code)}" type="button">${icon('copy', 16)}<span>${esc(L('کپی کد', 'Copy code', 'Kodu kopyala'))}</span></button>
+        <a class="btn btn-line btn-s" href="${POST_TRACKING}" target="_blank" rel="noopener">${esc(L('پیگیری در سایت پست', 'Track on post.ir', 'post.ir’de takip et'))}</a>
+      </div>
+    </div>`;
 }
 
 const SAMPLE = () => ({
@@ -168,7 +230,10 @@ async function trackReal(signal) {
   if (Date.now() - trackedAt < 30000) return;
   trackedAt = Date.now();
   const byPhone = {};
-  state.orders.filter((o) => o.server && o.phone && (!['delivered', 'cancelled'].includes(o.status) || awaitingPay(o)))
+  /* Delivered orders are still asked about for 30 days: a return («مرجوع شد»)
+     cancels one and takes its cashback, and a tracking code may come late. */
+  const recent = (o) => o.status === 'delivered' && Date.now() - o.placed < 30 * 86400000;
+  state.orders.filter((o) => o.server && o.phone && (!['delivered', 'cancelled'].includes(o.status) || awaitingPay(o) || recent(o)))
     .forEach((o) => { (byPhone[o.phone] ||= []).push(o.code); });
   let moved = false;
   for (const [phone, codes] of Object.entries(byPhone)) {
@@ -182,6 +247,7 @@ async function trackReal(signal) {
         const o = getOrder(code);
         if (!o) continue;
         if (o.status !== s.status) { o.status = s.status; moved = true; }
+        if ((s.post_code || '') !== (o.postCode || '')) { o.postCode = s.post_code || ''; moved = true; }
         if (isC2c(o) && (o.payState !== s.pay_state || Boolean(o.paid) !== Boolean(s.paid))) {
           o.payState = s.pay_state;
           o.paid = Boolean(s.paid);
@@ -215,6 +281,7 @@ async function landFromPayment(code, key) {
     o = addOrder({
       code, placed: s.created_at * 1000, pay: s.pay, payKey: key, server: true, status: s.status,
       subtotal: s.subtotal, shipping: s.shipping, total: s.total, phone: s.phone,
+      credit: Number(s.credit) || 0, cashback: Number(s.cashback) || 0,
       items: s.items.map((i) => ({
         id: i.id, size: i.size, colour: i.colour, qty: i.qty, name: i.name, img: i.img,
         price: i.price, colourName: i.colour_name,
@@ -242,8 +309,9 @@ export default {
     if (!state.orders.length) {
       return `<div class="wrap"><div class="topgap"></div>${h1}</div>
         ${empty('box', L('هنوز سفارشی نداری', 'No orders yet', 'Henüz siparişin yok'),
-          L('سفارش که بدی، پیک از همین‌جا پیداش می‌شه.', 'Once you order, this is where the courier turns up.',
-            'Sipariş verdiğinde kurye burada görünecek.'),
+          L('سفارش که بدی، از همین‌جا تا در خونه دنبالش می‌کنی؛ ارسال با پست، رایگان به سراسر ایران.',
+            'Once you order, follow it here to your door — free delivery by Iran Post anywhere in Iran.',
+            'Sipariş verdiğinde kapına kadar buradan takip et; İran Postası ile ücretsiz teslimat.'),
           `<button class="btn btn-ink btn-s" data-act="nav" data-to="/shop" type="button">${esc(L('بریم خرید', 'Shop the season', 'Alışverişe başla'))}</button>
            <div style="height:9px"></div>
            <button class="btn btn-line btn-s" data-act="sample" type="button">${esc(L('ببین پیگیری چه شکلیه', 'See how tracking looks', 'Takip nasıl görünüyor'))}</button>`)}`;

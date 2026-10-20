@@ -4,7 +4,7 @@
 import { BRAND } from '../config.js';
 import { SIZES } from '../data.js';
 import { icon } from '../icons.js';
-import { esc, num, typed } from '../util.js';
+import { esc, num, typed, toman } from '../util.js';
 import { state, patch, bagCount } from '../store.js';
 import {
   openSheet, closeSheet, toast, recommendSize, fitSaved, alphaSig, trustSeal,
@@ -13,6 +13,26 @@ import { standalone } from '../install.js';
 import { consent } from '../consent.js';
 import { account } from '../account.js';
 import { L } from '../i18n.js';
+import { cbOn, pctText, minText } from '../credit.js';
+import { provinceSelect, postalDigits, postLine } from '../post.js';
+
+/** Signed in: the account's TIFFANY credit, and what is still on its way. */
+function creditBox() {
+  const c = account.credit;
+  if (!cbOn() && c.balance <= 0 && c.pending <= 0) return '';
+  return `
+    <section class="credit-box" aria-label="${esc(L('اعتبار تیفانی', 'TIFFANY credit', 'TIFFANY kredisi'))}">
+      <p class="eyebrow">${icon('gift', 15)}${esc(L('اعتبار تیفانی', 'TIFFANY credit', 'TIFFANY kredisi'))}</p>
+      <b class="credit-amt">${toman(c.balance)}</b>
+      ${c.pending > 0 ? `<p class="credit-pending">${esc(L(`${toman(c.pending)} در راه؛ بعد از تحویل سفارش‌هات اضافه می‌شه.`,
+    `${toman(c.pending)} on its way — added once your orders are delivered.`,
+    `${toman(c.pending)} yolda; siparişlerin teslim edilince eklenir.`))}</p>` : ''}
+      ${cbOn() ? `<p class="credit-how">${esc(L(`خریدهای ${minText()} به بالا، ${pctText()} مبلغ پرداختی رو اعتبار می‌گیرن؛ توی سبد ازش استفاده کن.`,
+    `Orders of ${minText()} or more earn ${pctText()} of what you pay as credit — use it in the bag.`,
+    `${minText()} ve üzeri siparişler ödenen tutarın ${pctText()} kadarı kredi kazandırır; sepette kullan.`))}
+        <a href="#/terms" class="link-more">${esc(L('قوانین', 'How it works', 'Kurallar'))}</a></p>` : ''}
+    </section>`;
+}
 
 const initials = (name) => {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -100,21 +120,25 @@ function addressSheet() {
       'موقع تکمیل خرید خودش پر می‌شه. فقط روی همین گوشی ذخیره می‌شه، جای دیگه نه.',
       'Fills in checkout for you. Stored on this phone and nowhere else.',
       'Ödeme sırasında kendiliğinden dolar. Sadece bu telefonda saklanır, başka hiçbir yerde değil.'))}</p>
+    <p class="post-note">${icon('truck', 16)}<span>${esc(postLine())}</span></p>
     <form id="adForm" novalidate>
       <div class="field"><label for="aName">${esc(L('اسم و فامیل', 'Full name', 'Ad soyad'))}</label>
         <input id="aName" name="name" autocomplete="name" value="${esc(p.name)}"></div>
       <div class="field"><label for="aPhone">${esc(L('شماره موبایل', 'Phone', 'Telefon'))}</label>
         <input id="aPhone" name="phone" inputmode="tel" autocomplete="tel" dir="ltr"
                value="${esc(p.phone)}" placeholder="${L('۰۹۱۲ ۰۰۰ ۰۰۰۰', '0912 000 0000', '0912 000 0000')}"></div>
-      <div class="field"><label for="aLine">${esc(L('آدرس', 'Address', 'Adres'))}</label>
-        <textarea id="aLine" name="line" autocomplete="street-address">${esc(a.line)}</textarea></div>
       <div class="field-row">
+        <div class="field"><label for="aProvince">${esc(L('استان', 'Province', 'İl'))}</label>
+          ${provinceSelect('aProvince', a.province || '')}</div>
         <div class="field"><label for="aCity">${esc(L('شهر', 'City', 'Şehir'))}</label>
           <input id="aCity" name="city" autocomplete="address-level2" value="${esc(a.city)}"></div>
-        <div class="field"><label for="aPostal">${esc(L('کد پستی', 'Post code', 'Posta kodu'))}</label>
-          <input id="aPostal" name="postal" inputmode="numeric" dir="ltr"
-                 value="${esc(a.postal)}"></div>
       </div>
+      <div class="field"><label for="aLine">${esc(L('آدرس کامل', 'Full address', 'Açık adres'))}</label>
+        <textarea id="aLine" name="line" autocomplete="street-address"
+                  placeholder="${esc(L('خیابون، کوچه، پلاک، واحد', 'Street, lane, building, unit', 'Cadde, sokak, bina, daire'))}">${esc(a.line)}</textarea></div>
+      <div class="field"><label for="aPostal">${esc(L('کد پستی ۱۰ رقمی', '10-digit postal code', '10 haneli posta kodu'))}</label>
+        <input id="aPostal" name="postal" inputmode="numeric" dir="ltr" maxlength="14"
+               autocomplete="postal-code" placeholder="0000000000" value="${esc(a.postal)}"></div>
       <div style="height:12px"></div>
       <button class="btn btn-ink btn-block" type="submit">${esc(L('ذخیره', 'Save', 'Kaydet'))}</button>
     </form>`,
@@ -126,7 +150,7 @@ function addressSheet() {
         const d = new FormData(e.target);
         const g = (k) => String(d.get(k) || '').trim();
         patch('profile', { name: g('name'), phone: g('phone') });
-        patch('address', { line: g('line'), city: g('city'), postal: g('postal') });
+        patch('address', { line: g('line'), city: g('city'), province: g('province'), postal: postalDigits(g('postal')) });
         closeSheet();
         toast(L('اطلاعات ذخیره شد', 'Details saved', 'Bilgiler kaydedildi'), 'check');
         document.dispatchEvent(new CustomEvent('view:refresh'));
@@ -196,7 +220,8 @@ export default {
           ${icon('check', 13)}${esc(L('تأییدشده', 'confirmed', 'doğrulandı'))}</p>
       </div>
       <button class="btn btn-line btn-s" data-act="account" type="button">${esc(L('حساب', 'Account', 'Hesap'))}</button>
-    </header>` : `
+    </header>
+    ${creditBox()}` : `
     <header class="phead">
       <div class="avatar">${esc(initials(p.name))}</div>
       <div style="flex:1;min-width:0">
@@ -211,6 +236,9 @@ export default {
         <li>${icon('ticket', 17)}<span>${esc(L('تیکت پشتیبانی بفرست و جواب تیم رو همین‌جا بگیر؛ وقتی جواب بیاد پیامک می‌گیری.',
           'Send support tickets and read the team’s answers here — with a text when one arrives.',
           'Destek talebi gönder, ekibin yanıtını burada oku — yanıt gelince SMS alırsın.'))}</span></li>
+        ${cbOn() ? `<li>${icon('gift', 17)}<span>${esc(L(`خریدهای ${minText()} به بالا، ${pctText()} مبلغ پرداختی رو به‌صورت اعتبار پس می‌گیری.`,
+          `Orders of ${minText()} or more give ${pctText()} of what you pay back as credit.`,
+          `${minText()} ve üzeri siparişlerde ödediğin tutarın ${pctText()} kadarı kredi olarak geri gelir.`))}</span></li>` : ''}
         <li>${icon('bag', 17)}<span>${esc(L('موقع خرید، اسم و شماره‌ت خودش پر می‌شه.',
           'Checkout fills in your name and number.',
           'Ödemede adın ve numaran kendiliğinden dolar.'))}</span></li>

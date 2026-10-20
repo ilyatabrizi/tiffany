@@ -286,7 +286,7 @@ with sync_playwright() as pw:
     page.wait_for_selector('.acct-box')
     two = page.eval_on_selector_all('.acct-two .btn', 'e => e.map(x => x.textContent.trim())')
     check('signed out: what an account is for, then «ورود» and «ساخت حساب» side by side',
-          two == ['ورود', 'ساخت حساب'] and page.locator('.acct-perks li').count() == 3
+          two == ['ورود', 'ساخت حساب'] and page.locator('.acct-perks li').count() == 4
           and page.locator('.phead .btn').count() == 0, str(two))
     shot(page, '09b-profile-signed-out')
     page.click('.acct-two [data-act="signup"]')

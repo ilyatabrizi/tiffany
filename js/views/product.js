@@ -15,6 +15,7 @@ import {
   shot, bigShot, productCard, openSheet, closeSheet, toast, recommendSize,
 } from '../ui.js';
 import { L } from '../i18n.js';
+import { postLine } from '../post.js';
 
 /* Chosen size and colour live for as long as the page does. */
 let pick = { id: null, size: null, colour: 0 };
@@ -234,10 +235,10 @@ export default {
         ${spec.map(([head, body], i) => `<details ${i === 0 ? 'open' : ''}><summary>${esc(head)}${icon('chevD', 17)}</summary>
           <div class="body">${esc(body)}</div></details>`).join('')}
         <details><summary>${esc(L('ارسال و مرجوعی', 'Delivery and returns', 'Teslimat ve iade'))}${icon('chevD', 17)}</summary>
-          <div class="body">${esc(L(
-            'ارسال رایگانه و نهایتاً ۳ روز کاری طول می‌کشه. تا ۷ روز بعد از تحویل، اگه نپوشیده باشی و برچسبش سالم باشه، عوض یا مرجوعش می‌کنیم.',
-            'Free delivery, within 3 working days at most. Exchange or return within 7 days of delivery, unworn with tags intact.',
-            'Ücretsiz teslimat, en geç 3 iş günü içinde. Teslimattan sonraki 7 gün içinde, giyilmemiş ve etiketi sağlamsa değişim ya da iade.'))}
+          <div class="body">${esc(postLine())} ${esc(L(
+            'تا ۷ روز بعد از تحویل، اگه نپوشیده باشی و برچسبش سالم باشه، عوض یا مرجوعش می‌کنیم.',
+            'Exchange or return within 7 days of delivery, unworn with tags intact.',
+            'Teslimattan sonraki 7 gün içinde, giyilmemiş ve etiketi sağlamsa değişim ya da iade.'))}
             <a class="more-link" href="#/terms">${esc(L('قوانین کامل', 'Full terms', 'Tüm koşullar'))}</a></div></details>
       </div>
 

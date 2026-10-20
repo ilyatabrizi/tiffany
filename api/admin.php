@@ -368,6 +368,19 @@ switch ($a) {
         tz_refresh($row, true);
         ok(['order' => order_or_404($o['code'])]);
 
+    /* The Iran Post tracking code (24 digits on the receipt; Persian digits
+       read); empty takes it off. The customer sees it on the order. */
+    case 'order_post':
+        $o = order_or_404((string) ($in['code'] ?? ''));
+        $raw = tf_line($in['post'] ?? '', 60);
+        $post = preg_replace('/\D/', '', tf_digits($raw)) ?? '';
+        if ($raw !== '' && (strlen($post) < 10 || strlen($post) > 30)) {
+            throw new TfInvalid('post', 'کد رهگیری پست فقط عدده (معمولاً ۲۴ رقم، روی رسید پست).');
+        }
+        db()->prepare('UPDATE orders SET post_code = ?, updated_at = ? WHERE code = ?')->execute([$post, time(), $o['code']]);
+        tf_log($me['name'], 'order_post', $o['code'] . ($post !== '' ? ' → ' . $post : ''));
+        ok(['order' => order_or_404($o['code'])]);
+
     case 'order_note':
         $o = order_or_404((string) ($in['code'] ?? ''));
         db()->prepare('UPDATE orders SET admin_note = ?, updated_at = ? WHERE code = ?')
@@ -384,7 +397,11 @@ switch ($a) {
         $st = db()->prepare('SELECT * FROM orders WHERE phone = ? ORDER BY created_at DESC');
         $st->execute([$phone]);
         $orders = array_map('tf_order_public', $st->fetchAll());
-        ok(['orders' => $orders]);
+        /* The account on this number, if there is one, and its cashback credit. */
+        $acct = $phone !== '' ? tf_customer_by_phone($phone) : null;
+        $credit = $acct ? tf_credit((int) $acct['id']) : null;
+        ok(['orders' => $orders, 'account' => $acct ? ['name' => $acct['name'], 'since' => (int) $acct['created_at'],
+            'balance' => $credit['balance'], 'pending' => $credit['pending']] : null]);
 
     /* -------------------------------------------------------- settings */
     case 'settings':
@@ -440,6 +457,39 @@ switch ($a) {
             }
             setting_set('tz_on', $on ? '1' : '0');
             tf_log($me['name'], $on ? 'pay_on' : 'pay_off');
+        }
+        /* Cashback: on or off, the share of the amount paid that comes back
+           (0–50%), and the order total it starts at, in toman. */
+        /* Both numbers are checked before either is kept, so a wrong one
+           saves nothing. The minimum takes 5,000,000 / 5.000.000 / ۵٬۰۰۰٬۰۰۰
+           but not a decimal (5000000.00 is refused, never read as 500 million). */
+        $pct = $min = null;
+        if (array_key_exists('cb_pct', $in)) {
+            $raw = tf_line($in['cb_pct'] ?? '', 6);
+            $pct = tf_int($raw);
+            if ($raw === '' || !preg_match('/^\d{1,2}$/', tf_digits($raw)) || $pct < 1 || $pct > 50) {
+                throw new TfInvalid('cb_pct', 'درصد رو بین ۱ تا ۵۰ بنویس.');
+            }
+        }
+        if (array_key_exists('cb_min', $in)) {
+            $raw = tf_digits(tf_line($in['cb_min'] ?? '', 24));
+            $min = tf_int($raw);
+            if (preg_match('/[.,\x{066B}\x{066C}]\d{1,2}$/u', $raw) || $min < 1000 || $min > 10000000000) {
+                throw new TfInvalid('cb_min', 'حداقل مبلغ رو به تومان و بدون اعشار بنویس.');
+            }
+        }
+        if (array_key_exists('cb_on', $in)) {
+            $on = !empty($in['cb_on']);
+            setting_set('cb_on', $on ? '1' : '0');
+            tf_log($me['name'], $on ? 'cashback_on' : 'cashback_off');
+        }
+        if ($pct !== null) {
+            setting_set('cb_pct', (string) $pct);
+            tf_log($me['name'], 'cashback_pct', (string) $pct);
+        }
+        if ($min !== null) {
+            setting_set('cb_min', (string) $min);
+            tf_log($me['name'], 'cashback_min', (string) $min);
         }
         if (array_key_exists('sms_on', $in)) {
             $on = !empty($in['sms_on']);

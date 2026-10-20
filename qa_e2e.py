@@ -79,8 +79,10 @@ def state(page):
 def checkout(page, name='سارا رضایی', phone='09121110000'):
     page.fill('#coName', name)
     page.fill('#coPhone', phone)
+    page.select_option('#coProvince', 'آذربایجان شرقی')
     page.fill('#coLine', 'خیابان امام، کوچه‌ی ۵، پلاک ۸')
     page.fill('#coCity', 'تبریز')
+    page.fill('#coPostal', '5166615731')
     page.locator('#coForm button[type="submit"]').click()
 
 

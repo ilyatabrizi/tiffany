@@ -235,6 +235,10 @@ r2 = requests.get(BASE + '/seo.php', params={'k': 'c', 'id': '"><img src=x onerr
 check('a hostile id is never written into the page', r.status_code == 404 and r2.status_code == 404
       and 'alert(1)' not in r.text and 'alert(1)' not in r2.text)
 
+r = requests.get(BASE + '/join', allow_redirects=False)
+check('tiffanybv.com/join (the QR code) sends the visitor to the shop with sign-up open',
+      r.status_code == 302 and r.headers.get('Location') == '/#/join', f"{r.status_code} {r.headers.get('Location')}")
+
 print('\nsitemap, llms.txt, robots.txt')
 r = requests.get(BASE + '/sitemap.xml')
 ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9', 'i': 'http://www.google.com/schemas/sitemap-image/1.1'}

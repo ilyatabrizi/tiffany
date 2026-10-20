@@ -20,6 +20,9 @@ import { go } from '../router.js';
 import { L } from '../i18n.js';
 import { live } from '../live.js';
 import { payOptions, forgetOffer } from '../pay.js';
+import { account, takeCredit, loadAccount } from '../account.js';
+import { cbOn, pctText, minText, spending, setSpending, creditFor, earns } from '../credit.js';
+import { provinceSelect, postalDigits, postalOk, mobileOk, fullNameOk, postLine } from '../post.js';
 
 export const subtotal = () => state.bag.reduce((n, l) => {
   const p = getProduct(l.id);
@@ -39,13 +42,82 @@ export const lineOpt = (p, l) =>
   `${isOneSize(l.size) ? esc(sizeLabel(l.size)) : `<span dir="ltr">${esc(l.size)}</span>`} — ${esc(
     p.colours?.length ? colourLabel(p, l.colour) : (l.colourName || l.colour))}`;
 
-const totals = (sub, ship) => `
+/* With credit spent, the last line is what is left to pay. */
+const totals = (sub, ship, credit = 0) => `
   <div class="totals">
     <div class="trow"><span>${esc(L('جمع', 'Subtotal', 'Ara toplam'))}</span><b>${toman(sub)}</b></div>
     <div class="trow"><span>${esc(L('ارسال', 'Delivery', 'Teslimat'))}</span><b>${ship ? toman(ship) : esc(L('رایگان', 'Free', 'Ücretsiz'))}</b></div>
-    <div class="trow big"><span>${esc(L('مبلغ کل', 'Total', 'Toplam'))}</span><b>${toman(sub + ship)}</b></div>
+    ${credit > 0 ? `<div class="trow credit"><span>${esc(L('اعتبار تیفانی', 'TIFFANY credit', 'TIFFANY kredisi'))}</span><b>−${toman(credit)}</b></div>` : ''}
+    <div class="trow big"><span>${esc(credit > 0 ? L('مبلغ قابل پرداخت', 'To pay', 'Ödenecek') : L('مبلغ کل', 'Total', 'Toplam'))}</span><b>${toman(sub + ship - credit)}</b></div>
   </div>`;
 export { totals };
+
+/* ---------------------------------------------------------------- cashback */
+/** Above the lines: how far to the cashback, or what this bag earns. */
+function cashbackNote(gross, credit) {
+  if (!cbOn()) return '';
+  const min = live.cashback.min;
+  if (gross < min) {
+    const left = min - gross;
+    return `
+    <div class="cbnote">
+      ${icon('gift', 18)}
+      <div>
+        <b>${esc(L(`${toman(left)} دیگه تا ${pctText()} اعتبار برگشتی`,
+    `${toman(left)} more for ${pctText()} cashback`,
+    `${toman(left)} daha alışveriş yap, ${pctText()} kredi kazan`))}</b>
+        <span>${esc(L(`خریدهای ${minText()} به بالا، ${pctText()} مبلغ پرداختی رو به‌صورت اعتبار به حسابت برمی‌گردونن.`,
+    `Orders of ${minText()} or more give ${pctText()} of what you pay back as credit to your account.`,
+    `${minText()} ve üzeri siparişlerde ödenen tutarın ${pctText()} kadarı hesabına kredi olarak eklenir.`))}</span>
+        <i class="cbbar" style="--p:${Math.max(4, Math.min(100, Math.round((gross / min) * 100)))}%"></i>
+      </div>
+    </div>`;
+  }
+  const back = earns(gross, credit);
+  if (!back) return '';
+  if (!account.user) {
+    return `
+    <div class="cbnote on">
+      ${icon('gift', 18)}
+      <div>
+        <b>${esc(L(`این خرید ${toman(back)} اعتبار برگشتی داره`, `This order earns ${toman(back)} cashback`,
+    `Bu sipariş ${toman(back)} kredi kazandırır`))}</b>
+        <span>${esc(L('برای گرفتنش، قبل از خرید وارد حسابت شو یا یه حساب بساز.',
+    'Sign in or create an account before checkout to get it.',
+    'Almak için ödemeden önce giriş yap ya da hesap oluştur.'))}</span>
+        <span class="cbacts">
+          <button class="btn btn-ink btn-s" data-act="signin" type="button">${esc(L('ورود', 'Sign in', 'Giriş yap'))}</button>
+          <button class="btn btn-line btn-s" data-act="signup" type="button">${esc(L('ساخت حساب', 'Create account', 'Hesap oluştur'))}</button>
+        </span>
+      </div>
+    </div>`;
+  }
+  return `
+    <div class="cbnote on">
+      ${icon('gift', 18)}
+      <div>
+        <b>${esc(L(`این خرید ${toman(back)} اعتبار برگشتی داره`, `This order earns ${toman(back)} cashback`,
+    `Bu sipariş ${toman(back)} kredi kazandırır`))}</b>
+        <span>${esc(L('بعد از تحویل سفارش به حسابت اضافه می‌شه و توی خرید بعدی همین‌جا ازش استفاده می‌کنی.',
+    'It is added to your account once the order is delivered, and comes off your next order right here.',
+    'Sipariş teslim edilince hesabına eklenir; sonraki siparişinde burada kullanırsın.'))}</span>
+      </div>
+    </div>`;
+}
+
+/** Signed in with credit: the switch that spends it on this order. */
+function creditSwitch() {
+  const have = account.user ? account.credit.balance : 0;
+  if (have <= 0) return '';
+  const on = spending();
+  return `
+    <button class="cbswitch" data-credit type="button" role="switch" aria-checked="${on}">
+      ${icon('gift', 18)}
+      <span><b>${esc(L('استفاده از اعتبار تیفانی', 'Use my TIFFANY credit', 'TIFFANY kredimi kullan'))}</b>
+        <span>${esc(L(`${toman(have)} اعتبار داری`, `You have ${toman(have)}`, `${toman(have)} kredin var`))}</span></span>
+      <i class="knob" aria-hidden="true"></i>
+    </button>`;
+}
 
 function lineHTML(l) {
   const p = getProduct(l.id);
@@ -83,14 +155,21 @@ function lineHTML(l) {
 }
 
 const ORDER_ERR = {
-  name: () => L('اسم و فامیل رو کامل بنویس.', 'Please give your full name.', 'Lütfen adını ve soyadını yaz.'),
+  name: () => L('اسم و فامیل رو کامل بنویس.', 'Please give your first and last name.', 'Lütfen adını ve soyadını yaz.'),
   phone: () => L('شماره موبایل درست نیست.', 'That mobile number does not look right.', 'Cep numarası doğru görünmüyor.'),
+  province: () => L('استان رو انتخاب کن.', 'Please choose your province.', 'Lütfen ilini seç.'),
   city: () => L('شهر رو بنویس.', 'Please add your city.', 'Lütfen şehrini yaz.'),
-  address: () => L('آدرس کامل رو بنویس.', 'Please give your full address.', 'Lütfen açık adresini yaz.'),
-  postal: () => L('کد پستی ۱۰ رقمیه.', 'The post code has 10 digits.', 'Posta kodu 10 hanelidir.'),
+  address: () => L('آدرس کامل رو بنویس: خیابون، کوچه، پلاک و واحد.', 'Please give your full address: street, building and unit.',
+    'Lütfen açık adresini yaz: sokak, bina ve daire.'),
+  postal: () => L('کد پستی ۱۰ رقمی رو درست بنویس.', 'Please give your 10-digit postal code.', 'Lütfen 10 haneli posta kodunu yaz.'),
   pay: () => L('کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.',
     'Card-to-card is not available right now — please choose card on delivery.',
     'Kartla havale şu an kullanılamıyor; lütfen kapıda kartı seç.'),
+  credit: () => L('برای استفاده از اعتبار اول وارد حسابت شو.', 'Sign in first to use your credit.',
+    'Kredini kullanmak için önce giriş yap.'),
+  credit_changed: () => L('اعتبار حسابت همین الان تغییر کرده؛ مبلغ جدید رو توی سبد ببین و دوباره ثبت کن.',
+    'Your credit has just changed — check the new amount in the bag and place the order again.',
+    'Kredin az önce değişti; sepetteki yeni tutara bak ve siparişi yeniden ver.'),
 };
 
 /** What to tell the customer when the server says no. */
@@ -101,6 +180,11 @@ function orderError(status, j) {
       'Online sipariş şu an kapalı; mağazadan ya da Instagram’dan sipariş ver.');
   }
   if (status === 429) return L('چند دقیقه دیگه دوباره امتحان کن.', 'Please try again in a few minutes.', 'Birkaç dakika sonra tekrar dene.');
+  if (status === 403 && j.error === 'csrf') {
+    return L('حسابت نیاز به ورود دوباره داره؛ یه بار خارج شو و دوباره وارد شو.',
+      'Your sign-in needs refreshing — sign out and in again.',
+      'Oturumunun yenilenmesi gerekiyor; çıkış yapıp tekrar giriş yap.');
+  }
   if (status === 422 && j.field === 'pending') {
     return L('برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.',
       'A few orders from this number are still waiting to be confirmed — the TIFFANY team will call you shortly.',
@@ -145,15 +229,33 @@ let opening = false;
 
 /* What the customer reads above the form, for the way they pay. */
 const payLede = (pay) => (pay === 'c2c'
-  ? L(`بعد از ثبت، می‌ری صفحه‌ی پرداخت «تأیید شد»: مبلغ رو از اپ بانکت کارت‌به‌کارت می‌کنی و «واریز کردم» رو می‌زنی. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
-    `Next you go to the Tayid Shod payment page: transfer the amount from your bank app and tap «واریز کردم». Delivery is free and takes ${live.deliveryDays} working days at most.`,
-    `Sonra Tayid Shod ödeme sayfasına geçersin: tutarı banka uygulamandan havale edip «واریز کردم»a dokunursun. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`)
-  : L(`پرداخت با کارت موقع تحویل. ارسال رایگانه و نهایتاً ${num(live.deliveryDays)} روز کاری طول می‌کشه.`,
-    `Pay by card on delivery. Delivery is free and takes ${live.deliveryDays} working days at most.`,
-    `Teslimatta kartla ödeme. Teslimat ücretsiz, en geç ${live.deliveryDays} iş günü.`));
+  ? L(`بعد از ثبت، می‌ری صفحه‌ی پرداخت «تأیید شد»: مبلغ رو از اپ بانکت کارت‌به‌کارت می‌کنی و «واریز کردم» رو می‌زنی. ارسال با پست، رایگان به سراسر ایران؛ نهایتاً ${num(live.deliveryDays)} روز کاری.`,
+    `Next you go to the Tayid Shod payment page: transfer the amount from your bank app and tap «واریز کردم». Free delivery by Iran Post anywhere in Iran, ${live.deliveryDays} working days at most.`,
+    `Sonra Tayid Shod ödeme sayfasına geçersin: tutarı banka uygulamandan havale edip «واریز کردم»a dokunursun. İran Postası ile İran'ın her yerine ücretsiz teslimat, en geç ${live.deliveryDays} iş günü.`)
+  : L(`پرداخت با کارت موقع تحویل. ارسال با پست، رایگان به سراسر ایران؛ نهایتاً ${num(live.deliveryDays)} روز کاری.`,
+    `Pay by card on delivery. Free delivery by Iran Post anywhere in Iran, ${live.deliveryDays} working days at most.`,
+    `Teslimatta kartla ödeme. İran Postası ile İran'ın her yerine ücretsiz teslimat, en geç ${live.deliveryDays} iş günü.`));
 const payButton = (pay) => (pay === 'c2c'
   ? L('ثبت سفارش و پرداخت', 'Place order and pay', 'Siparişi ver ve öde')
   : L('ثبت سفارش', 'Place order', 'Siparişi ver'));
+/* Credit that covers the whole order: nothing to pay, nothing to choose. */
+const creditLede = () => L(`کل مبلغ با اعتبار تیفانیت پرداخت می‌شه. ارسال با پست، رایگان به سراسر ایران؛ نهایتاً ${num(live.deliveryDays)} روز کاری.`,
+  `Your TIFFANY credit covers all of it. Free delivery by Iran Post anywhere in Iran, ${live.deliveryDays} working days at most.`,
+  `Tutarın tamamı TIFFANY kredinle ödenir. İran Postası ile İran'ın her yerine ücretsiz teslimat, en geç ${live.deliveryDays} iş günü.`);
+
+/** Under the checkout totals: the cashback this order earns. */
+function cashbackLine(gross, credit) {
+  const back = earns(gross, credit);
+  if (!back) return '';
+  return account.user
+    ? `<p class="cbline">${icon('gift', 16)}<span>${esc(L(`${toman(back)} اعتبار برگشتی، بعد از تحویل سفارش به حسابت اضافه می‌شه.`,
+      `${toman(back)} cashback, added to your account once the order is delivered.`,
+      `${toman(back)} kredi, sipariş teslim edilince hesabına eklenir.`))}</span></p>`
+    : `<p class="cbline">${icon('gift', 16)}<span>${esc(L(`با ورود به حسابت قبل از ثبت سفارش، ${toman(back)} اعتبار برگشتی می‌گیری.`,
+      `Sign in before you order to get ${toman(back)} cashback.`,
+      `Sipariş vermeden önce giriş yaparsan ${toman(back)} kredi kazanırsın.`))}</span>
+      <button class="link-more" data-act="signin" type="button">${esc(L('ورود', 'Sign in', 'Giriş yap'))}</button></p>`;
+}
 
 /* With the store switched on (back office → Settings), the order goes to the
    shop for real: the server prices it, keeps it and the team sees it in the
@@ -165,13 +267,16 @@ async function checkoutSheet() {
   const offer = await payOptions().finally(() => { opening = false; });
   const sub = subtotal();
   const ship = shippingFor(sub);
+  const gross = sub + ship;
+  const credit = creditFor(gross);
+  const free = gross > 0 && credit >= gross;
   const { profile, address } = state;
   /* Card-to-card first when it is on: paid now, nothing to collect at the door. */
-  let pay = offer.c2c ? 'c2c' : 'card';
+  let pay = offer.c2c && !free ? 'c2c' : 'card';
 
   openSheet(`
     <h2>${esc(L('تکمیل خرید', 'Checkout', 'Ödeme'))}</h2>
-    <p class="lede" id="coLede">${esc(payLede(pay))}</p>
+    <p class="lede" id="coLede">${esc(free ? creditLede() : payLede(pay))}</p>
 
     <form id="coForm" novalidate>
       <p class="eyebrow" style="margin:18px 0 10px">${esc(L('برای کی', 'Who it is for', 'Kimin için'))}</p>
@@ -182,27 +287,38 @@ async function checkoutSheet() {
                placeholder="${L('۰۹۱۲ ۰۰۰ ۰۰۰۰', '0912 000 0000', '0912 000 0000')}" value="${esc(profile.phone)}" required></div>
 
       <p class="eyebrow" style="margin:20px 0 10px">${esc(L('کجا بفرستیم', 'Where it goes', 'Nereye gönderelim'))}</p>
-      <div class="field"><label for="coLine">${esc(L('آدرس', 'Address', 'Adres'))}</label>
-        <textarea id="coLine" name="line" autocomplete="street-address"
-                  placeholder="${esc(L('خیابون، پلاک، واحد', 'Street, building, unit', 'Sokak, bina, daire'))}" required>${esc(address.line)}</textarea></div>
+      <p class="post-note">${icon('truck', 16)}<span>${esc(postLine())}</span></p>
       <div class="field-row">
+        <div class="field"><label for="coProvince">${esc(L('استان', 'Province', 'İl'))}</label>
+          ${provinceSelect('coProvince', address.province)}</div>
         <div class="field"><label for="coCity">${esc(L('شهر', 'City', 'Şehir'))}</label>
           <input id="coCity" name="city" autocomplete="address-level2"
                  value="${esc(address.city)}" required></div>
-        <div class="field"><label for="coPostal">${esc(L('کد پستی', 'Post code', 'Posta kodu'))}</label>
-          <input id="coPostal" name="postal" inputmode="numeric" dir="ltr"
-                 autocomplete="postal-code" value="${esc(address.postal)}"></div>
       </div>
+      <div class="field"><label for="coLine">${esc(L('آدرس کامل', 'Full address', 'Açık adres'))}</label>
+        <textarea id="coLine" name="line" autocomplete="street-address"
+                  placeholder="${esc(L('خیابون، کوچه، پلاک، واحد', 'Street, lane, building, unit', 'Cadde, sokak, bina, daire'))}" required>${esc(address.line)}</textarea></div>
+      <div class="field"><label for="coPostal">${esc(L('کد پستی ۱۰ رقمی', '10-digit postal code', '10 haneli posta kodu'))}</label>
+        <input id="coPostal" name="postal" inputmode="numeric" dir="ltr" maxlength="14"
+               autocomplete="postal-code" placeholder="0000000000" value="${esc(address.postal)}" required>
+        <p class="tiny field-hint">${esc(L('پست بدون کد پستی بسته رو نمی‌فرسته؛ روی قبض برق یا گاز خونه نوشته شده.',
+    'Iran Post needs it on the parcel; it is printed on your electricity or gas bill.',
+    'İran Postası koliye bunu yazar; elektrik ya da doğalgaz faturanda yazılıdır.'))}</p></div>
+      <div class="field"><label for="coNote">${esc(L('توضیح برای ارسال (اختیاری)', 'Delivery note (optional)', 'Teslimat notu (isteğe bağlı)'))}</label>
+        <input id="coNote" name="note" maxlength="300" value=""
+               placeholder="${esc(L('مثلاً: زنگ واحد ۴ خرابه، به موبایل زنگ بزنید', 'e.g. unit 4’s bell is broken, call me', 'örn. 4 nolu zil bozuk, beni arayın'))}"></div>
       <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <p class="eyebrow" style="margin:20px 0 10px">${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}</p>
+      ${free ? `<p class="cbline">${icon('gift', 16)}<span>${esc(L('با اعتبار تیفانی', 'With TIFFANY credit', 'TIFFANY kredisiyle'))}</span></p>` : `
       <div class="sizes" id="coPay" role="radiogroup" aria-label="${esc(L('پرداخت', 'Payment', 'Ödeme yöntemi'))}">
         ${offer.c2c ? `<button class="chip ${pay === 'c2c' ? 'on' : ''}" data-pay="c2c" type="button" role="radio" aria-checked="${pay === 'c2c'}">${icon('card', 15)}${esc(L('کارت‌به‌کارت، همین الان', 'Card-to-card, now', 'Kartla havale, şimdi'))}${offer.test ? ` · ${esc(L('آزمایشی', 'test', 'test'))}` : ''}</button>` : ''}
         <button class="chip ${pay === 'card' ? 'on' : ''}" data-pay="card" type="button" role="radio" aria-checked="${pay === 'card'}">${icon('truck', 15)}${esc(L('کارت، موقع تحویل', 'Card, on delivery', 'Kapıda kart'))}</button>
         ${offer.c2c ? '' : `<button class="chip" type="button" disabled aria-disabled="true">${icon('lock', 15)}${esc(L('پرداخت آنلاین · به‌زودی', 'Pay online · soon', 'Online ödeme · yakında'))}</button>`}
-      </div>
+      </div>`}
 
-      ${totals(sub, ship)}
+      ${totals(sub, ship, credit)}
+      ${cashbackLine(gross, credit)}
 
       <button class="btn btn-ink btn-block" type="submit">${esc(payButton(pay))}</button>
       <div style="height:9px"></div>
@@ -220,7 +336,7 @@ async function checkoutSheet() {
         sheet.querySelector('#coLede').textContent = payLede(to);
         sheet.querySelector('#coForm [type="submit"]').textContent = payButton(to);
       };
-      sheet.querySelector('#coPay').addEventListener('click', (e) => {
+      sheet.querySelector('#coPay')?.addEventListener('click', (e) => {
         const b = e.target.closest('[data-pay]');
         if (b && !b.disabled) { tap(); choose(b.dataset.pay); }
       });
@@ -240,13 +356,26 @@ async function checkoutSheet() {
         const form = e.target;
         const f = new FormData(form);
         const get = (k) => String(f.get(k) || '').trim();
-        if (!get('name') || !get('phone') || !get('line') || !get('city')) {
-          toast(L('اسم، شماره، آدرس و شهر رو پر کن', 'Fill in name, phone, address and city',
-            'Ad, telefon, adres ve şehri doldur'), 'info');
+        /* What the post office needs, checked here first; the field that is
+           wrong is pointed at, and the server checks it all again. */
+        const wrong = [
+          ['coName', 'name', !fullNameOk(get('name'))],
+          ['coPhone', 'phone', !mobileOk(get('phone'))],
+          ['coProvince', 'province', !get('province')],
+          ['coCity', 'city', get('city').length < 2],
+          ['coLine', 'address', get('line').length < 10],
+          ['coPostal', 'postal', !postalOk(get('postal'))],
+        ].find((x) => x[2]);
+        form.querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+        if (wrong) {
+          const el = form.querySelector(`#${wrong[0]}`);
+          el.setAttribute('aria-invalid', 'true');
+          el.focus();
+          toast(ORDER_ERR[wrong[1]](), 'info', 3600);
           return;
         }
         patch('profile', { name: get('name'), phone: get('phone') });
-        patch('address', { line: get('line'), city: get('city'), postal: get('postal') });
+        patch('address', { line: get('line'), city: get('city'), province: get('province'), postal: postalDigits(get('postal')) });
 
         if (state.bag.some((l) => !getProduct(l.id))) {
           toast(L('اول قطعه‌هایی که دیگه موجود نیستن رو از سبد بردار.',
@@ -271,11 +400,16 @@ async function checkoutSheet() {
           const r = await fetch('api/order.php', {
             method: 'POST',
             signal: ctl.signal,
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            /* Signed in, the order is the account's (cashback); spending its
+               credit takes the account's CSRF token too. */
+            headers: { 'Content-Type': 'application/json', ...(account.csrf ? { 'X-CSRF': account.csrf } : {}) },
             body: JSON.stringify({
               items: lines.map(({ id, size, colour, qty }) => ({ id, size, colour, qty })),
-              name: get('name'), phone: get('phone'), city: get('city'),
-              address: get('line'), postal: get('postal'), website: get('website'), pay,
+              name: get('name'), phone: get('phone'), province: get('province'), city: get('city'),
+              address: get('line'), postal: postalDigits(get('postal')), note: get('note'), website: get('website'), pay,
+              use_credit: credit > 0,
+              ...(credit > 0 ? { expect_balance: account.credit.balance } : {}),
             }),
           });
           const j = await r.json().catch(() => ({}));
@@ -283,15 +417,24 @@ async function checkoutSheet() {
             if (j.error === 'closed') live.storeOpen = false;
             if (j.field === 'pay') dropC2c();
             toast(orderError(r.status, j), 'info', 4200);
+            /* The account's credit moved (another phone, a return), or the
+               shop no longer knows this phone as signed in: fetch the account
+               again and redraw the bag with what is true now. */
+            if (j.field === 'credit_changed' || j.field === 'credit') {
+              closeSheet();
+              loadAccount().finally(() => document.dispatchEvent(new CustomEvent('bag:changed')));
+            }
             return;
           }
+          if (j.balance) takeCredit(j.balance);
           placed = {
-            code: j.code, placed: j.created_at * 1000, pay: j.pay === 'c2c' ? 'c2c' : 'card',
+            code: j.code, placed: j.created_at * 1000, pay: ['c2c', 'credit'].includes(j.pay) ? j.pay : 'card',
             subtotal: j.subtotal, shipping: j.shipping, total: j.total,
+            credit: Number(j.credit) || 0, cashback: Number(j.cashback) || 0,
             server: true, status: j.status, phone: get('phone'), lines: j.items || [],
           };
           if (placed.pay === 'c2c') Object.assign(placed, { payKey: j.pay_key, payState: 'pending', paid: false, payUrl: j.pay_url });
-          if (pay === 'c2c' && placed.pay !== 'c2c') { placed.fellBack = true; forgetOffer(); }
+          if (pay === 'c2c' && placed.pay === 'card') { placed.fellBack = true; forgetOffer(); }
         } catch {
           toast(L('اینترنت وصل نیست؟ دوباره امتحان کن.', 'No connection? Please try again.', 'Bağlantı yok mu? Tekrar dene.'), 'info');
           return;
@@ -362,6 +505,7 @@ export default {
     const sub = subtotal();
     const ship = shippingFor(sub);
     const count = pieces();
+    const credit = creditFor(sub + ship);
 
     return `
     <div class="wrap">
@@ -372,19 +516,18 @@ export default {
         `${num(count)} item${count === 1 ? '' : 's'} in your bag.`,
         `Sepetinde ${num(count)} parça.`))}</p>
 
-      <p class="shipnote">${icon('truck', 17)}<span>${esc(L(
-        'ارسال رایگانه و نهایتاً ۳ روز کاری طول می‌کشه.',
-        `Free delivery, ${BRAND.deliveryDays} working days at most.`,
-        `Ücretsiz teslimat, en geç ${BRAND.deliveryDays} iş günü.`))}</span></p>
+      <p class="shipnote">${icon('truck', 17)}<span>${esc(postLine())}</span></p>
+      ${cashbackNote(sub + ship, credit)}
 
       <div style="height:8px"></div>
       ${state.bag.map(lineHTML).join('')}
 
-      ${totals(sub, ship)}
+      ${creditSwitch()}
+      ${totals(sub, ship, credit)}
 
       <div style="height:14px"></div>
       <button class="btn btn-ink btn-block" data-act="checkout" type="button" ${count ? '' : 'disabled'}>
-        ${esc(L('تکمیل خرید', 'Checkout', 'Ödemeye geç'))} — ${toman(sub + ship)}</button>
+        ${esc(L('تکمیل خرید', 'Checkout', 'Ödemeye geç'))} — ${toman(sub + ship - credit)}</button>
       <div style="height:9px"></div>
       <button class="btn btn-quiet btn-block" data-act="nav" data-to="/shop" type="button">
         ${esc(L('ادامه‌ی خرید', 'Keep looking', 'Alışverişe devam et'))}</button>
@@ -413,6 +556,12 @@ export default {
         }
         tap();
         document.dispatchEvent(new CustomEvent('bag:changed'));
+        document.dispatchEvent(new CustomEvent('view:refresh'));
+        return;
+      }
+      if (e.target.closest('[data-credit]')) {
+        tap();
+        setSpending(!spending());
         document.dispatchEvent(new CustomEvent('view:refresh'));
         return;
       }

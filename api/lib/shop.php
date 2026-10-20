@@ -109,6 +109,60 @@ function tf_customer_public(array $c): array
     return ['name' => $c['name'], 'phone' => $c['phone'], 'since' => (int) $c['created_at']];
 }
 
+/* --------------------------------------------------------------- cashback */
+/* An order of the cashback minimum or more (its subtotal plus delivery),
+   placed while signed in, earns its share of the amount actually paid (what
+   is left after any credit spent on it, so credit never earns credit). It is
+   «on the way» while the order is, spendable once the order is delivered,
+   and gone if the order is cancelled; credit spent on an order comes back if
+   that order is cancelled. Everything is read off the orders themselves. */
+
+/** What an order earns: $gross is its subtotal plus delivery, $paid what is left to pay. */
+function tf_cashback_for(int $gross, int $paid, int $customerId): int
+{
+    $rule = tf_cashback_rule();
+    if (!$rule['on'] || $customerId <= 0 || $gross < $rule['min'] || $paid <= 0) {
+        return 0;
+    }
+    return intdiv($paid * $rule['pct'], 100);
+}
+
+/** One account's credit: balance (spendable; below zero only when a delivered
+    order whose cashback was already spent is cancelled), pending (on the way),
+    and the orders that moved it, newest first. */
+function tf_credit(int $customerId): array
+{
+    $st = db()->prepare("SELECT code, status, credit, cashback, total, created_at FROM orders
+                         WHERE customer_id = ? AND (credit > 0 OR cashback > 0) ORDER BY created_at DESC, id DESC");
+    $st->execute([$customerId]);
+    $balance = 0;
+    $pending = 0;
+    $moves = [];
+    foreach ($st->fetchAll() as $o) {
+        $cb = (int) $o['cashback'];
+        $spent = (int) $o['credit'];
+        $live = $o['status'] !== 'cancelled';
+        if ($live && $spent > 0) {
+            $balance -= $spent;
+        }
+        if ($cb > 0 && $o['status'] === 'delivered') {
+            $balance += $cb;
+        } elseif ($cb > 0 && $live) {
+            $pending += $cb;
+        }
+        $moves[] = ['code' => $o['code'], 'status' => $o['status'], 'spent' => $spent, 'cashback' => $cb,
+            'at' => (int) $o['created_at']];
+    }
+    return ['balance' => $balance, 'pending' => $pending, 'orders' => $moves];
+}
+
+/** What the customer's phone is told: never a balance below zero, the last 30 orders. */
+function tf_credit_public(int $customerId): array
+{
+    $c = tf_credit($customerId);
+    return ['balance' => max(0, $c['balance']), 'pending' => $c['pending'], 'orders' => array_slice($c['orders'], 0, 30)];
+}
+
 function tf_customer_by_phone(string $phone): ?array
 {
     $st = db()->prepare('SELECT * FROM customers WHERE phone = ?');

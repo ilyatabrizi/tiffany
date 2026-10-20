@@ -370,6 +370,77 @@ stories, and the p2-5 film in the hero.
   `media/hero-2-poster.webp`, `assets/img/r-col-480/960.webp`,
   `assets/img/r-white-wool-knit-2-480/960.webp` (and the older files listed before).
 
+## Cashback (اعتبار برگشتی) and tiffanybv.com/join — 2026-10-20
+
+- **The rule.** An order whose subtotal plus delivery is 5,000,000 toman or more, placed
+  while signed in, earns 6% of the amount actually paid as TIFFANY credit (credit spent on
+  it earns nothing). The credit is «on the way» while the order is new, confirmed or
+  shipped, spendable once it is **delivered**, and gone if the order is cancelled; credit
+  spent on an order comes back if that order is cancelled. A delivered order cancelled
+  later (the panel's «مرجوع شد») takes its cashback back, even if already spent: the panel
+  then shows a negative balance, the shop shows 0, and the next cashback fills it first.
+- **No stored balance.** Database v8 adds `customer_id`, `credit` and `cashback` to orders;
+  the balance is read off the orders and their status every time (`tf_credit` in
+  `api/lib/shop.php`), so every status change — the panel, the card-to-card sweep — moves
+  it with nothing else to keep in step. `total` stays «what is left to pay» (subtotal +
+  delivery − credit), so card-to-card, the SMS and the dashboard work on real money.
+- **Spending.** In the bag a signed-in customer with credit sees «استفاده از اعتبار تیفانی»
+  (on by default); the credit comes off before paying. `api/order.php` reads the balance
+  inside the order's write lock (two orders sent together cannot spend it twice) and needs
+  the account's CSRF token. Credit covering the whole order makes it `pay = 'credit'`, with
+  nothing to pay and no payment page.
+- **Seen in:** the bag (how far to the cashback, or what this bag earns, with sign-in
+  buttons for guests), checkout, the Orders sheets (credit line, cashback on its way /
+  added / not added), the profile (balance and on-the-way), the sign-up sheet, the
+  signed-out account box, and a «اعتبار برگشتی (کش‌بک)» section on the terms page.
+- **Panel.** Settings → «اعتبار برگشتی (کش‌بک)»: on/off, percentage (1–50) and minimum
+  (CEO only; off stops new cashback, existing credit stays spendable). Orders show the
+  credit spent and the cashback with its state; delivered orders get «مرجوع شد (لغو
+  سفارش)»; a customer's page shows their account and its credit; the CSV has both columns.
+- **tiffanybv.com/join** (`.htaccess`, 302 to `/#/join`): the profile with the
+  create-account sheet open (the account sheet for someone signed in) — the QR codes use it.
+- **Tests.** `credit_test.py` (54, API: threshold edges, delivery, spending, cancel and
+  return, full cover, two phones signed in to one account ordering at once, a moved
+  balance, settings) and `credit_e2e.py` (21, browser).
+- **After an independent review (same day):** the phone sends the balance it showed
+  (`expect_balance`); if the account's balance has moved since (spent on another phone, a
+  return), the order is refused with `credit_changed`, the phone reloads the account and
+  redraws the bag. An order paid fully by credit is no longer mistaken for a card-to-card
+  fallback. Card-to-card with under 1,000 toman left after credit spends a little less
+  credit so 1,000 is paid (tayidshod's minimum). The cashback settings are all checked
+  before any is saved, and a decimal minimum (5000000.00) is refused; 5.000.000 and
+  ۵٬۰۰۰٬۰۰۰ are read. Delivered orders keep being asked about for 30 days, so a return
+  or a late tracking code reaches the customer's phone. The name rule counts like the
+  server (spaces collapsed).
+
+## Iran Post: free delivery anywhere in Iran, and a checkout the post office can use — 2026-10-20
+
+- **What the parcel needs.** Checkout now asks for exactly what Iran Post writes on a
+  parcel: first and last name (two words), mobile (09…, any digits or +98), **province**
+  (a picker of the 31, `js/post.js` / `TF_PROVINCES`), city, the full address (10+
+  characters: street, lane, building, unit) and the **10-digit postal code** (required;
+  Persian digits, spaces and dashes are read; one repeated digit is refused). An optional
+  delivery note goes to the team. The phone checks each one first, focusing the wrong
+  field with its own message; `api/order.php` checks them all again (field-named 422s).
+  The saved delivery details on the profile have the province and postal code too.
+- **Free Iran Post delivery, said everywhere:** «ارسال با پست، رایگان به سراسر ایران؛ نهایتاً
+  ۳ روز کاری» on the bag, checkout, payment notes, product page, terms (delivery section,
+  with what the post office needs and how to track), about page, the empty Orders page,
+  `index.html` descriptions, every server-rendered page (`seo.php`) and `llms.txt` (which
+  also states the cashback rule, read from the settings). The three-working-day promise
+  is unchanged.
+- **Tracking.** The order stages now read «تحویل پست شد» / «توی راه» instead of courier
+  wording. The panel's order sheet has a «کد رهگیری پست» field (once confirmed; 10–30
+  digits, Persian digits read, empty clears; action `order_post`, logged) and a «کپی برای
+  برچسب پست» button (name, mobile, province/city/address, postal code, order code). The
+  customer sees the code on the order with a copy button and a link to
+  https://tracking.post.ir/ (`api/track.php` returns `post_code`).
+- **Panel.** Province on the order sheet; the CSV gains «استان», «کد رهگیری پست» and
+  «یادداشت مشتری».
+- **Tests.** `api_test.py` refuses each missing or wrong field and checks the province,
+  the 10-digit postal code and the tracking code end to end; `e2e.py` walks the phone-side
+  checks; `admin_e2e.py` saves a tracking code and sees it on the customer's order.
+
 ## Full review: bugs, security, rush and traffic — 2026-10-16
 
 Two independent code reviews (backend security, front end), then every fix covered

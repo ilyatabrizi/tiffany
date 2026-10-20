@@ -848,6 +848,13 @@ html[dir='ltr'] .vlink .chev { transform: scaleX(-1); }
   font-size: 12.5px; color: var(--muted);
 }
 .shipnote .ico { flex: 0 0 auto; color: var(--faint); }
+/* Iran Post, said once above the address */
+.post-note {
+  display: flex; align-items: center; gap: 9px; margin: -2px 0 14px;
+  padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: var(--r-s, 10px);
+  font-size: 12.5px; line-height: 1.6; color: var(--muted);
+}
+.post-note .ico { flex: 0 0 auto; color: var(--ink); }
 
 /* -------------------------------------------------------------- orders */
 .order {
@@ -973,6 +980,18 @@ html[data-colour='always'] .order-thumbs img { filter: none; }
 .field textarea { height: 84px; padding: 13px 15px; resize: none; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--ink); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field select {
+  appearance: none; -webkit-appearance: none; padding-inline-end: 38px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-size: 5px 5px; background-repeat: no-repeat;
+  background-position: calc(100% - 21px) 50%, calc(100% - 16px) 50%;
+}
+[dir="rtl"] .field select { background-position: 16px 50%, 21px 50%; }
+.field select:focus { outline: none; border-color: var(--ink); }
+.field select:invalid { color: var(--faint); }
+.field select option { color: var(--ink); }
+.field [aria-invalid="true"] { border-color: #c2412d; }
 
 /* -------------------------------------------------------------- sheets */
 .sheet-root { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
@@ -1679,3 +1698,79 @@ html[dir='rtl'] .chip-c { padding: 4px 10px 4px 4px; }
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
 }
 .viewer:has(.viewer-sound:not([hidden])) .viewer-bars { inset-inline-end: 108px; }
+
+/* -------------------------------------------------------------- cashback */
+/* The note over the bag: how far to the cashback (a thin bar fills toward
+   it), or what this bag earns. The switch that spends credit on the order,
+   the credit line in the totals, and the account's credit on the profile. */
+.cbnote {
+  margin: 14px 0 0; padding: 13px 14px; border-radius: var(--r-m);
+  background: var(--paper-2); display: flex; gap: 11px; align-items: flex-start;
+}
+.cbnote > .ico { flex: 0 0 auto; margin-top: 1px; color: var(--muted); }
+.cbnote.on > .ico { color: var(--ink); }
+.cbnote > div { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.cbnote b { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.6; }
+.cbnote span { font-size: 12.5px; color: var(--muted); line-height: 1.7; }
+.cbbar {
+  display: block; height: 3px; margin-top: 6px; border-radius: 3px; background: var(--line);
+  position: relative; overflow: hidden;
+}
+.cbbar::after {
+  content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: var(--p);
+  border-radius: 3px; background: var(--ink); transition: width .5s var(--ease);
+}
+.cbacts { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.cbswitch {
+  width: 100%; margin: 18px 0 0; padding: 13px 14px; border-radius: var(--r-m);
+  border: 1px solid var(--line); display: flex; gap: 11px; align-items: center; text-align: start;
+  color: var(--ink); transition: border-color .25s var(--ease);
+}
+.cbswitch[aria-checked="true"] { border-color: var(--ink); }
+.cbswitch > .ico { flex: 0 0 auto; }
+.cbswitch > span { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.cbswitch b { font-size: 13.5px; font-weight: 600; }
+.cbswitch span span { font-size: 12.5px; color: var(--muted); }
+.cbswitch .knob {
+  flex: 0 0 auto; width: 44px; height: 26px; border-radius: 999px; background: var(--line);
+  position: relative; transition: background .25s var(--ease);
+}
+.cbswitch .knob::after {
+  content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px;
+  border-radius: 999px; background: var(--paper); box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transition: transform .25s var(--ease);
+}
+.cbswitch[aria-checked="true"] .knob { background: var(--ink); }
+.cbswitch[aria-checked="true"] .knob::after { transform: translateX(18px); }
+[dir="rtl"] .cbswitch[aria-checked="true"] .knob::after { transform: translateX(-18px); }
+.trow.credit b { color: var(--ink); }
+.cbline {
+  display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; margin: 4px 0 14px;
+  font-size: 12.5px; line-height: 1.7; color: var(--muted);
+}
+.cbline > .ico { flex: 0 0 auto; margin-top: 2px; color: var(--ink); }
+.cbline > span { flex: 1; min-width: 0; }
+.cbline b { color: var(--ink); font-weight: 600; }
+.credit-box {
+  margin: 14px var(--gap) 0; padding: 16px 16px 14px; border-radius: var(--r-l, 22px);
+  background: var(--paper-2); display: grid; gap: 6px;
+}
+.credit-box .eyebrow { display: flex; align-items: center; gap: 6px; margin: 0; }
+.credit-amt { font-size: 26px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.credit-pending, .credit-how { margin: 0; font-size: 12.5px; line-height: 1.7; color: var(--muted); }
+.credit-how .link-more { margin-inline-start: 4px; }
+
+/* Iran Post's tracking code on an order */
+.post-box {
+  margin: 16px 0 6px; padding: 14px 15px; border-radius: var(--r-m);
+  background: var(--paper-2); display: grid; gap: 8px;
+}
+.post-box .eyebrow { display: flex; align-items: center; gap: 6px; margin: 0; }
+.post-code {
+  display: block; font-size: 17px; font-weight: 600; letter-spacing: .02em; font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere; text-align: start;
+}
+.post-box .tiny { margin: 0; line-height: 1.7; }
+.post-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.post-acts .btn { gap: 6px; }
+[dir="rtl"] .post-code { text-align: right; }

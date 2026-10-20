@@ -158,7 +158,18 @@ function render(route, { keepScroll = false, how = 'push' } = {}) {
   /* Until 2026-10-20 the whole season was one collection, «aw27»; links to it
      shared since then open the shop, which is that whole season now. */
   if (route.path === '/c/aw27') { go('/shop', { replace: true }); return; }
-  const key =['p', 'c', 'tickets'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
+  /* tiffanybv.com/join (the QR code on posts and in the stores): the profile,
+     with the sign-up sheet open — or the account, for someone already in.
+     The sheet waits for the account state, which says whether codes go out. */
+  if (route.path === '/join') {
+    go('/profile', { replace: true });
+    /* Opened by the shop, not by a tap: calm, so no button sits there ringed. */
+    const open = () => setTimeout(() => (account.user ? accountSheet({ calm: true }) : signUpSheet({ calm: true })), 350);
+    if (account.loaded) open();
+    else document.addEventListener('account:changed', open, { once: true });
+    return;
+  }
+  const key = ['p', 'c', 'tickets'].includes(route.parts[0]) ? '/' + route.parts[0] : route.path;
   const view = VIEWS[key] || VIEWS['/'];
   const y = window.scrollY;
   /* Remember where the page being left was scrolled to, so a step back
@@ -265,12 +276,13 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('bag:changed', badgeTabs);
 document.addEventListener('account:unread', badgeTabs);
-/* Signing in or out redraws the profile (its header is the account); the
-   tickets page redraws itself. Never on top of an open sheet: a redraw
-   closes sheets, and the visitor may be in the middle of one. */
+/* Signing in or out redraws the profile (its header is the account) and the
+   bag (its credit and cashback); the tickets page redraws itself. Never on
+   top of an open sheet: a redraw closes sheets, and the visitor may be in
+   the middle of one. */
 document.addEventListener('account:changed', () => {
   badgeTabs();
-  if (parse().parts[0] === 'profile' && !sheetIsOpen()) refresh();
+  if (['profile', 'bag'].includes(parse().parts[0]) && !sheetIsOpen()) refresh();
 });
 document.addEventListener('view:refresh', refresh);
 document.addEventListener('colour:changed', refresh);

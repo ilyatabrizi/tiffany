@@ -5,7 +5,8 @@
    Prices, names and stock come from the database, never from the browser:
    the bag only says which piece, which size, which colour and how many, and
    how it will be paid (pay: card on delivery, or c2c — card-to-card now
-   through «تأیید شد»; the answer then carries the payment page). */
+   through «تأیید شد»; the answer then carries the payment page), and whether
+   to spend the account's cashback credit (use_credit). */
 declare(strict_types=1);
 require __DIR__ . '/lib/boot.php';
 
@@ -31,6 +32,7 @@ if (tf_too_many('order:ok:' . tf_ip_key(), 15, 3600)) {
 
 $name = tf_line($in['name'] ?? '', 60);
 $phone = tf_phone($in['phone'] ?? '');
+$province = tf_line($in['province'] ?? '', 40);
 $city = tf_line($in['city'] ?? '', 40);
 $address = tf_text($in['address'] ?? '', 300);
 $postal = preg_replace('/[^0-9]/', '', tf_digits((string) ($in['postal'] ?? ''))) ?? '';
@@ -38,21 +40,42 @@ $note = tf_text($in['note'] ?? '', 300);
 /* card: by card on delivery. c2c: card-to-card now, through «تأیید شد»
    (api/lib/pay.php), only while the CEO has it switched on and it works. */
 $pay = ($in['pay'] ?? 'card') === 'c2c' ? 'c2c' : 'card';
+/* Signed in, the order is the account's: it earns cashback (api/lib/shop.php)
+   and may spend the account's credit — which only the account itself can ask
+   for, so that needs its CSRF token too. */
+$me = tf_customer();
+$useCredit = !empty($in['use_credit']);
+/* The balance the phone showed; if the account's balance has moved since
+   (spent on another phone, a return), the order is refused and the phone
+   shows the new one, rather than charging something the customer never saw. */
+$expectBalance = array_key_exists('expect_balance', $in) ? max(0, tf_int($in['expect_balance'])) : null;
+if ($useCredit) {
+    if (!$me) {
+        throw new TfInvalid('credit', 'برای استفاده از اعتبار اول وارد حسابت شو.');
+    }
+    tf_require_csrf();
+}
 
-if (mb_strlen($name) < 2) {
-    throw new TfInvalid('name', 'اسم و فامیل رو بنویس.');
+/* What Iran Post needs on the parcel: the full name (first and last), a
+   mobile number, the province and city, the full address, and the ten-digit
+   postal code. */
+if (mb_strlen($name) < 4 || count(preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY)) < 2) {
+    throw new TfInvalid('name', 'اسم و فامیل رو کامل بنویس.');
 }
 if ($phone === '') {
     throw new TfInvalid('phone', 'شماره موبایل درست نیست.');
 }
+if (!in_array($province, TF_PROVINCES, true)) {
+    throw new TfInvalid('province', 'استان رو انتخاب کن.');
+}
 if (mb_strlen($city) < 2) {
     throw new TfInvalid('city', 'شهر رو بنویس.');
 }
-if (mb_strlen($address) < 8) {
-    throw new TfInvalid('address', 'آدرس کامل رو بنویس.');
+if (mb_strlen($address) < 10) {
+    throw new TfInvalid('address', 'آدرس کامل رو بنویس: خیابون، کوچه، پلاک و واحد.');
 }
-if ($postal !== '' && strlen($postal) !== 10) {
-    throw new TfInvalid('postal', 'کد پستی ۱۰ رقمیه.');
+if (strlen($postal) !== 10 || preg_match('/^(\d)\1{9}$/', $postal)) {
+    throw new TfInvalid('postal', 'کد پستی ۱۰ رقمی رو درست بنویس.');
 }
 
 /* One line per piece/size/colour, quantities merged: at most TF_LINE_MAX of
@@ -97,9 +120,9 @@ $open->closeCursor();
 if ($pending >= 3) {
     throw new TfInvalid('pending', 'برای این شماره چند سفارش منتظر تأییده؛ تیم تیفانی به‌زودی باهات تماس می‌گیره.');
 }
-if ($pay === 'c2c' && !tz_available(true)) {
-    throw new TfInvalid('pay', 'کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.');
-}
+/* Asked here, before the lock (it may ask tayidshod); refused below, once it
+   is known whether anything is left to pay after the credit. */
+$c2cOff = $pay === 'c2c' && !tz_available(true);
 
 $db = db();
 $db->exec('BEGIN IMMEDIATE');
@@ -147,7 +170,30 @@ try {
     }
 
     $shipping = (int) tf_public_settings()['shipping'];
-    $total = $subtotal + $shipping;
+    $gross = $subtotal + $shipping;
+    /* The balance is read inside this lock: two orders sent together cannot
+       both spend the same credit. Credit covering everything leaves nothing
+       to pay, and the order is marked paid by credit. */
+    $cid = $me ? (int) $me['id'] : 0;
+    $balance = $useCredit && $cid ? max(0, tf_credit($cid)['balance']) : 0;
+    if ($useCredit && $expectBalance !== null && $balance !== $expectBalance) {
+        throw new TfInvalid('credit_changed', 'اعتبار حسابت همین الان تغییر کرده؛ مبلغ جدید رو ببین و دوباره ثبت کن.');
+    }
+    $credit = min($balance, $gross);
+    $total = $gross - $credit;
+    /* Card-to-card takes 1,000 toman at least: a few hundred left after the
+       credit would fall back to paying at the door, so a little less credit
+       is spent and 1,000 is paid now. */
+    if ($pay === 'c2c' && $total > 0 && $total < 1000 && $gross >= 1000) {
+        $credit = $gross - 1000;
+        $total = 1000;
+    }
+    if ($total === 0) {
+        $pay = 'credit';
+    } elseif ($c2cOff) {
+        throw new TfInvalid('pay', 'کارت‌به‌کارت همین الان در دسترس نیست؛ «کارت، موقع تحویل» رو انتخاب کن.');
+    }
+    $cashback = tf_cashback_for($gross, $total, $cid);
     $exists = $db->prepare('SELECT 1 FROM orders WHERE code = ?');
     $tries = 0;
     do {
@@ -161,12 +207,12 @@ try {
     } while ($taken);
 
     $now = time();
-    $db->prepare('INSERT INTO orders (code, status, name, phone, city, address, postal, pay, items,
-                  subtotal, shipping, total, note, day, created_at, updated_at)
-                  VALUES (?, \'new\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        ->execute([$code, $name, $phone, $city, $address, $postal, $pay,
+    $db->prepare('INSERT INTO orders (code, status, name, phone, province, city, address, postal, pay, items,
+                  subtotal, shipping, total, note, day, created_at, updated_at, customer_id, credit, cashback)
+                  VALUES (?, \'new\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute([$code, $name, $phone, $province, $city, $address, $postal, $pay,
             json_encode($items, JSON_UNESCAPED_UNICODE), $subtotal, $shipping, $total, $note,
-            date('Y-m-d', $now), $now, $now]);
+            date('Y-m-d', $now), $now, $now, $cid, $credit, $cashback]);
     $db->exec('COMMIT');
 } catch (Throwable $e) {
     $db->exec('ROLLBACK');
@@ -180,6 +226,8 @@ tf_after(static function () use ($code, $name, $phone, $total): void {
 
 $out = ['ok' => true, 'code' => $code, 'status' => 'new', 'total' => $total,
     'subtotal' => $subtotal, 'shipping' => $shipping, 'created_at' => $now, 'pay' => $pay,
+    'credit' => $credit, 'cashback' => $cashback,
+    'balance' => $cid ? tf_credit_public($cid) : null,
     'items' => array_map(static fn ($i) => ['id' => $i['id'], 'size' => $i['size'], 'colour' => $i['colour'],
         'qty' => $i['qty'], 'price' => $i['price']], $items)];
 /* The order is in; now its payment page. If tayidshod cannot make one, the

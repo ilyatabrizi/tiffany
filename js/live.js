@@ -15,6 +15,9 @@ export const live = {
   storeOpen: false,    // the CEO has switched online ordering on
   deliveryDays: 3,
   skew: 0,             // the server's clock minus this phone's, in ms
+  /* Cashback (back office → Settings): this share of what an order of `min`
+     or more costs comes back as credit, once it is delivered. */
+  cashback: { on: true, pct: 6, min: 5000000 },
 };
 
 const KEEP = 'tiffany.catalog';
@@ -45,6 +48,10 @@ export async function loadCatalogue() {
   live.loaded = true;
   live.storeOpen = Boolean(data.settings?.store_open) && live.fresh;
   live.deliveryDays = Number(data.settings?.delivery_days) || 3;
+  const cb = data.settings?.cashback;
+  if (cb && typeof cb === 'object') {
+    live.cashback = { on: Boolean(cb.on), pct: Number(cb.pct) || 0, min: Number(cb.min) || 0 };
+  }
   return live;
 }
 

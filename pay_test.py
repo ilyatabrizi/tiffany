@@ -69,8 +69,8 @@ class Panel:
 
 
 ORDER = {'items': [{'id': 'alphabet-tee', 'size': 'M', 'colour': '#A9C9E8', 'qty': 1}],
-         'name': 'سارا محمدی', 'phone': '09121112233', 'city': 'تهران',
-         'address': 'خیابان ولیعصر، کوچه‌ی ۳، پلاک ۱۲'}
+         'name': 'سارا محمدی', 'phone': '09121112233', 'province': 'تهران', 'city': 'تهران',
+         'address': 'خیابان ولیعصر، کوچه‌ی ۳، پلاک ۱۲', 'postal': '1966914111'}
 phones = iter(f'0912{n:07d}' for n in range(1000001, 1000999))
 
 
@@ -104,7 +104,7 @@ code, _ = ceo('setup', key=k, name='مدیر تست', email='ceo@tiffany.test', 
 check('CEO account made', code == 200)
 code, r = ceo('settings_save', store_open=True)
 check('store open', r['settings']['store_open'] is True)
-check('database is on version 7', db('PRAGMA user_version')[0][0] == 7)
+check('database is on version 8', db('PRAGMA user_version')[0][0] == 8)
 cols = {c[1] for c in db('PRAGMA table_info(orders)')}
 check('orders carry the payment columns', {'pay_state', 'pay_ref', 'pay_amount', 'pay_url', 'pay_mode', 'paid', 'paid_at'} <= cols)
 r = requests.get(f'{BASE}/api/pay.php?a=state').json()
