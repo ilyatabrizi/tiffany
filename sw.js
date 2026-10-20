@@ -12,7 +12,7 @@
    worker still reads the browser's HTTP cache, and the host sends its own
    max-age, so the "network" copy can be the stale one. Every revalidation
    below bypasses it explicitly. */
-const V = 'tiffany-fa-v15';
+const V = 'tiffany-fa-v16';
 
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest',
@@ -57,6 +57,13 @@ self.addEventListener('activate', (e) => {
 
 /* ------------------------------------------------------------ strategies */
 async function fresh(request) {
+  /* tiffanybv.com/join is the host's redirect to /#/join (the QR codes). A
+     fetch's answer never carries a # (Response.url drops it), so following
+     that redirect here would land on the home page: the worker sends the
+     browser to /#/join itself, online or not. */
+  if (request.mode === 'navigate' && /^\/join\/?$/.test(new URL(request.url).pathname)) {
+    return Response.redirect(`${self.location.origin}/#/join`, 302);
+  }
   const cache = await caches.open(V);
   try {
     const res = await fetch(request.url, {

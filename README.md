@@ -412,6 +412,12 @@ stories, and the p2-5 film in the hero.
   ۵٬۰۰۰٬۰۰۰ are read. Delivered orders keep being asked about for 30 days, so a return
   or a late tracking code reaches the customer's phone. The name rule counts like the
   server (spaces collapsed).
+- **Found on the live check (same day):** with the service worker in control (the live
+  shop, not localhost), tiffanybv.com/join landed on the home page: the worker followed
+  the host's redirect to /#/join, and a fetch's answer never carries the #. The worker
+  (v16) now sends /join to /#/join itself, online or offline. `sw_e2e.py` serves the
+  shop under a made-up secure name so the worker really runs, and checks /join, a
+  product address, and /join offline (4 checks).
 
 ## Iran Post: free delivery anywhere in Iran, and a checkout the post office can use — 2026-10-20
 
