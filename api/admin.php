@@ -368,14 +368,14 @@ switch ($a) {
         tz_refresh($row, true);
         ok(['order' => order_or_404($o['code'])]);
 
-    /* The Iran Post tracking code (24 digits on the receipt; Persian digits
+    /* The Iran Post tracking code (20 or 24 digits on the receipt; Persian digits
        read); empty takes it off. The customer sees it on the order. */
     case 'order_post':
         $o = order_or_404((string) ($in['code'] ?? ''));
         $raw = tf_line($in['post'] ?? '', 60);
         $post = preg_replace('/\D/', '', tf_digits($raw)) ?? '';
         if ($raw !== '' && (strlen($post) < 10 || strlen($post) > 30)) {
-            throw new TfInvalid('post', 'کد رهگیری پست فقط عدده (معمولاً ۲۴ رقم، روی رسید پست).');
+            throw new TfInvalid('post', 'کد رهگیری پست فقط عدده (۲۰ یا ۲۴ رقم، روی رسید پست).');
         }
         db()->prepare('UPDATE orders SET post_code = ?, updated_at = ? WHERE code = ?')->execute([$post, time(), $o['code']]);
         tf_log($me['name'], 'order_post', $o['code'] . ($post !== '' ? ' → ' . $post : ''));

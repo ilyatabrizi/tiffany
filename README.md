@@ -436,8 +436,8 @@ stories, and the p2-5 film in the hero.
   also states the cashback rule, read from the settings). The three-working-day promise
   is unchanged.
 - **Tracking.** The order stages now read «تحویل پست شد» / «توی راه» instead of courier
-  wording. The panel's order sheet has a «کد رهگیری پست» field (once confirmed; 10–30
-  digits, Persian digits read, empty clears; action `order_post`, logged) and a «کپی برای
+  wording. The panel's order sheet has a «کد رهگیری پست» field (once confirmed; Iran Post
+  codes are 20 or 24 digits, 10–30 are taken, Persian digits read, empty clears; action `order_post`, logged) and a «کپی برای
   برچسب پست» button (name, mobile, province/city/address, postal code, order code). The
   customer sees the code on the order with a copy button and a link to
   https://tracking.post.ir/ (`api/track.php` returns `post_code`).

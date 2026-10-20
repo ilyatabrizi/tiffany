@@ -902,7 +902,7 @@ async function openOrder(code, onChange) {
     ${payPart(o)}
     ${o.note ? `<p class="label" style="margin-top:16px">یادداشت مشتری</p><p style="margin:0">${esc(o.note)}</p>` : ''}
     ${o.status !== 'cancelled' && o.status !== 'new' ? `<form id="postForm" style="margin-top:16px">${field('post', 'کد رهگیری پست',
-    `<input class="input ltr-in" id="f-post" name="post" inputmode="numeric" autocomplete="off" maxlength="40" value="${esc(o.post_code || '')}" placeholder="۲۴ رقم روی رسید پست">`,
+    `<input class="input ltr-in" id="f-post" name="post" inputmode="numeric" autocomplete="off" maxlength="40" value="${esc(o.post_code || '')}" placeholder="کد ۲۰ یا ۲۴ رقمی روی رسید پست">`,
     'بعد از تحویل بسته به پست بزنش؛ مشتری توی «سفارش‌ها»ی سایت می‌بینه و توی سایت رهگیری پست دنبالش می‌کنه.')}
       <button class="btn line s" type="submit">ذخیره‌ی کد رهگیری</button></form>` : ''}
     <form id="noteForm" style="margin-top:16px">${field('note', 'یادداشت داخلی (فقط تیم می‌بینه)',
