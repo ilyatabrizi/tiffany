@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="enamad" content="3485842" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<!-- Opened from the home screen, the shop behaves as an app: the page never
+     zooms, by pinching, double-tapping or tapping into a field. In a browser
+     tab it stays zoomable, for anyone who needs to enlarge it. -->
+<script>(function(){try{var m=function(q){return window.matchMedia&&matchMedia(q).matches;};if(!(m('(display-mode: standalone)')||m('(display-mode: fullscreen)')||m('(display-mode: minimal-ui)')||navigator.standalone===true))return;document.documentElement.classList.add('app');var v=document.querySelector('meta[name=viewport]');if(v)v.setAttribute('content','width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');var no=function(e){e.preventDefault();};['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,no,{passive:false});});}catch(e){}})();</script>
 <title>TIFFANY by Vanda | تیفانی، پوشاک زنانه — کالکشن پاییز و زمستون ۲۰۲۷</title>
 <!-- Persian is the default on every visit. A visitor who picked English or
      Türkçe in the hero keeps it for this visit only (sessionStorage), and the

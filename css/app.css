@@ -136,6 +136,9 @@ html[data-theme='dark'] {
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html { -webkit-text-size-adjust: 100%; }
+/* From the home screen (index.html marks it .app): scrolling and swiping in
+   any direction, but no pinch or double-tap zoom, like a native app. */
+html.app, html.app body { touch-action: pan-x pan-y; }
 
 body {
   margin: 0;

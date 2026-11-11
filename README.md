@@ -619,3 +619,18 @@ ten current-password guesses an hour; ticket files are named by what they really
 («receipt.hta» that is a PDF becomes «receipt.pdf»), photos at most 20 MP (stories 30 MP),
 files are moved before the database lock and the 300 MB a day is checked again under it;
 public stories no longer name the team member.
+
+## The home-screen app never zooms — 2026-11-11
+
+- Opened from the home screen (iPhone `navigator.standalone`, or `display-mode`
+  standalone / fullscreen / minimal-ui on Android and desktop installs), a small script
+  at the top of `index.html` marks the page `.app` before the first paint and locks the
+  viewport (`minimum-scale=1, maximum-scale=1, user-scalable=no`), which also stops
+  iPhone's zoom when a field is tapped. Safari's pinch events (`gesturestart/change/end`)
+  are cancelled, and `css/app.css` gives `html.app` and its body `touch-action: pan-x
+  pan-y`: scrolling and swiping work, pinch and double-tap zoom do not.
+- In a browser tab nothing changes: the page stays zoomable for anyone who needs it.
+  The server-rendered pages (`seo.php`) carry the same head. Service worker v17.
+- `pwa_e2e.py` (20 checks) sends a real two-finger pinch through Chromium's touch input:
+  the browser tab zooms (so the test can see a zoom), both home-screen modes do not,
+  one-finger scrolling still works, and other pages stay locked.
